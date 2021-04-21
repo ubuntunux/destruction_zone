@@ -12,7 +12,9 @@ git submodule update --recursive
 ```
 
 # run on window or llinux
+```
 cargo run --release
+```
 
 # reference
 - https://store.steampowered.com/app/301650/Battlezone_98_Redux/
