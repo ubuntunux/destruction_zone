@@ -6,7 +6,7 @@ use rust_engine_3d::constants;
 use rust_engine_3d::application::application::{self, ApplicationBase, ApplicationData};
 
 use crate::application_constants;
-use crate::application::scene_manager::SceneManager;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::renderer::Renderer;
 use crate::renderer::ui::UIManager;
 use crate::renderer::effect::EffectManager;
@@ -17,7 +17,7 @@ pub struct Application {
     pub _application_data: *const ApplicationData,
     pub _project_resources: Box<ProjectResources>,
     pub _renderer: Box<Renderer>,
-    pub _scene_manager: Box<SceneManager>,
+    pub _project_scene_manager: Box<ProjectSceneManager>,
     pub _effect_manager: Box<EffectManager>,
     pub _ui_manager: Box<UIManager>,
 }
@@ -58,8 +58,8 @@ impl ApplicationBase for Application {
         let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
         let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
 
-        let mut main_camera = self.get_scene_manager()._main_camera.borrow_mut();
-        let mut main_light = self.get_scene_manager()._main_light.borrow_mut();
+        let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
+        let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
         let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
         let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
@@ -153,11 +153,11 @@ impl Application {
     pub fn get_project_resources_mut(&self) -> &mut ProjectResources {
         unsafe { &mut *((self._project_resources.as_ref() as *const ProjectResources) as *mut ProjectResources) }
     }
-    pub fn get_scene_manager(&self) -> &SceneManager {
-        &self._scene_manager
+    pub fn get_project_scene_manager(&self) -> &ProjectSceneManager {
+        &self._project_scene_manager
     }
-    pub fn get_scene_manager_mut(&self) -> &mut SceneManager {
-        unsafe { &mut *((self._scene_manager.as_ref() as *const SceneManager) as *mut SceneManager) }
+    pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager {
+        unsafe { &mut *((self._project_scene_manager.as_ref() as *const ProjectSceneManager) as *mut ProjectSceneManager) }
     }
     pub fn get_renderer(&self) -> &Renderer {
         &self._renderer
@@ -214,7 +214,7 @@ pub fn run_application() {
     // create
     let project_resources = ProjectResources::create_project_resources();
     let renderer = Renderer::create_renderer_data();
-    let scene_manager = SceneManager::create_scene_manager();
+    let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let effect_manager = EffectManager::create_effect_manager();
     let ui_manager = UIManager::create_ui_manager();
 
@@ -223,7 +223,7 @@ pub fn run_application() {
         _application_data: std::ptr::null(),
         _project_resources: project_resources,
         _renderer: renderer,
-        _scene_manager: scene_manager,
+        _project_scene_manager: project_scene_manager,
         _effect_manager: effect_manager,
         _ui_manager: ui_manager,
     };
@@ -231,7 +231,7 @@ pub fn run_application() {
         LevelFilter::Info,
         &application,
         application.get_project_resources(),
-        application.get_scene_manager(),
+        application.get_project_scene_manager(),
         application.get_effect_manager(),
         application.get_renderer(),
         application.get_ui_manager(),

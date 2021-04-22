@@ -23,7 +23,7 @@ use rust_engine_3d::vulkan_context::texture::{ self, TextureData };
 use rust_engine_3d::vulkan_context::vulkan_context::{ self, SwapchainArray, MipLevels };
 
 use crate::application_constants;
-use crate::application::scene_manager::SceneManager;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::effect::EffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
 use crate::renderer::precomputed_atmosphere::PushConstant_Atmosphere;
@@ -271,19 +271,19 @@ impl RendererBase for Renderer {
         _elapsed_frame: u64,
     ) {
         let resources = renderer_data._resources.borrow();
-        let scene_manager: &SceneManager = unsafe { &mut *(scene_manager_data._scene_manager as *mut SceneManager) };
-        let main_camera =  scene_manager.get_main_camera().borrow();
-        let main_light = scene_manager.get_main_light().borrow();
-        let mut capture_height_map = scene_manager.get_capture_height_map().borrow_mut();
+        let project_scene_manager: &ProjectSceneManager = unsafe { &mut *(scene_manager_data._project_scene_manager as *mut ProjectSceneManager) };
+        let main_camera =  project_scene_manager.get_main_camera().borrow();
+        let main_light = project_scene_manager.get_main_light().borrow();
+        let mut capture_height_map = project_scene_manager.get_capture_height_map().borrow_mut();
         let render_capture_height_map: bool = capture_height_map.get_need_to_redraw_shadow_and_reset();
-        let fft_ocean =  scene_manager.get_fft_ocean().borrow();
-        let mut atmosphere =  scene_manager.get_atmosphere().borrow_mut();
+        let fft_ocean =  project_scene_manager.get_fft_ocean().borrow();
+        let mut atmosphere =  project_scene_manager.get_atmosphere().borrow_mut();
         let quad_mesh = resources.get_mesh_data("quad").borrow();
         let quad_geometry_data: Ref<GeometryData> = quad_mesh.get_default_geometry_data().borrow();
-        let static_render_elements = scene_manager.get_static_render_elements();
-        let static_shadow_render_elements = scene_manager.get_static_shadow_render_elements();
-        let skeletal_render_elements = scene_manager.get_skeletal_render_elements();
-        let skeletal_shadow_render_elements = scene_manager.get_skeletal_shadow_render_elements();
+        let static_render_elements = project_scene_manager.get_static_render_elements();
+        let static_shadow_render_elements = project_scene_manager.get_static_shadow_render_elements();
+        let skeletal_render_elements = project_scene_manager.get_skeletal_render_elements();
+        let skeletal_shadow_render_elements = project_scene_manager.get_skeletal_shadow_render_elements();
 
         // Upload Uniform Buffers
         self._scene_constants.update_scene_constants(
@@ -337,7 +337,7 @@ impl RendererBase for Renderer {
                 swapchain_index,
                 &quad_geometry_data,
                 &resources,
-                scene_manager,
+                project_scene_manager,
                 &main_camera,
                 static_render_elements,
                 &fft_ocean
@@ -631,7 +631,7 @@ impl Renderer {
         swapchain_index: u32,
         quad_geometry_data: &GeometryData,
         resources: &Ref<Resources>,
-        scene_manager: &SceneManager,
+        project_scene_manager: &ProjectSceneManager,
         main_camera: &CameraObjectData,
         static_render_elements: &Vec<RenderElementData>,
         _fft_ocean: &FFTOcean,
@@ -670,7 +670,7 @@ impl Renderer {
 
         // render atmosphere, inscatter
         for i in 0..constants::CUBE_LAYER_COUNT {
-            let mut light_probe_camera = scene_manager.get_light_probe_camera(i).borrow_mut();
+            let mut light_probe_camera = project_scene_manager.get_light_probe_camera(i).borrow_mut();
             light_probe_camera._transform_object.set_position(main_camera_position);
             light_probe_camera.update_camera_object_data();
             light_probe_view_constants.update_view_constants(&light_probe_camera);

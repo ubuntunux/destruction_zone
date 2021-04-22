@@ -13,7 +13,7 @@ use rust_engine_3d::resource::resource::{ ResourceDataMap, ProjectResourcesBase,
 use rust_engine_3d::renderer::renderer::{ RendererData };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 
-use crate::application::scene_manager::{ SceneDataCreateInfo };
+use crate::application::project_scene_manager::{ SceneDataCreateInfo };
 
 pub const SCENE_FILE_PATH: &str = "resource/scenes";
 

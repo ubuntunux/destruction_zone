@@ -9,7 +9,7 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
-use rust_engine_3d::application::scene_manager::{ SceneManagerBase, SceneManagerData };
+use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManagerData };
 use rust_engine_3d::renderer::effect::{ EffectCreateInfo, EffectInstance, EffectManagerData, EffectManagerBase };
 use rust_engine_3d::renderer::font::FontManager;
 use rust_engine_3d::renderer::renderer::RendererData;
@@ -47,7 +47,7 @@ impl Default for SceneDataCreateInfo {
 }
 
 #[derive(Clone)]
-pub struct SceneManager {
+pub struct ProjectSceneManager {
     pub _scene_manager_data: *const SceneManagerData,
     pub _resources: *const Resources,
     pub _renderer: *const Renderer,
@@ -71,8 +71,8 @@ pub struct SceneManager {
 }
 
 
-impl SceneManagerBase for SceneManager {
-    fn initialize_scene_manager(
+impl ProjectSceneManagerBase for ProjectSceneManager {
+    fn initialize_project_scene_manager(
         &mut self,
         window_width: u32,
         window_height: u32,
@@ -202,11 +202,11 @@ impl SceneManagerBase for SceneManager {
         self._skeletal_shadow_render_elements.clear();
     }
 
-    fn destroy_scene_manager_data(&mut self, device: &Device) {
+    fn destroy_project_scene_manager(&mut self, device: &Device) {
         self.destroy_scene_graphics_data(device);
     }
 
-    fn update_scene_manager_data(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
+    fn update_project_scene_manager(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
         let delta_time: f64 = time_data._delta_time;
 
         self._fft_ocean.borrow_mut().update(delta_time);
@@ -232,7 +232,7 @@ impl SceneManagerBase for SceneManager {
         self.get_effect_manager_mut().update_effects(delta_time as f32);
 
         // gather render elements
-        SceneManager::gather_render_elements(
+        ProjectSceneManager::gather_render_elements(
             &main_camera,
             &main_light,
             &self._static_render_object_map,
@@ -240,7 +240,7 @@ impl SceneManagerBase for SceneManager {
             &mut self._static_shadow_render_elements
         );
 
-        SceneManager::gather_render_elements(
+        ProjectSceneManager::gather_render_elements(
             &main_camera,
             &main_light,
             &self._skeletal_render_object_map,
@@ -256,8 +256,8 @@ impl SceneManagerBase for SceneManager {
     }
 }
 
-impl SceneManager {
-    pub fn create_scene_manager() -> Box<SceneManager> {
+impl ProjectSceneManager {
+    pub fn create_project_scene_manager() -> Box<ProjectSceneManager> {
         let default_camera = CameraObjectData::create_camera_object_data(&String::from("default_camera"), &CameraCreateInfo::default());
         let light_probe_camera_create_info = CameraCreateInfo {
             fov: 90.0,
@@ -290,7 +290,7 @@ impl SceneManager {
         );
         let fft_ocean = system::newRcRefCell(FFTOcean::default());
         let atmosphere = system::newRcRefCell(Atmosphere::create_atmosphere(true));
-        Box::new(SceneManager {
+        Box::new(ProjectSceneManager {
             _scene_manager_data: std::ptr::null(),
             _resources: std::ptr::null(),
             _renderer: std::ptr::null(),
@@ -432,7 +432,7 @@ impl SceneManager {
             let geometry_bound_boxes = &render_object_data_ref._geometry_bound_boxes;
             let material_instance_datas = mode_data.get_material_instance_datas();
             for index in 0..geometry_datas.len() {
-                if false == SceneManager::view_frustum_culling_geometry(camera, &geometry_bound_boxes[index]) {
+                if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &geometry_bound_boxes[index]) {
                     render_elements.push(RenderElementData {
                         _render_object: render_object_data.clone(),
                         _geometry_data: geometry_datas[index].clone(),
@@ -440,7 +440,7 @@ impl SceneManager {
                     })
                 }
 
-                if false == SceneManager::shadow_culling(light, &geometry_bound_boxes[index]) {
+                if false == ProjectSceneManager::shadow_culling(light, &geometry_bound_boxes[index]) {
                     render_shadow_elements.push(RenderElementData {
                         _render_object: render_object_data.clone(),
                         _geometry_data: geometry_datas[index].clone(),
