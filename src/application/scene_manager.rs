@@ -5,6 +5,7 @@ use nalgebra::{
     Vector3,
     Vector4
 };
+use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
@@ -30,6 +31,20 @@ use crate::renderer::renderer::Renderer;
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
+
+//#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
+pub struct SceneDataCreateInfo {
+    _static_render_objects: Vec<RenderObjectCreateInfo>,
+}
+
+impl Default for SceneDataCreateInfo {
+    fn default() -> SceneDataCreateInfo {
+        SceneDataCreateInfo {
+            _static_render_objects: Vec::new(),
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct SceneManager {
@@ -103,7 +118,7 @@ impl SceneManagerBase for SceneManager {
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
 
-    fn open_scene_data(&mut self, resources: &Resources) {
+    fn open_scene_data(&mut self, resources: &Resources, scene_data_name: &String) {
         let camera_create_info = CameraCreateInfo {
             window_width: self._window_width,
             window_height: self._window_height,

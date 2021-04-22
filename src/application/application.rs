@@ -4,18 +4,18 @@ use ash::vk;
 use winit::event::VirtualKeyCode;
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::{self, ApplicationBase, ApplicationData};
-use rust_engine_3d::resource::resource::Resources;
 
 use crate::application_constants;
 use crate::application::scene_manager::SceneManager;
 use crate::renderer::renderer::Renderer;
 use crate::renderer::ui::UIManager;
 use crate::renderer::effect::EffectManager;
+use crate::resource::resource::ProjectResources;
 
 
 pub struct Application {
     pub _application_data: *const ApplicationData,
-    pub _resources: *const Resources,
+    pub _project_resources: Box<ProjectResources>,
     pub _renderer: Box<Renderer>,
     pub _scene_manager: Box<SceneManager>,
     pub _effect_manager: Box<EffectManager>,
@@ -147,6 +147,12 @@ impl Application {
     pub fn get_effect_manager_mut(&self) -> &mut EffectManager {
         unsafe { &mut *((self._effect_manager.as_ref() as *const EffectManager) as *mut EffectManager) }
     }
+    pub fn get_project_resources(&self) -> &ProjectResources {
+        &self._project_resources
+    }
+    pub fn get_project_resources_mut(&self) -> &mut ProjectResources {
+        unsafe { &mut *((self._project_resources.as_ref() as *const ProjectResources) as *mut ProjectResources) }
+    }
     pub fn get_scene_manager(&self) -> &SceneManager {
         &self._scene_manager
     }
@@ -206,6 +212,7 @@ pub fn run_application() {
     }
 
     // create
+    let project_resources = ProjectResources::create_project_resources();
     let renderer = Renderer::create_renderer_data();
     let scene_manager = SceneManager::create_scene_manager();
     let effect_manager = EffectManager::create_effect_manager();
@@ -214,7 +221,7 @@ pub fn run_application() {
     // initialize
     let application = Application {
         _application_data: std::ptr::null(),
-        _resources: std::ptr::null(),
+        _project_resources: project_resources,
         _renderer: renderer,
         _scene_manager: scene_manager,
         _effect_manager: effect_manager,
@@ -223,9 +230,10 @@ pub fn run_application() {
     application::run_application(
         LevelFilter::Info,
         &application,
+        application.get_project_resources(),
         application.get_scene_manager(),
         application.get_effect_manager(),
         application.get_renderer(),
-        application.get_ui_manager()
+        application.get_ui_manager(),
     );
 }
