@@ -276,7 +276,7 @@ pub fn regist_shader_buffer_data(shdaer_buffer_create_info: &mut RegistShaderBuf
 pub fn regist_shader_buffer_datas(
     device: &Device,
     memory_properties: &vk::PhysicalDeviceMemoryProperties,
-    mut shader_buffer_data_map: &mut ShaderBufferDataMap,
+    shader_buffer_data_map: &mut ShaderBufferDataMap,
 ) {
     // Regist Uniform Buffer
     let uniform_buffer_create_info = RegistShaderBufferCreateInfo {
@@ -291,6 +291,7 @@ pub fn regist_shader_buffer_datas(
         _has_staging_buffer: true,
         _is_device_local: false,
     };
+
     regist_shader_buffer_data(&mut RegistShaderBufferCreateInfo {
         _shader_buffer_data_type: ShaderBufferDataType::SceneConstants,
         _shader_buffer_data_stride: std::mem::size_of::<SceneConstants>(),

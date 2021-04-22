@@ -21,11 +21,11 @@ use rust_engine_3d::vulkan_context::vulkan_context::{
 };
 
 use crate::renderer::push_constants::PushConstant_RenderDebug;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataCreateInfo {
-    let swapchain_data = renderer.get_renderer_data().get_swap_chain_data();
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> FramebufferDataCreateInfo {
+    let swapchain_data = project_renderer.get_renderer_data().get_swap_chain_data();
     let (width, height) = (swapchain_data._swapchain_extent.width, swapchain_data._swapchain_extent.height);
     let rendertarget_views = constants::SWAPCHAIN_IMAGE_INDICES.iter().map(|index| {
         vec![swapchain_data.get_swapchain_image_view(*index)]
@@ -43,9 +43,9 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataC
 }
 
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("render_debug");
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {

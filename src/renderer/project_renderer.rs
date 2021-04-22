@@ -12,7 +12,7 @@ use rust_engine_3d::renderer::effect::EffectManagerBase;
 use rust_engine_3d::renderer::font::{ FontManager, RenderTextInfo };
 use rust_engine_3d::renderer::material_instance::{ PipelineBindingData, MaterialInstanceData };
 use rust_engine_3d::renderer::render_element::RenderElementData;
-use rust_engine_3d::renderer::renderer::{ RendererBase, RendererData };
+use rust_engine_3d::renderer::renderer::{ ProjectRendererBase, RendererData };
 use rust_engine_3d::renderer::ui::UIManagerData;
 use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::buffer::{ self, ShaderBufferData };
@@ -76,7 +76,7 @@ pub enum RenderObjectType {
     Skeletal = 1,
 }
 
-pub struct Renderer {
+pub struct ProjectRenderer {
     pub _renderer_data: *const RendererData,
     pub _resources: *const Resources,
     pub _effect_manager: *const EffectManager,
@@ -99,8 +99,8 @@ pub struct Renderer {
     pub _light_probe_datas: RendererData_LightProbe,
 }
 
-impl RendererBase for Renderer {
-    fn initialize_renderer(&mut self, renderer_data: &RendererData, effect_manager: *const dyn EffectManagerBase) {
+impl ProjectRendererBase for ProjectRenderer {
+    fn initialize_project_renderer(&mut self, renderer_data: &RendererData, effect_manager: *const dyn EffectManagerBase) {
         self._renderer_data = renderer_data;
         self._resources = renderer_data._resources.as_ptr();
         self._effect_manager = effect_manager as *const EffectManager;
@@ -461,9 +461,9 @@ impl RendererBase for Renderer {
     }
 }
 
-impl Renderer {
-    pub fn create_renderer_data() -> Box<Renderer> {
-        Box::new(Renderer {
+impl ProjectRenderer {
+    pub fn create_project_renderer() -> Box<ProjectRenderer> {
+        Box::new(ProjectRenderer {
             _renderer_data: std::ptr::null(),
             _resources: std::ptr::null(),
             _effect_manager: std::ptr::null(),

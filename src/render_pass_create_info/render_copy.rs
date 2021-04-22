@@ -21,12 +21,12 @@ use rust_engine_3d::vulkan_context::vulkan_context::{
 
 use crate::renderer::push_constants::PushConstant_RenderCopy;
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataCreateInfo {
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> FramebufferDataCreateInfo {
     framebuffer::create_framebuffer_data_create_info(
         &[RenderTargetInfo {
-            _texture_data: renderer.get_render_target(RenderTargetType::SceneColorCopy),
+            _texture_data: project_renderer.get_render_target(RenderTargetType::SceneColorCopy),
             _target_layer: 0,
             _target_mip_level: 0,
             _clear_value: None,
@@ -36,9 +36,9 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataC
     )
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("render_copy");
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {

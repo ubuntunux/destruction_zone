@@ -18,10 +18,11 @@ use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::render_pass::{ RenderPassData, PipelineData };
 use rust_engine_3d::utilities::system::RcRefCell;
 
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
 // gpu_particle_constant_flags
+#[warn(dead_code)]
 const GPU_PARTICLE_CONSTANT_FLAG_NONE: u32 = 0;
 const GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE: u32 = 1 << 0;
 
@@ -211,7 +212,7 @@ impl EffectManager {
         unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) }
     }
 
-    pub fn prepare_framebuffer_and_descriptors(&mut self, _renderer: &Renderer, _resources: &Resources) {
+    pub fn prepare_framebuffer_and_descriptors(&mut self, _project_renderer: &ProjectRenderer, _resources: &Resources) {
     }
 
     pub fn destroy_framebuffer_and_descriptors(&mut self, _device: &Device) {
@@ -229,15 +230,15 @@ impl EffectManager {
         &mut self,
         command_buffer: vk::CommandBuffer,
         swapchain_index: u32,
-        renderer: &Renderer,
+        project_renderer: &ProjectRenderer,
         resources: &Resources
     ) {
         let material_instance_data = &resources.get_material_instance_data("process_gpu_particle").borrow();
 
         let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
         let dispatch_count = unsafe { MAX_PARTICLE_COUNT * 2 };
-        let thread_group_count = unsafe { (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE };
-        renderer.get_renderer_data().dispatch_render_pass_pipeline(
+        let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+        project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
             command_buffer,
             swapchain_index,
             pipeline_binding_data,
@@ -255,8 +256,8 @@ impl EffectManager {
 
         let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/update_gpu_particle");
         let dispatch_count = unsafe { MAX_PARTICLE_COUNT * 2 };
-        let thread_group_count = unsafe { (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE };
-        renderer.get_renderer_data().dispatch_render_pass_pipeline(
+        let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+        project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
             command_buffer,
             swapchain_index,
             pipeline_binding_data,
@@ -277,7 +278,7 @@ impl EffectManager {
         &mut self,
         command_buffer: vk::CommandBuffer,
         swapchain_index: u32,
-        renderer: &Renderer,
+        project_renderer: &ProjectRenderer,
         resources: &Resources,
     ) {
         let effect_manager_data: &mut EffectManagerData = unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) };
@@ -371,25 +372,25 @@ impl EffectManager {
             self._gpu_particle_count_buffer_offset = unsafe { if 0 == self._gpu_particle_count_buffer_offset { MAX_EMITTER_COUNT } else { 0 } };
             self._gpu_particle_update_buffer_offset = unsafe { if 0 == self._gpu_particle_update_buffer_offset { MAX_PARTICLE_COUNT } else { 0 } };
 
-            let gpu_particle_static_constants_buffer = renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleStaticConstants);
-            let gpu_particle_dynamic_constants_buffer = renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleDynamicConstants);
-            let gpu_particle_emitter_index_buffer = renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleEmitterIndexBuffer);
-            let gpu_particle_count_buffer = renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleCountBuffer);
-            let gpu_particle_update_buffer = renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleUpdateBuffer);
+            let gpu_particle_static_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleStaticConstants);
+            let gpu_particle_dynamic_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleDynamicConstants);
+            let gpu_particle_emitter_index_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleEmitterIndexBuffer);
+            let gpu_particle_count_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleCountBuffer);
+            let gpu_particle_update_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleUpdateBuffer);
 
-            renderer.get_renderer_data().upload_shader_buffer_datas(
+            project_renderer.get_renderer_data().upload_shader_buffer_datas(
                 command_buffer,
                 swapchain_index,
                 gpu_particle_static_constants_buffer,
                 &self._gpu_particle_static_constants[0..process_emitter_count as usize]
             );
-            renderer.get_renderer_data().upload_shader_buffer_datas(
+            project_renderer.get_renderer_data().upload_shader_buffer_datas(
                 command_buffer,
                 swapchain_index,
                 gpu_particle_dynamic_constants_buffer,
                 &self._gpu_particle_dynamic_constants[0..process_emitter_count as usize]
             );
-            renderer.get_renderer_data().upload_shader_buffer_datas(
+            project_renderer.get_renderer_data().upload_shader_buffer_datas(
                 command_buffer,
                 swapchain_index,
                 gpu_particle_emitter_index_buffer,
@@ -424,7 +425,7 @@ impl EffectManager {
                     ..Default::default()
                 }
             ];
-            renderer.get_renderer_data().pipeline_barrier(
+            project_renderer.get_renderer_data().pipeline_barrier(
                 command_buffer,
                 vk::PipelineStageFlags::TRANSFER,
                 vk::PipelineStageFlags::COMPUTE_SHADER,
@@ -436,8 +437,8 @@ impl EffectManager {
 
             // compute gpu particle count
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
-            let thread_group_count = unsafe { (process_emitter_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE };
-            renderer.get_renderer_data().dispatch_render_pass_pipeline(
+            let thread_group_count = (process_emitter_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+            project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,
                 swapchain_index,
                 pipeline_binding_data,
@@ -467,7 +468,7 @@ impl EffectManager {
                     ..Default::default()
                 }
             ];
-            renderer.get_renderer_data().pipeline_barrier(
+            project_renderer.get_renderer_data().pipeline_barrier(
                 command_buffer,
                 vk::PipelineStageFlags::COMPUTE_SHADER,
                 vk::PipelineStageFlags::COMPUTE_SHADER,
@@ -479,8 +480,8 @@ impl EffectManager {
 
             // update gpu particles
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/update_gpu_particle");
-            let thread_group_count = unsafe { (process_gpu_particle_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE };
-            renderer.get_renderer_data().dispatch_render_pass_pipeline(
+            let thread_group_count = (process_gpu_particle_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+            project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,
                 swapchain_index,
                 pipeline_binding_data,
@@ -520,7 +521,7 @@ impl EffectManager {
                     ..Default::default()
                 },
             ];
-            renderer.get_renderer_data().pipeline_barrier(
+            project_renderer.get_renderer_data().pipeline_barrier(
                 command_buffer,
                 vk::PipelineStageFlags::COMPUTE_SHADER,
                 vk::PipelineStageFlags::VERTEX_SHADER,
@@ -535,8 +536,8 @@ impl EffectManager {
             // println!("prev_gpu_particle_count_buffer_offset: {}, gpu_particle_count_buffer_offset: {}", prev_gpu_particle_count_buffer_offset, self._gpu_particle_count_buffer_offset);
             // let mut prev_gpu_particle_count_buffer_data: Vec<GpuParticleCountBufferData> = unsafe { vec![GpuParticleCountBufferData::default(); process_emitter_count as usize] };
             // let mut gpu_particle_count_buffer_data: Vec<GpuParticleCountBufferData> = unsafe { vec![GpuParticleCountBufferData::default(); process_emitter_count as usize] };
-            // renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, prev_gpu_particle_count_buffer_offset as u32, &mut prev_gpu_particle_count_buffer_data);
-            // renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, self._gpu_particle_count_buffer_offset as u32, &mut gpu_particle_count_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, prev_gpu_particle_count_buffer_offset as u32, &mut prev_gpu_particle_count_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, self._gpu_particle_count_buffer_offset as u32, &mut gpu_particle_count_buffer_data);
             // for i in 0..process_emitter_count {
             //     println!("prev_buffer[{}]: {:?}", i + prev_gpu_particle_count_buffer_offset, prev_gpu_particle_count_buffer_data[i as usize]);
             //     println!("curr_buffer[{}]: {:?}", i + self._gpu_particle_count_buffer_offset, gpu_particle_count_buffer_data[i as usize]);
@@ -545,8 +546,8 @@ impl EffectManager {
             // println!("prev_gpu_particle_update_buffer_offset: {}, gpu_particle_update_buffer_offset: {}", prev_gpu_particle_update_buffer_offset, self._gpu_particle_update_buffer_offset);
             // let mut prev_gpu_particle_update_buffer_data: Vec<GpuParticleUpdateBufferData> = unsafe { vec![GpuParticleUpdateBufferData::default(); process_gpu_particle_count as usize] };
             // let mut gpu_particle_update_buffer_data: Vec<GpuParticleUpdateBufferData> = unsafe { vec![GpuParticleUpdateBufferData::default(); process_gpu_particle_count as usize] };
-            // renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, prev_gpu_particle_update_buffer_offset as u32, &mut prev_gpu_particle_update_buffer_data);
-            // renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, self._gpu_particle_update_buffer_offset as u32, &mut gpu_particle_update_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, prev_gpu_particle_update_buffer_offset as u32, &mut prev_gpu_particle_update_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, self._gpu_particle_update_buffer_offset as u32, &mut gpu_particle_update_buffer_data);
             // for i in 0..process_gpu_particle_count {
             //     let prev_update_data = &prev_gpu_particle_update_buffer_data[i as usize];
             //     let update_data = &gpu_particle_update_buffer_data[i as usize];
@@ -560,14 +561,14 @@ impl EffectManager {
         &self,
         command_buffer: vk::CommandBuffer,
         swapchain_index: u32,
-        renderer: &Renderer,
+        project_renderer: &ProjectRenderer,
         resources: &Resources,
     ) {
         if self._effect_render_group.is_empty() {
             return;
         }
 
-        let renderer_data: &RendererData = renderer.get_renderer_data();
+        let renderer_data: &RendererData = project_renderer.get_renderer_data();
         let quad_mesh = resources.get_mesh_data("quad").borrow();
         let quad_geometry_data = quad_mesh.get_default_geometry_data().borrow();
         let render_pass_pipeline_data_name = "render_particle_translucent/alpha_blend";

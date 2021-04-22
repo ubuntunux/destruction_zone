@@ -18,11 +18,11 @@ use rust_engine_3d::vulkan_context::vulkan_context::{ self, BlendMode };
 use crate::renderer::precomputed_atmosphere::{ DEFAULT_USE_COMBINED_TEXTURES, PushConstant_PrecomputedAtmosphere };
 use crate::renderer::render_target::RenderTargetType;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataCreateInfo {
-    let render_target0 = renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_DELTA_RAYLEIGH_SCATTERING); // equal to DELTA_MULTIPLE_SCATTERING_TEXTURE
-    let render_target1 = renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_SCATTERING);
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> FramebufferDataCreateInfo {
+    let render_target0 = project_renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_DELTA_RAYLEIGH_SCATTERING); // equal to DELTA_MULTIPLE_SCATTERING_TEXTURE
+    let render_target1 = project_renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_SCATTERING);
     let render_target_infos: [RenderTargetInfo; 2] = [
         RenderTargetInfo { _texture_data: render_target0, _target_layer: 0, _target_mip_level: 0, _clear_value: None, },
         RenderTargetInfo { _texture_data: render_target1, _target_layer: 0, _target_mip_level: 0, _clear_value: None, },
@@ -30,9 +30,9 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataC
     framebuffer::create_framebuffer_data_create_info(&render_target_infos, &[], &[])
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("compute_multiple_scattering");
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer);
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {
         color_attachment_descriptions.push(

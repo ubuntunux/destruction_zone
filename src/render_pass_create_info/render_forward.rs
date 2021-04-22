@@ -17,21 +17,21 @@ use rust_engine_3d::vulkan_context::descriptor::{
 use rust_engine_3d::vulkan_context::vulkan_context::{ self, BlendMode, };
 
 use crate::renderer::push_constants::{ PushConstant_StaticRenderObject, PushConstant_SkeletalRenderObject, };
-use crate::renderer::renderer::{ RenderMode, RenderObjectType };
+use crate::renderer::project_renderer::{RenderMode, RenderObjectType };
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataCreateInfo {
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> FramebufferDataCreateInfo {
     framebuffer::create_framebuffer_data_create_info(
         &[RenderTargetInfo {
-                _texture_data: renderer.get_render_target(RenderTargetType::SceneColor),
+                _texture_data: project_renderer.get_render_target(RenderTargetType::SceneColor),
                 _target_layer: 0,
                 _target_mip_level: 0,
                 _clear_value: Some(vulkan_context::get_color_clear_zero()),
         }],
         &[RenderTargetInfo {
-            _texture_data: renderer.get_render_target(RenderTargetType::SceneDepth),
+            _texture_data: project_renderer.get_render_target(RenderTargetType::SceneDepth),
             _target_layer: 0,
             _target_mip_level: 0,
             _clear_value: Some(vulkan_context::get_depth_stencil_clear_value(1.0, 0)),
@@ -40,12 +40,12 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataC
     )
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer, render_object_type: RenderObjectType) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, render_object_type: RenderObjectType) -> RenderPassDataCreateInfo {
     let render_pass_name = match render_object_type {
         RenderObjectType::Static => String::from("render_pass_static_forward"),
         RenderObjectType::Skeletal => String::from("render_pass_skeletal_forward"),
     };
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {

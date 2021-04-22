@@ -12,10 +12,10 @@ use rust_engine_3d::vulkan_context::descriptor::{
 };
 
 use crate::renderer::push_constants::PushConstant_BlendCubeMap;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::render_target::RenderTargetType;
 
-pub fn get_render_pass_data_create_info(_renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("copy_cube_map");
     let input = DescriptorDataCreateInfo {
         _descriptor_binding_index: 0,

@@ -18,9 +18,9 @@ use rust_engine_3d::vulkan_context::vulkan_context::{
 };
 
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer, render_target_formats: &[vk::Format], depth_format: vk::Format) -> FramebufferDataCreateInfo {
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer, render_target_formats: &[vk::Format], depth_format: vk::Format) -> FramebufferDataCreateInfo {
     let mut color_render_targets = Vec::new();
     for render_target_format in render_target_formats.iter() {
         let render_target_type = match *render_target_format {
@@ -32,7 +32,7 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer, render_target_forma
             _ => panic!("Not implemented."),
         };
         color_render_targets.push(RenderTargetInfo {
-            _texture_data: renderer.get_render_target(render_target_type),
+            _texture_data: project_renderer.get_render_target(render_target_type),
             _target_layer: 0,
             _target_mip_level: 0,
             _clear_value: Some(vulkan_context::get_color_clear_zero()),
@@ -46,7 +46,7 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer, render_target_forma
             _ => panic!("Not implemented."),
         };
         depth_render_target.push(RenderTargetInfo {
-            _texture_data: renderer.get_render_target(depth_format_type.unwrap()),
+            _texture_data: project_renderer.get_render_target(depth_format_type.unwrap()),
             _target_layer: 0,
             _target_mip_level: 0,
             _clear_value: Some(vulkan_context::get_depth_stencil_clear_value(1.0, 0)),
@@ -60,7 +60,7 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer, render_target_forma
     )
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer, render_target_formats: &[vk::Format], depth_format: vk::Format) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, render_target_formats: &[vk::Format], depth_format: vk::Format) -> RenderPassDataCreateInfo {
     let use_depth_target: bool = vk::Format::UNDEFINED != depth_format;
     let mut render_pass_name = String::from("clear");
     for render_target_format in render_target_formats.iter() {
@@ -69,7 +69,7 @@ pub fn get_render_pass_data_create_info(renderer: &Renderer, render_target_forma
     if use_depth_target {
         render_pass_name.push_str(&format!("_{:?}", depth_format));
     }
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer, render_target_formats, depth_format);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer, render_target_formats, depth_format);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for (i, format) in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter().enumerate() {

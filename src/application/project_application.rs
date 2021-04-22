@@ -7,16 +7,16 @@ use rust_engine_3d::application::application::{self, ApplicationBase, Applicatio
 
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::ui::UIManager;
 use crate::renderer::effect::EffectManager;
-use crate::resource::resource::ProjectResources;
+use crate::resource::project_resource::ProjectResources;
 
 
 pub struct Application {
     pub _application_data: *const ApplicationData,
     pub _project_resources: Box<ProjectResources>,
-    pub _renderer: Box<Renderer>,
+    pub _project_renderer: Box<ProjectRenderer>,
     pub _project_scene_manager: Box<ProjectSceneManager>,
     pub _effect_manager: Box<EffectManager>,
     pub _ui_manager: Box<UIManager>,
@@ -67,15 +67,15 @@ impl ApplicationBase for Application {
         let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
 
         if released_key_left_bracket {
-            self.get_renderer_mut().prev_debug_render_target();
+            self.get_project_renderer_mut().prev_debug_render_target();
         } else if released_key_right_bracket {
-            self.get_renderer_mut().next_debug_render_target();
+            self.get_project_renderer_mut().next_debug_render_target();
         }
 
         if released_key_subtract {
-            self.get_renderer_mut().prev_debug_render_target_miplevel();
+            self.get_project_renderer_mut().prev_debug_render_target_miplevel();
         } else if released_key_equals {
-            self.get_renderer_mut().next_debug_render_target_miplevel();
+            self.get_project_renderer_mut().next_debug_render_target_miplevel();
         }
 
         #[cfg(target_os = "android")]
@@ -159,11 +159,11 @@ impl Application {
     pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager {
         unsafe { &mut *((self._project_scene_manager.as_ref() as *const ProjectSceneManager) as *mut ProjectSceneManager) }
     }
-    pub fn get_renderer(&self) -> &Renderer {
-        &self._renderer
+    pub fn get_project_renderer(&self) -> &ProjectRenderer {
+        &self._project_renderer
     }
-    pub fn get_renderer_mut(&self) -> &mut Renderer {
-        unsafe { &mut *((self._renderer.as_ref() as *const Renderer) as *mut Renderer) }
+    pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer {
+        unsafe { &mut *((self._project_renderer.as_ref() as *const ProjectRenderer) as *mut ProjectRenderer) }
     }
     pub fn get_ui_manager(&self) -> &UIManager {
         &self._ui_manager
@@ -213,7 +213,7 @@ pub fn run_application() {
 
     // create
     let project_resources = ProjectResources::create_project_resources();
-    let renderer = Renderer::create_renderer_data();
+    let project_renderer = ProjectRenderer::create_project_renderer();
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let effect_manager = EffectManager::create_effect_manager();
     let ui_manager = UIManager::create_ui_manager();
@@ -222,7 +222,7 @@ pub fn run_application() {
     let application = Application {
         _application_data: std::ptr::null(),
         _project_resources: project_resources,
-        _renderer: renderer,
+        _project_renderer: project_renderer,
         _project_scene_manager: project_scene_manager,
         _effect_manager: effect_manager,
         _ui_manager: ui_manager,
@@ -233,7 +233,7 @@ pub fn run_application() {
         application.get_project_resources(),
         application.get_project_scene_manager(),
         application.get_effect_manager(),
-        application.get_renderer(),
+        application.get_project_renderer(),
         application.get_ui_manager(),
     );
 }

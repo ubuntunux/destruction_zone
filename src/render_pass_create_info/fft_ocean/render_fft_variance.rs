@@ -17,10 +17,10 @@ use rust_engine_3d::vulkan_context::vulkan_context::{ self, BlendMode };
 
 use crate::renderer::fft_ocean::PushConstant_FFT_Variance;
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataCreateInfo {
-    let render_target = renderer.get_render_target(RenderTargetType::FFT_SLOPE_VARIANCE);
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> FramebufferDataCreateInfo {
+    let render_target = project_renderer.get_render_target(RenderTargetType::FFT_SLOPE_VARIANCE);
     framebuffer::create_framebuffer_data_create_info(
         &[RenderTargetInfo {
             _texture_data: render_target,
@@ -33,9 +33,9 @@ pub fn get_framebuffer_data_create_info(renderer: &Renderer) -> FramebufferDataC
     )
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("render_fft_variance");
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {

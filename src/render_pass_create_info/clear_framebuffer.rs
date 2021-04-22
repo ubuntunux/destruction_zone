@@ -15,27 +15,27 @@ use rust_engine_3d::vulkan_context::vulkan_context::{
 };
 
 use crate::render_pass_create_info;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_framebuffer_data_create_info(renderer: &Renderer, framebuffer_name: &str) -> FramebufferDataCreateInfo {
+pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer, framebuffer_name: &str) -> FramebufferDataCreateInfo {
     let light_probe_depth_only: bool = true;
     match framebuffer_name {
-        "clear_gbuffer" => render_pass_create_info::render_gbuffer::get_framebuffer_data_create_info(renderer),
-        "clear_shadow" => render_pass_create_info::render_shadow::get_framebuffer_data_create_info(renderer),
-        "clear_capture_height_map" => render_pass_create_info::capture_height_map::get_framebuffer_data_create_info(renderer),
-        "clear_light_probe_depth_0" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 0, light_probe_depth_only),
-        "clear_light_probe_depth_1" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 1, light_probe_depth_only),
-        "clear_light_probe_depth_2" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 2, light_probe_depth_only),
-        "clear_light_probe_depth_3" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 3, light_probe_depth_only),
-        "clear_light_probe_depth_4" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 4, light_probe_depth_only),
-        "clear_light_probe_depth_5" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(renderer, 5, light_probe_depth_only),
+        "clear_gbuffer" => render_pass_create_info::render_gbuffer::get_framebuffer_data_create_info(project_renderer),
+        "clear_shadow" => render_pass_create_info::render_shadow::get_framebuffer_data_create_info(project_renderer),
+        "clear_capture_height_map" => render_pass_create_info::capture_height_map::get_framebuffer_data_create_info(project_renderer),
+        "clear_light_probe_depth_0" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 0, light_probe_depth_only),
+        "clear_light_probe_depth_1" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 1, light_probe_depth_only),
+        "clear_light_probe_depth_2" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 2, light_probe_depth_only),
+        "clear_light_probe_depth_3" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 3, light_probe_depth_only),
+        "clear_light_probe_depth_4" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 4, light_probe_depth_only),
+        "clear_light_probe_depth_5" => render_pass_create_info::render_forward_for_light_probe::get_framebuffer_data_create_info(project_renderer, 5, light_probe_depth_only),
         _ => panic!("Not implemented.")
     }
 }
 
-pub fn get_render_pass_data_create_info(renderer: &Renderer, framebuffer_name: &str) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, framebuffer_name: &str) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from(framebuffer_name);
-    let framebuffer_data_create_info = get_framebuffer_data_create_info(renderer, framebuffer_name);
+    let framebuffer_data_create_info = get_framebuffer_data_create_info(project_renderer, framebuffer_name);
     let sample_count = framebuffer_data_create_info._framebuffer_sample_count;
     let mut color_attachment_descriptions: Vec<ImageAttachmentDescription> = Vec::new();
     for format in framebuffer_data_create_info._framebuffer_color_attachment_formats.iter() {

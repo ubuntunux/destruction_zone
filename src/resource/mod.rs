@@ -1,1 +1,1 @@
-pub mod resource;
+pub mod project_resource;

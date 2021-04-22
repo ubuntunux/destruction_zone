@@ -12,7 +12,7 @@ use rust_engine_3d::vulkan_context::vulkan_context::{ SwapchainArray, Layers, Mi
 use rust_engine_3d::utilities::system::newRcRefCell;
 
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
 const CM: f64 = 0.23;
 const KM: f64 = 370.0;
@@ -286,12 +286,12 @@ impl FFTOcean {
         self._render_fft_ocean_descriptor_sets.clear();
     }
 
-    pub fn prepare_framebuffer_and_descriptors(&mut self, renderer: &Renderer, resources: &Resources) {
-        let device = renderer.get_renderer_data().get_device();
+    pub fn prepare_framebuffer_and_descriptors(&mut self, project_renderer: &ProjectRenderer, resources: &Resources) {
+        let device = project_renderer.get_renderer_data().get_device();
         // fft Variance
         let material_instance = resources.get_material_instance_data("render_fft_ocean").borrow();
         let pipeline_binding_data = material_instance.get_pipeline_binding_data("render_fft_variance/render_fft_variance");
-        let render_target = renderer.get_render_target(RenderTargetType::FFT_SLOPE_VARIANCE);
+        let render_target = project_renderer.get_render_target(RenderTargetType::FFT_SLOPE_VARIANCE);
         let mip_level = 0;
         for layer in 0..render_target._image_layers {
             self._fft_variance_framebuffers.push(utility::create_framebuffer(device, &pipeline_binding_data.get_render_pass_data().borrow(), render_target, layer, mip_level, None))
@@ -300,8 +300,8 @@ impl FFTOcean {
         // fft waves
         let mip_level = 0;
         let material_instance = resources.get_material_instance_data("render_fft_ocean").borrow();
-        let texture_fft_a = renderer.get_render_target(RenderTargetType::FFT_A);
-        let texture_fft_b = renderer.get_render_target(RenderTargetType::FFT_B);
+        let texture_fft_a = project_renderer.get_render_target(RenderTargetType::FFT_A);
+        let texture_fft_b = project_renderer.get_render_target(RenderTargetType::FFT_B);
 
         // fft wave x
         let pipeline_binding_data = material_instance.get_pipeline_binding_data("render_fft_waves/render_fft_x");

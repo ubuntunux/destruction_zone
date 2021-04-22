@@ -12,9 +12,9 @@ use rust_engine_3d::vulkan_context::descriptor::{
 };
 
 use crate::renderer::render_target::RenderTargetType;
-use crate::renderer::renderer::Renderer;
+use crate::renderer::project_renderer::ProjectRenderer;
 
-pub fn get_render_pass_data_create_info(_renderer: &Renderer) -> RenderPassDataCreateInfo {
+pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> RenderPassDataCreateInfo {
     let render_pass_name = String::from("downsampling");
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
