@@ -8,7 +8,7 @@ use nalgebra::{ Vector2, Matrix4 };
 use rust_engine_3d::constants;
 use rust_engine_3d::application::scene_manager::SceneManagerData;
 use rust_engine_3d::renderer::camera::CameraObjectData;
-use rust_engine_3d::renderer::effect::EffectManagerBase;
+use rust_engine_3d::renderer::effect::ProjectEffectManagerBase;
 use rust_engine_3d::renderer::font::{ FontManager, RenderTextInfo };
 use rust_engine_3d::renderer::material_instance::{ PipelineBindingData, MaterialInstanceData };
 use rust_engine_3d::renderer::render_element::RenderElementData;
@@ -24,7 +24,7 @@ use rust_engine_3d::vulkan_context::vulkan_context::{ self, SwapchainArray, MipL
 
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::renderer::effect::EffectManager;
+use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
 use crate::renderer::precomputed_atmosphere::PushConstant_Atmosphere;
 use crate::renderer::push_constants::{
@@ -79,7 +79,7 @@ pub enum RenderObjectType {
 pub struct ProjectRenderer {
     pub _renderer_data: *const RendererData,
     pub _resources: *const Resources,
-    pub _effect_manager: *const EffectManager,
+    pub _project_effect_manager: *const ProjectEffectManager,
     pub _is_first_rendering: bool,
     pub _scene_constants: shader_buffer_datas::SceneConstants,
     pub _view_constants: shader_buffer_datas::ViewConstants,
@@ -100,10 +100,10 @@ pub struct ProjectRenderer {
 }
 
 impl ProjectRendererBase for ProjectRenderer {
-    fn initialize_project_renderer(&mut self, renderer_data: &RendererData, effect_manager: *const dyn EffectManagerBase) {
+    fn initialize_project_renderer(&mut self, renderer_data: &RendererData, project_effect_manager: *const dyn ProjectEffectManagerBase) {
         self._renderer_data = renderer_data;
         self._resources = renderer_data._resources.as_ptr();
-        self._effect_manager = effect_manager as *const EffectManager;
+        self._project_effect_manager = project_effect_manager as *const ProjectEffectManager;
         shader_buffer_datas::regist_shader_buffer_datas(renderer_data.get_device(), renderer_data.get_device_memory_properties(), &mut self._shader_buffer_data_map);
         self.create_render_targets(renderer_data);
     }
@@ -292,8 +292,8 @@ impl ProjectRendererBase for ProjectRenderer {
             elapsed_time,
             delta_time,
             fft_ocean.get_height(),
-            self.get_effect_manager().get_gpu_particle_count_buffer_offset(),
-            self.get_effect_manager().get_gpu_particle_update_buffer_offset(),
+            self.get_project_effect_manager().get_gpu_particle_count_buffer_offset(),
+            self.get_project_effect_manager().get_gpu_particle_update_buffer_offset(),
         );
         self._view_constants.update_view_constants(&main_camera);
         if render_capture_height_map {
@@ -388,7 +388,7 @@ impl ProjectRendererBase for ProjectRenderer {
 
         // render translucent
         {
-            let effect_manager = self.get_effect_manager_mut();
+            let effect_manager = self.get_project_effect_manager_mut();
             if effect_manager.get_need_to_clear_gpu_particle_buffer() {
                 effect_manager.clear_gpu_particles(command_buffer, swapchain_index, self, &resources);
                 effect_manager.set_need_to_clear_gpu_particle_buffer(false);
@@ -466,7 +466,7 @@ impl ProjectRenderer {
         Box::new(ProjectRenderer {
             _renderer_data: std::ptr::null(),
             _resources: std::ptr::null(),
-            _effect_manager: std::ptr::null(),
+            _project_effect_manager: std::ptr::null(),
             _is_first_rendering: true,
             _scene_constants: shader_buffer_datas::SceneConstants::default(),
             _view_constants: shader_buffer_datas::ViewConstants::default(),
@@ -487,8 +487,8 @@ impl ProjectRenderer {
         })
     }
 
-    pub fn get_effect_manager(&self) -> &EffectManager { unsafe { &*self._effect_manager } }
-    pub fn get_effect_manager_mut(&self) -> &mut EffectManager { unsafe { &mut *(self._effect_manager as *mut EffectManager) } }
+    pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
+    pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_renderer_data(&self) -> &RendererData { unsafe { &*self._renderer_data } }
     pub fn get_renderer_data_mut(&self) -> &mut RendererData { unsafe { &mut *(self._renderer_data as *mut RendererData) } }
     pub fn get_resources(&self) -> &Resources { unsafe { &*self._resources } }

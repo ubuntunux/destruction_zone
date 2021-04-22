@@ -11,7 +11,7 @@ use rust_engine_3d::vulkan_context::descriptor::{
     DescriptorResourceType,
 };
 
-use crate::renderer::effect::{ PushConstant_ComputeGpuParticleCount, PushConstant_UpdateGpuParticle };
+use crate::renderer::project_effect::{PushConstant_ComputeGpuParticleCount, PushConstant_UpdateGpuParticle };
 use crate::renderer::render_target::RenderTargetType;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;

@@ -9,7 +9,7 @@ use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::project_ui::ProjectUIManager;
-use crate::renderer::effect::EffectManager;
+use crate::renderer::project_effect::ProjectEffectManager;
 use crate::resource::project_resource::ProjectResources;
 
 
@@ -18,7 +18,7 @@ pub struct Application {
     pub _project_resources: Box<ProjectResources>,
     pub _project_renderer: Box<ProjectRenderer>,
     pub _project_scene_manager: Box<ProjectSceneManager>,
-    pub _effect_manager: Box<EffectManager>,
+    pub _project_effect_manager: Box<ProjectEffectManager>,
     pub _project_ui_manager: Box<ProjectUIManager>,
 }
 
@@ -141,11 +141,11 @@ impl Application {
     pub fn get_application_data_mut(&self) -> &mut ApplicationData {
         unsafe { &mut *(self._application_data as *mut ApplicationData) }
     }
-    pub fn get_effect_manager(&self) -> &EffectManager {
-        &self._effect_manager
+    pub fn get_project_effect_manager(&self) -> &ProjectEffectManager {
+        &self._project_effect_manager
     }
-    pub fn get_effect_manager_mut(&self) -> &mut EffectManager {
-        unsafe { &mut *((self._effect_manager.as_ref() as *const EffectManager) as *mut EffectManager) }
+    pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager {
+        unsafe { &mut *((self._project_effect_manager.as_ref() as *const ProjectEffectManager) as *mut ProjectEffectManager) }
     }
     pub fn get_project_resources(&self) -> &ProjectResources {
         &self._project_resources
@@ -215,7 +215,7 @@ pub fn run_application() {
     let project_resources = ProjectResources::create_project_resources();
     let project_renderer = ProjectRenderer::create_project_renderer();
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
-    let effect_manager = EffectManager::create_effect_manager();
+    let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
 
     // initialize
@@ -224,7 +224,7 @@ pub fn run_application() {
         _project_resources: project_resources,
         _project_renderer: project_renderer,
         _project_scene_manager: project_scene_manager,
-        _effect_manager: effect_manager,
+        _project_effect_manager: project_effect_manager,
         _project_ui_manager: project_ui_manager,
     };
     application::run_application(
@@ -232,7 +232,7 @@ pub fn run_application() {
         &application,
         application.get_project_resources(),
         application.get_project_scene_manager(),
-        application.get_effect_manager(),
+        application.get_project_effect_manager(),
         application.get_project_renderer(),
         application.get_project_ui_manager(),
     );

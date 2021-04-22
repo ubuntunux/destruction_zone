@@ -127,7 +127,7 @@ impl Default for PushConstant_RenderParticle {
 }
 
 // interfaces
-pub struct EffectManager {
+pub struct ProjectEffectManager {
     pub _effect_manager_data: *const EffectManagerData,
     pub _effect_render_group: Vec<*const EmitterInstance>,
     pub _gpu_particle_static_constants: Vec<GpuParticleStaticConstants>,
@@ -138,8 +138,8 @@ pub struct EffectManager {
     pub _need_to_clear_gpu_particle_buffer: bool,
 }
 
-impl EffectManagerBase for EffectManager {
-    fn initialize_effect_manager(&mut self, effect_manager_data: *const EffectManagerData) {
+impl ProjectEffectManagerBase for ProjectEffectManager {
+    fn initialize_project_effect_manager(&mut self, effect_manager_data: *const EffectManagerData) {
         self._effect_manager_data = effect_manager_data;
     }
 
@@ -183,9 +183,9 @@ impl EffectManagerBase for EffectManager {
     }
 }
 
-impl EffectManager {
-    pub fn create_effect_manager() -> Box<EffectManager> {
-        Box::new(EffectManager {
+impl ProjectEffectManager {
+    pub fn create_project_effect_manager() -> Box<ProjectEffectManager> {
+        Box::new(ProjectEffectManager {
             _effect_manager_data: std::ptr::null(),
             _effect_render_group: Vec::new(),
             _gpu_particle_static_constants: unsafe { vec![GpuParticleStaticConstants::default(); MAX_EMITTER_COUNT as usize] },

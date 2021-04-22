@@ -10,7 +10,7 @@ use nalgebra::{
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
 use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManagerData };
-use rust_engine_3d::renderer::effect::{ EffectCreateInfo, EffectInstance, EffectManagerData, EffectManagerBase };
+use rust_engine_3d::renderer::effect::{ EffectCreateInfo, EffectInstance, EffectManagerData, ProjectEffectManagerBase };
 use rust_engine_3d::renderer::font::FontManager;
 use rust_engine_3d::renderer::renderer::RendererData;
 use rust_engine_3d::renderer::camera::{ CameraCreateInfo, CameraObjectData};
@@ -23,7 +23,7 @@ use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 use crate::application_constants;
-use crate::renderer::effect::EffectManager;
+use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
 use crate::renderer::precomputed_atmosphere::Atmosphere;
 use crate::renderer::project_renderer::ProjectRenderer;
@@ -51,7 +51,7 @@ pub struct ProjectSceneManager {
     pub _scene_manager_data: *const SceneManagerData,
     pub _resources: *const Resources,
     pub _project_renderer: *const ProjectRenderer,
-    pub _effect_manager: *const EffectManager,
+    pub _project_effect_manager: *const ProjectEffectManager,
     pub _window_width: u32,
     pub _window_height: u32,
     pub _main_camera: RcRefCell<CameraObjectData>,
@@ -84,7 +84,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._project_renderer = renderer_data._project_renderer as *const ProjectRenderer;
         self._scene_manager_data = scene_manager_data;
         self._resources = resources;
-        self._effect_manager = unsafe { (*effect_manager_data)._effect_manager as *const EffectManager };
+        self._project_effect_manager = unsafe { (*effect_manager_data)._project_effect_manager as *const ProjectEffectManager };
 
         self.resized_window(window_width, window_height);
 
@@ -97,11 +97,11 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn initialize_scene_graphics_data(&self) {
         self._fft_ocean.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
         self._atmosphere.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
-        self.get_effect_manager_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
+        self.get_project_effect_manager_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
     }
 
     fn destroy_scene_graphics_data(&self, device: &Device) {
-        self.get_effect_manager_mut().destroy_framebuffer_and_descriptors(device);
+        self.get_project_effect_manager_mut().destroy_framebuffer_and_descriptors(device);
         self._fft_ocean.borrow_mut().destroy_fft_ocean(device);
         self._atmosphere.borrow_mut().destroy_atmosphere(device);
     }
@@ -229,7 +229,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
         }
 
-        self.get_effect_manager_mut().update_effects(delta_time as f32);
+        self.get_project_effect_manager_mut().update_effects(delta_time as f32);
 
         // gather render elements
         ProjectSceneManager::gather_render_elements(
@@ -294,7 +294,7 @@ impl ProjectSceneManager {
             _scene_manager_data: std::ptr::null(),
             _resources: std::ptr::null(),
             _project_renderer: std::ptr::null(),
-            _effect_manager: std::ptr::null(),
+            _project_effect_manager: std::ptr::null(),
             _window_width: default_camera._window_width,
             _window_height: default_camera._window_height,
             _main_camera: system::newRcRefCell(default_camera),
@@ -319,8 +319,8 @@ impl ProjectSceneManager {
     pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer { unsafe { &mut *(self._project_renderer as *mut ProjectRenderer) } }
     pub fn get_resources(&self) -> &Resources { unsafe { &*self._resources } }
     pub fn get_resources_mut(&self) -> &mut Resources { unsafe { &mut *(self._resources as *mut Resources) } }
-    pub fn get_effect_manager(&self) -> &EffectManager { unsafe { &*self._effect_manager } }
-    pub fn get_effect_manager_mut(&self) -> &mut EffectManager { unsafe { &mut *(self._effect_manager as *mut EffectManager) } }
+    pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
+    pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_fft_ocean(&self) -> &RcRefCell<FFTOcean>  { &self._fft_ocean }
     pub fn get_atmosphere(&self) -> &RcRefCell<Atmosphere> { &self._atmosphere }
     pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
@@ -385,11 +385,11 @@ impl ProjectSceneManager {
     }
 
     pub fn add_effect(&mut self, effect_create_info: &EffectCreateInfo) -> i64 {
-        self.get_effect_manager_mut().create_effect(effect_create_info)
+        self.get_project_effect_manager_mut().create_effect(effect_create_info)
     }
 
     pub fn get_effect(&self, effect_id: i64) -> Option<&RcRefCell<EffectInstance>> {
-        self.get_effect_manager().get_effect(effect_id)
+        self.get_project_effect_manager().get_effect(effect_id)
     }
 
     pub fn view_frustum_culling_geometry(camera: &CameraObjectData, geometry_bound_box: &BoundingBox) -> bool {

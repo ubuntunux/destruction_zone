@@ -1,4 +1,4 @@
-pub mod effect;
+pub mod project_effect;
 pub mod fft_ocean;
 pub mod precomputed_atmosphere;
 pub mod push_constants;
