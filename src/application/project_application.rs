@@ -8,7 +8,7 @@ use rust_engine_3d::application::application::{self, ApplicationBase, Applicatio
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::project_renderer::ProjectRenderer;
-use crate::renderer::ui::UIManager;
+use crate::renderer::project_ui::ProjectUIManager;
 use crate::renderer::effect::EffectManager;
 use crate::resource::project_resource::ProjectResources;
 
@@ -19,7 +19,7 @@ pub struct Application {
     pub _project_renderer: Box<ProjectRenderer>,
     pub _project_scene_manager: Box<ProjectSceneManager>,
     pub _effect_manager: Box<EffectManager>,
-    pub _ui_manager: Box<UIManager>,
+    pub _project_ui_manager: Box<ProjectUIManager>,
 }
 
 impl ApplicationBase for Application {
@@ -165,11 +165,11 @@ impl Application {
     pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer {
         unsafe { &mut *((self._project_renderer.as_ref() as *const ProjectRenderer) as *mut ProjectRenderer) }
     }
-    pub fn get_ui_manager(&self) -> &UIManager {
-        &self._ui_manager
+    pub fn get_project_ui_manager(&self) -> &ProjectUIManager {
+        &self._project_ui_manager
     }
-    pub fn get_ui_manager_mut(&self) -> &mut UIManager {
-        unsafe { &mut *((self._ui_manager.as_ref() as *const UIManager) as *mut UIManager) }
+    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
+        unsafe { &mut *((self._project_ui_manager.as_ref() as *const ProjectUIManager) as *mut ProjectUIManager) }
     }
 }
 
@@ -216,7 +216,7 @@ pub fn run_application() {
     let project_renderer = ProjectRenderer::create_project_renderer();
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let effect_manager = EffectManager::create_effect_manager();
-    let ui_manager = UIManager::create_ui_manager();
+    let project_ui_manager = ProjectUIManager::create_project_ui_manager();
 
     // initialize
     let application = Application {
@@ -225,7 +225,7 @@ pub fn run_application() {
         _project_renderer: project_renderer,
         _project_scene_manager: project_scene_manager,
         _effect_manager: effect_manager,
-        _ui_manager: ui_manager,
+        _project_ui_manager: project_ui_manager,
     };
     application::run_application(
         LevelFilter::Info,
@@ -234,6 +234,6 @@ pub fn run_application() {
         application.get_project_scene_manager(),
         application.get_effect_manager(),
         application.get_project_renderer(),
-        application.get_ui_manager(),
+        application.get_project_ui_manager(),
     );
 }

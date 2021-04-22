@@ -1,5 +1,5 @@
 use rust_engine_3d::renderer::ui::{
-    UIManagerBase,
+    ProjectUIManagerBase,
     UIManagerData,
     UIWidgetTypes,
     Widget,
@@ -13,11 +13,11 @@ use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::vulkan_context::{ get_color32 };
 
 
-pub struct UIManager {
+pub struct ProjectUIManager {
     pub _ui_manager_data: *const UIManagerData
 }
 
-impl UIManagerBase for UIManager {
+impl ProjectUIManagerBase for ProjectUIManager {
     fn get_ui_manager_data(&self) -> &UIManagerData {
         unsafe { &*(self._ui_manager_data) }
     }
@@ -172,9 +172,9 @@ impl UIManagerBase for UIManager {
     }
 }
 
-impl UIManager {
-    pub fn create_ui_manager() -> Box<UIManager> {
-        Box::new(UIManager {
+impl ProjectUIManager {
+    pub fn create_project_ui_manager() -> Box<ProjectUIManager> {
+        Box::new(ProjectUIManager {
             _ui_manager_data: std::ptr::null(),
         })
     }
