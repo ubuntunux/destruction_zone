@@ -289,7 +289,7 @@ impl FFTOcean {
     pub fn prepare_framebuffer_and_descriptors(&mut self, project_renderer: &ProjectRenderer, resources: &Resources) {
         let device = project_renderer.get_renderer_data().get_device();
         // fft Variance
-        let material_instance = resources.get_material_instance_data("render_fft_ocean").borrow();
+        let material_instance = resources.get_material_instance_data("system/render_fft_ocean").borrow();
         let pipeline_binding_data = material_instance.get_pipeline_binding_data("render_fft_variance/render_fft_variance");
         let render_target = project_renderer.get_render_target(RenderTargetType::FFT_SLOPE_VARIANCE);
         let mip_level = 0;
@@ -299,7 +299,7 @@ impl FFTOcean {
 
         // fft waves
         let mip_level = 0;
-        let material_instance = resources.get_material_instance_data("render_fft_ocean").borrow();
+        let material_instance = resources.get_material_instance_data("system/render_fft_ocean").borrow();
         let texture_fft_a = project_renderer.get_render_target(RenderTargetType::FFT_A);
         let texture_fft_b = project_renderer.get_render_target(RenderTargetType::FFT_B);
 
@@ -335,7 +335,7 @@ impl FFTOcean {
         );
 
         // fft a generate mips
-        let downsampling_material_instance = resources.get_material_instance_data("downsampling").borrow();
+        let downsampling_material_instance = resources.get_material_instance_data("system/downsampling").borrow();
         let pipeline_binding_data = downsampling_material_instance.get_default_pipeline_binding_data();
         let layer_count = texture_fft_a._image_layers;
         let dispatch_count: u32 = texture_fft_a._image_mip_levels - 1;
@@ -506,7 +506,7 @@ impl FFTOcean {
         resources: &Resources,
     ) {
         // fft variance
-        let material_instance_data = resources.get_material_instance_data("render_fft_ocean").borrow();
+        let material_instance_data = resources.get_material_instance_data("system/render_fft_ocean").borrow();
         let pipeline_binding_data = material_instance_data.get_pipeline_binding_data("render_fft_variance/render_fft_variance");
         let framebuffer_count = self._fft_variance_framebuffers.len();
         let mut push_constants = PushConstant_FFT_Variance {
@@ -548,7 +548,7 @@ impl FFTOcean {
         renderer_data: &RendererData,
         resources: &Resources,
     ) {
-        let material_instance_data = resources.get_material_instance_data("render_fft_ocean").borrow();
+        let material_instance_data = resources.get_material_instance_data("system/render_fft_ocean").borrow();
 
         // fft init
         let pipeline_binding_data = material_instance_data.get_pipeline_binding_data("render_fft_init/render_fft_init");
@@ -609,7 +609,7 @@ impl FFTOcean {
         }
 
         // fft a generate mips
-        let material_instance_data = resources.get_material_instance_data("downsampling").borrow();
+        let material_instance_data = resources.get_material_instance_data("system/downsampling").borrow();
         let pipeline_binding_data = material_instance_data.get_default_pipeline_binding_data();
         let pipeline_data = &pipeline_binding_data.get_pipeline_data().borrow();
         renderer_data.begin_compute_pipeline(command_buffer, pipeline_data);
@@ -647,6 +647,6 @@ impl FFTOcean {
             _t: self._acc_time * self._simulation_wind,
             ..Default::default()
         };
-        renderer_data.render_material_instance(command_buffer, swapchain_index, "render_fft_ocean", "render_fft_ocean/render_fft_ocean", &fft_grid, None, None, Some(&push_constant));
+        renderer_data.render_material_instance(command_buffer, swapchain_index, "system/render_fft_ocean", "render_fft_ocean/render_fft_ocean", &fft_grid, None, None, Some(&push_constant));
     }
 }
