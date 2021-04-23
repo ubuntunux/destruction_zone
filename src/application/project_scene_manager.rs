@@ -33,8 +33,7 @@ type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
-//#[derive(Serialize, Deserialize, Debug, Clone)]
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SceneDataCreateInfo {
     _static_render_objects: Vec<RenderObjectCreateInfo>,
 }
@@ -161,26 +160,23 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             ..Default::default()
         });
 
-        let model_data0 = resources.get_model_data("sponza/sponza").clone();
-        self.add_static_render_object("sponza", RenderObjectCreateInfo {
-            _model_data: Some(model_data0),
+        self.add_static_render_object("sponza", &RenderObjectCreateInfo {
+            _model_data_name: String::from("sponza/sponza"),
             _position: Vector3::new(0.0, 0.0, 0.0),
             _scale: Vector3::new(0.1, 0.1, 0.1),
             ..Default::default()
         });
 
-        let sphere = resources.get_model_data("sphere").clone();
-        self.add_static_render_object("sphere", RenderObjectCreateInfo {
-            _model_data: Some(sphere),
+        self.add_static_render_object("sphere", &RenderObjectCreateInfo {
+            _model_data_name: String::from("sphere"),
             _position: Vector3::new(-2.0, 1.0, 0.0),
             _scale: Vector3::new(1.0, 1.0, 1.0),
             ..Default::default()
         });
 
         for i in 0..3 {
-            let model_data = resources.get_model_data("skeletal").clone();
-            let skeletal_actor = self.add_skeletal_render_object("skeletal", RenderObjectCreateInfo {
-                _model_data: Some(model_data),
+            let skeletal_actor = self.add_skeletal_render_object("skeletal", &RenderObjectCreateInfo {
+                _model_data_name: String::from("skeletal"),
                 _position: Vector3::new(i as f32, 1.0, 0.0),
                 _scale: Vector3::new(0.01, 0.01, 0.01),
                 ..Default::default()
@@ -349,16 +345,18 @@ impl ProjectSceneManager {
         light_object_data
     }
 
-    pub fn add_static_render_object(&mut self, object_name: &str, render_object_create_info: RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
+    pub fn add_static_render_object(&mut self, object_name: &str, render_object_create_info: &RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
+        let model_data = self.get_engine_resources().get_model_data(&render_object_create_info._model_data_name);
         let new_object_name = system::generate_unique_name(&self._static_render_object_map, &object_name);
-        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, render_object_create_info));
+        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, &model_data, &render_object_create_info));
         self._static_render_object_map.insert(new_object_name, render_object_data.clone());
         render_object_data
     }
 
-    pub fn add_skeletal_render_object(&mut self, object_name: &str, render_object_create_info: RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
+    pub fn add_skeletal_render_object(&mut self, object_name: &str, render_object_create_info: &RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
+        let model_data = self.get_engine_resources().get_model_data(&render_object_create_info._model_data_name);
         let new_object_name = system::generate_unique_name(&self._skeletal_render_object_map, &object_name);
-        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, render_object_create_info));
+        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, model_data, &render_object_create_info));
         self._skeletal_render_object_map.insert(new_object_name, render_object_data.clone());
         render_object_data
     }
