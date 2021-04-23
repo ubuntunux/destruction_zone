@@ -5,7 +5,7 @@ use nalgebra::{
     Vector3,
     Vector4
 };
-//use serde::{ Serialize, Deserialize };
+use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
@@ -27,6 +27,7 @@ use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
 use crate::renderer::precomputed_atmosphere::Atmosphere;
 use crate::renderer::project_renderer::ProjectRenderer;
+use crate::resource::project_resource::ProjectResources;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
@@ -49,7 +50,7 @@ impl Default for SceneDataCreateInfo {
 #[derive(Clone)]
 pub struct ProjectSceneManager {
     pub _scene_manager_data: *const SceneManagerData,
-    pub _resources: *const Resources,
+    pub _project_resources: *const ProjectResources,
     pub _project_renderer: *const ProjectRenderer,
     pub _project_effect_manager: *const ProjectEffectManager,
     pub _window_width: u32,
@@ -83,21 +84,21 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     ) {
         self._project_renderer = renderer_data._project_renderer as *const ProjectRenderer;
         self._scene_manager_data = scene_manager_data;
-        self._resources = resources;
+        self._project_resources = resources._project_resources as *const ProjectResources;
         self._project_effect_manager = unsafe { (*effect_manager_data)._project_effect_manager as *const ProjectEffectManager };
 
         self.resized_window(window_width, window_height);
 
         self._fft_ocean.borrow_mut().regist_fft_ocean_textures(
             renderer_data,
-            unsafe { &mut *(self._resources as *mut Resources) }
+            self.get_engine_resources_mut()
         );
     }
 
     fn initialize_scene_graphics_data(&self) {
-        self._fft_ocean.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
-        self._atmosphere.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
-        self.get_project_effect_manager_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_resources());
+        self._fft_ocean.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
+        self._atmosphere.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
+        self.get_project_effect_manager_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
     }
 
     fn destroy_scene_graphics_data(&self, device: &Device) {
@@ -292,7 +293,7 @@ impl ProjectSceneManager {
         let atmosphere = system::newRcRefCell(Atmosphere::create_atmosphere(true));
         Box::new(ProjectSceneManager {
             _scene_manager_data: std::ptr::null(),
-            _resources: std::ptr::null(),
+            _project_resources: std::ptr::null(),
             _project_renderer: std::ptr::null(),
             _project_effect_manager: std::ptr::null(),
             _window_width: default_camera._window_width,
@@ -317,8 +318,10 @@ impl ProjectSceneManager {
     pub fn get_scene_manager_data_mut(&self) -> &mut SceneManagerData { unsafe { &mut *(self._scene_manager_data as *mut SceneManagerData) } }
     pub fn get_project_renderer(&self) -> &ProjectRenderer { unsafe { &*self._project_renderer } }
     pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer { unsafe { &mut *(self._project_renderer as *mut ProjectRenderer) } }
-    pub fn get_resources(&self) -> &Resources { unsafe { &*self._resources } }
-    pub fn get_resources_mut(&self) -> &mut Resources { unsafe { &mut *(self._resources as *mut Resources) } }
+    pub fn get_project_resources(&self) -> &ProjectResources { unsafe { &*self._project_resources } }
+    pub fn get_project_resources_mut(&self) -> &mut ProjectResources { unsafe { &mut *(self._project_resources as *mut ProjectResources) } }
+    pub fn get_engine_resources(&self) -> &Resources { self.get_project_resources().get_engine_resources() }
+    pub fn get_engine_resources_mut(&self) -> &mut Resources { self.get_project_resources().get_engine_resources_mut() }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_fft_ocean(&self) -> &RcRefCell<FFTOcean>  { &self._fft_ocean }
