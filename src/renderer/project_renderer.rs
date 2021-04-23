@@ -53,7 +53,7 @@ use crate::renderer::shader_buffer_datas::{
     ShaderBufferDataType,
     ShaderBufferDataMap,
 };
-use crate::render_pass_create_info::render_pass_create_info;
+use crate::render_pass::render_pass;
 
 pub type RenderTargetDataMap = HashMap<RenderTargetType, TextureData>;
 
@@ -232,7 +232,7 @@ impl ProjectRendererBase for ProjectRenderer {
         self.get_render_target(RenderTargetType::from_str(render_target_type_str).unwrap())
     }
     fn get_render_pass_data_create_infos(&self) -> Vec<RenderPassDataCreateInfo> {
-        render_pass_create_info::get_render_pass_data_create_infos(self)
+        render_pass::get_render_pass_data_create_infos(self)
     }
     fn create_render_targets(&mut self, renderer_data: &RendererData) {
         log::info!("create_render_targets");

@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+
 use std::collections::HashMap;
 use std::cmp::{max, min};
 use ash::{
@@ -22,7 +24,6 @@ use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
 // gpu_particle_constant_flags
-#[warn(dead_code)]
 const GPU_PARTICLE_CONSTANT_FLAG_NONE: u32 = 0;
 const GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE: u32 = 1 << 0;
 
