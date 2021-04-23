@@ -26,7 +26,7 @@ use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
-use crate::renderer::precomputed_atmosphere::PushConstant_Atmosphere;
+use crate::renderer::precomputed_atmosphere::{ Atmosphere, PushConstant_Atmosphere };
 use crate::renderer::push_constants::{
     NONE_PUSH_CONSTANT,
     PushConstant_StaticRenderObject,
@@ -97,6 +97,8 @@ pub struct ProjectRenderer {
     pub _renderer_data_composite_gbuffer: RendererData_CompositeGBuffer,
     pub _clear_render_targets: RendererData_ClearRenderTargets,
     pub _light_probe_datas: RendererData_LightProbe,
+    pub _fft_ocean: FFTOcean,
+    pub _atmosphere: Atmosphere,
 }
 
 impl ProjectRendererBase for ProjectRenderer {
@@ -107,13 +109,38 @@ impl ProjectRendererBase for ProjectRenderer {
         shader_buffer_datas::regist_shader_buffer_datas(renderer_data.get_device(), renderer_data.get_device_memory_properties(), &mut self._shader_buffer_data_map);
         self.create_render_targets(renderer_data);
     }
+
+    fn initialize_scene_graphics_data(&mut self) {
+        let fft_ocean: *const FFTOcean = &self._fft_ocean;
+        let atmosphere: *const Atmosphere = &self._atmosphere;
+        {
+            let mut fft_ocean = unsafe { &mut *(fft_ocean as *mut FFTOcean) };
+            let mut atmosphere = unsafe { &mut *(atmosphere as *mut Atmosphere) };
+            fft_ocean.prepare_framebuffer_and_descriptors(self, self.get_resources());
+            atmosphere.prepare_framebuffer_and_descriptors(self, self.get_resources());
+        }
+    }
+
+    fn destroy_scene_graphics_data(&mut self) {
+        let fft_ocean: *const FFTOcean = &self._fft_ocean;
+        let atmosphere: *const Atmosphere = &self._atmosphere;
+        {
+            let mut fft_ocean = unsafe { &mut *(fft_ocean as *mut FFTOcean) };
+            let mut atmosphere = unsafe { &mut *(atmosphere as *mut Atmosphere) };
+            fft_ocean.destroy_fft_ocean(self.get_renderer_data().get_device());
+            atmosphere.destroy_atmosphere(self.get_renderer_data().get_device());
+        }
+    }
+
     fn is_first_rendering(&self) -> bool {
         self._is_first_rendering
     }
+
     fn set_is_first_rendering(&mut self, is_first_rendering: bool) {
         log::info!("set_is_first_rendering: {}", is_first_rendering);
         self._is_first_rendering = is_first_rendering;
     }
+
     fn prepare_framebuffer_and_descriptors(&mut self, device: &Device, resources: &Resources) {
         log::info!("RendererData::prepare_framebuffer_and_descriptors");
 
@@ -222,6 +249,7 @@ impl ProjectRendererBase for ProjectRenderer {
         self._clear_render_targets.destroy(device);
         self._light_probe_datas.destroy(device);
     }
+
     fn update_post_process_datas(&mut self) {
         self._renderer_data_ssr.update();
     }
@@ -276,8 +304,6 @@ impl ProjectRendererBase for ProjectRenderer {
         let main_light = project_scene_manager.get_main_light().borrow();
         let mut capture_height_map = project_scene_manager.get_capture_height_map().borrow_mut();
         let render_capture_height_map: bool = capture_height_map.get_need_to_redraw_shadow_and_reset();
-        let fft_ocean =  project_scene_manager.get_fft_ocean().borrow();
-        let mut atmosphere =  project_scene_manager.get_atmosphere().borrow_mut();
         let quad_mesh = resources.get_mesh_data("quad").borrow();
         let quad_geometry_data: Ref<GeometryData> = quad_mesh.get_default_geometry_data().borrow();
         let static_render_elements = project_scene_manager.get_static_render_elements();
@@ -285,13 +311,16 @@ impl ProjectRendererBase for ProjectRenderer {
         let skeletal_render_elements = project_scene_manager.get_skeletal_render_elements();
         let skeletal_shadow_render_elements = project_scene_manager.get_skeletal_shadow_render_elements();
 
+        // update environments
+        self._fft_ocean.update(delta_time);
+
         // Upload Uniform Buffers
         self._scene_constants.update_scene_constants(
             renderer_data._swapchain_data._swapchain_extent.width,
             renderer_data._swapchain_data._swapchain_extent.height,
             elapsed_time,
             delta_time,
-            fft_ocean.get_height(),
+            self._fft_ocean.get_height(),
             self.get_project_effect_manager().get_gpu_particle_count_buffer_offset(),
             self.get_project_effect_manager().get_gpu_particle_update_buffer_offset(),
         );
@@ -304,12 +333,12 @@ impl ProjectRendererBase for ProjectRenderer {
         self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::ViewConstants, &self._view_constants);
         self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::LightConstants, main_light.get_light_constants());
         self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::SSAOConstants, &self._renderer_data_ssao._ssao_constants);
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::AtmosphereConstants, &atmosphere._atmosphere_constants);
+        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::AtmosphereConstants, &self._atmosphere._atmosphere_constants);
 
         if self._is_first_rendering {
             self.rendering_at_first(command_buffer, swapchain_index, renderer_data, &resources, &quad_geometry_data);
-            fft_ocean.compute_slope_variance_texture(command_buffer, swapchain_index, &quad_geometry_data, renderer_data, &resources);
-            atmosphere.precompute(command_buffer, swapchain_index, &quad_geometry_data, renderer_data);
+            self._fft_ocean.compute_slope_variance_texture(command_buffer, swapchain_index, &quad_geometry_data, renderer_data, &resources);
+            self._atmosphere.precompute(command_buffer, swapchain_index, &quad_geometry_data, renderer_data);
         }
 
         // clear gbuffer
@@ -327,7 +356,7 @@ impl ProjectRendererBase for ProjectRenderer {
         }
 
         // fft-simulation
-        fft_ocean.simulate_fft_waves(command_buffer, swapchain_index, &quad_geometry_data, renderer_data, &resources);
+        self._fft_ocean.simulate_fft_waves(command_buffer, swapchain_index, &quad_geometry_data, renderer_data, &resources);
 
         // light probe
         if self._light_probe_datas._next_refresh_time <= elapsed_time || self._light_probe_datas._light_probe_capture_count < 2 {
@@ -340,7 +369,7 @@ impl ProjectRendererBase for ProjectRenderer {
                 project_scene_manager,
                 &main_camera,
                 static_render_elements,
-                &fft_ocean
+                &self._fft_ocean
             );
             self._light_probe_datas._next_refresh_time = elapsed_time + self._light_probe_datas._light_probe_refresh_term;
             self._light_probe_datas._light_probe_blend_time = 0.0;
@@ -380,11 +409,11 @@ impl ProjectRendererBase for ProjectRenderer {
         self.render_pre_process(renderer_data, command_buffer, swapchain_index, &quad_geometry_data);
 
         // render ocean
-        fft_ocean.render_ocean(command_buffer, swapchain_index, &renderer_data, &resources);
+        self._fft_ocean.render_ocean(command_buffer, swapchain_index, &renderer_data, &resources);
 
         // render atmosphere
         let render_light_probe_mode: bool = false;
-        atmosphere.render_precomputed_atmosphere(command_buffer, swapchain_index, &quad_geometry_data, &renderer_data, render_light_probe_mode);
+        self._atmosphere.render_precomputed_atmosphere(command_buffer, swapchain_index, &quad_geometry_data, &renderer_data, render_light_probe_mode);
 
         // render translucent
         {
@@ -484,6 +513,8 @@ impl ProjectRenderer {
             _renderer_data_composite_gbuffer: RendererData_CompositeGBuffer::default(),
             _clear_render_targets: RendererData_ClearRenderTargets::default(),
             _light_probe_datas: RendererData_LightProbe::default(),
+            _fft_ocean: FFTOcean::default(),
+            _atmosphere: Atmosphere::create_atmosphere(true),
         })
     }
 

@@ -144,6 +144,12 @@ impl ProjectEffectManagerBase for ProjectEffectManager {
         self._effect_manager_data = effect_manager_data;
     }
 
+    fn prepare_framebuffer_and_descriptors(&mut self, _renderer_data: &RendererData, _resources: &Resources) {
+    }
+
+    fn destroy_framebuffer_and_descriptors(&mut self, _renderer_data: &RendererData) {
+    }
+
     fn get_effect_manager_data(&self) -> &EffectManagerData {
         unsafe { &*self._effect_manager_data }
     }
@@ -211,12 +217,6 @@ impl ProjectEffectManager {
 
     pub fn get_effect_manager_data_mut(&self) -> &mut EffectManagerData {
         unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) }
-    }
-
-    pub fn prepare_framebuffer_and_descriptors(&mut self, _project_renderer: &ProjectRenderer, _resources: &Resources) {
-    }
-
-    pub fn destroy_framebuffer_and_descriptors(&mut self, _device: &Device) {
     }
 
     pub fn get_need_to_clear_gpu_particle_buffer(&self) -> bool {

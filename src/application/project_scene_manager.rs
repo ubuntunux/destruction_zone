@@ -24,8 +24,6 @@ use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 use crate::application_constants;
 use crate::renderer::project_effect::ProjectEffectManager;
-use crate::renderer::fft_ocean::FFTOcean;
-use crate::renderer::precomputed_atmosphere::Atmosphere;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::resource::project_resource::ProjectResources;
 
@@ -66,8 +64,6 @@ pub struct ProjectSceneManager {
     pub _static_shadow_render_elements: Vec<RenderElementData>,
     pub _skeletal_render_elements: Vec<RenderElementData>,
     pub _skeletal_shadow_render_elements: Vec<RenderElementData>,
-    pub _fft_ocean: RcRefCell<FFTOcean>,
-    pub _atmosphere: RcRefCell<Atmosphere>,
 }
 
 
@@ -87,23 +83,12 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._project_effect_manager = unsafe { (*effect_manager_data)._project_effect_manager as *const ProjectEffectManager };
 
         self.resized_window(window_width, window_height);
-
-        self._fft_ocean.borrow_mut().regist_fft_ocean_textures(
-            renderer_data,
-            self.get_engine_resources_mut()
-        );
     }
 
     fn initialize_scene_graphics_data(&self) {
-        self._fft_ocean.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
-        self._atmosphere.borrow_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
-        self.get_project_effect_manager_mut().prepare_framebuffer_and_descriptors(self.get_project_renderer(), self.get_engine_resources());
     }
 
-    fn destroy_scene_graphics_data(&self, device: &Device) {
-        self.get_project_effect_manager_mut().destroy_framebuffer_and_descriptors(device);
-        self._fft_ocean.borrow_mut().destroy_fft_ocean(device);
-        self._atmosphere.borrow_mut().destroy_atmosphere(device);
+    fn destroy_scene_graphics_data(&self, _device: &Device) {
     }
 
     fn get_window_size(&self) -> (u32, u32) {
@@ -206,8 +191,6 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn update_project_scene_manager(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
         let delta_time: f64 = time_data._delta_time;
 
-        self._fft_ocean.borrow_mut().update(delta_time);
-
         let mut main_camera = self._main_camera.borrow_mut();
         main_camera.update_camera_object_data();
         let camera_position = &main_camera.get_camera_position();
@@ -285,8 +268,6 @@ impl ProjectSceneManager {
                 ..Default::default()
             }
         );
-        let fft_ocean = system::newRcRefCell(FFTOcean::default());
-        let atmosphere = system::newRcRefCell(Atmosphere::create_atmosphere(true));
         Box::new(ProjectSceneManager {
             _scene_manager_data: std::ptr::null(),
             _project_resources: std::ptr::null(),
@@ -306,8 +287,6 @@ impl ProjectSceneManager {
             _static_shadow_render_elements: Vec::new(),
             _skeletal_render_elements: Vec::new(),
             _skeletal_shadow_render_elements: Vec::new(),
-            _fft_ocean: fft_ocean,
-            _atmosphere: atmosphere,
         })
     }
     pub fn get_scene_manager_data(&self) -> &SceneManagerData { unsafe { &*self._scene_manager_data } }
@@ -320,8 +299,6 @@ impl ProjectSceneManager {
     pub fn get_engine_resources_mut(&self) -> &mut Resources { self.get_project_resources().get_engine_resources_mut() }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
-    pub fn get_fft_ocean(&self) -> &RcRefCell<FFTOcean>  { &self._fft_ocean }
-    pub fn get_atmosphere(&self) -> &RcRefCell<Atmosphere> { &self._atmosphere }
     pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
     pub fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
     pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {
