@@ -112,11 +112,13 @@ impl ProjectRendererBase for ProjectRenderer {
     }
 
     fn initialize_scene_graphics_data(&mut self) {
-
+        self.get_fft_ocean_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
+        self.get_atmospherer_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
     }
 
     fn destroy_scene_graphics_data(&mut self) {
-
+        self.get_fft_ocean_mut().destroy_fft_ocean(self.get_renderer_data().get_device());
+        self.get_atmospherer_mut().destroy_atmosphere(self.get_renderer_data().get_device());
     }
 
     fn is_first_rendering(&self) -> bool {
@@ -223,14 +225,9 @@ impl ProjectRendererBase for ProjectRenderer {
                 &self._shader_buffer_data_map.get(&ShaderBufferDataType::LightProbeViewConstants5).as_ref().unwrap(),
             ]
         );
-
-        self._fft_ocean.prepare_framebuffer_and_descriptors(self, self.get_resources());
-        self._atmospherer.prepare_framebuffer_and_descriptors(self, self.get_resources());
     }
 
     fn destroy_framebuffer_and_descriptors(&mut self, device: &Device) {
-        self.get_fft_ocean_mut().destroy_fft_ocean(self.get_renderer_data().get_device());
-        self.get_atmospherer_mut().destroy_atmosphere(self.get_renderer_data().get_device());
         self._renderer_data_bloom.destroy(device);
         self._renderer_data_taa.destroy(device);
         self._renderer_data_ssao.destroy(device);
