@@ -111,16 +111,6 @@ impl ProjectRendererBase for ProjectRenderer {
         self.get_fft_ocean_mut().regist_fft_ocean_textures(renderer_data, self.get_resources_mut());
     }
 
-    fn initialize_scene_graphics_data(&mut self) {
-        self.get_fft_ocean_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
-        self.get_atmospherer_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
-    }
-
-    fn destroy_scene_graphics_data(&mut self) {
-        self.get_fft_ocean_mut().destroy_fft_ocean(self.get_renderer_data().get_device());
-        self.get_atmospherer_mut().destroy_atmosphere(self.get_renderer_data().get_device());
-    }
-
     fn is_first_rendering(&self) -> bool {
         self._is_first_rendering
     }
@@ -225,9 +215,14 @@ impl ProjectRendererBase for ProjectRenderer {
                 &self._shader_buffer_data_map.get(&ShaderBufferDataType::LightProbeViewConstants5).as_ref().unwrap(),
             ]
         );
+
+        self.get_fft_ocean_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
+        self.get_atmosphere_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
     }
 
     fn destroy_framebuffer_and_descriptors(&mut self, device: &Device) {
+        self.get_fft_ocean_mut().destroy_fft_ocean(self.get_renderer_data().get_device());
+        self.get_atmosphere_mut().destroy_atmosphere(self.get_renderer_data().get_device());
         self._renderer_data_bloom.destroy(device);
         self._renderer_data_taa.destroy(device);
         self._renderer_data_ssao.destroy(device);
@@ -514,7 +509,7 @@ impl ProjectRenderer {
     pub fn get_resources(&self) -> &Resources { unsafe { &*self._resources } }
     pub fn get_resources_mut(&self) -> &mut Resources { unsafe { &mut *(self._resources as *mut Resources) } }
     pub fn get_fft_ocean_mut(&self) -> &mut FFTOcean { unsafe { &mut *((&self._fft_ocean as *const FFTOcean) as *mut FFTOcean) } }
-    pub fn get_atmospherer_mut(&self) -> &mut Atmosphere { unsafe { &mut *((&self._atmosphere as *const Atmosphere) as *mut Atmosphere) } }
+    pub fn get_atmosphere_mut(&self) -> &mut Atmosphere { unsafe { &mut *((&self._atmosphere as *const Atmosphere) as *mut Atmosphere) } }
     pub fn get_shader_buffer_data(&self, buffer_data_type: &ShaderBufferDataType) -> &ShaderBufferData {
         &self._shader_buffer_data_map.get(buffer_data_type).unwrap()
     }
