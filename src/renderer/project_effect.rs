@@ -3,8 +3,7 @@
 use std::collections::HashMap;
 use std::cmp::{max, min};
 use ash::{
-    vk,
-    Device
+    vk
 };
 use nalgebra::{ Vector3, Vector4, Matrix4 };
 

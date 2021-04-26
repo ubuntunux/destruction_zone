@@ -29,6 +29,7 @@ use crate::resource::project_resource::ProjectResources;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
+type EffectCreateInfoMap = HashMap<String, RcRefCell<EffectCreateInfo>>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -60,12 +61,14 @@ pub struct ProjectSceneManager {
     pub _project_effect_manager: *const ProjectEffectManager,
     pub _window_width: u32,
     pub _window_height: u32,
+    pub _scene_name: String,
     pub _main_camera: RcRefCell<CameraObjectData>,
     pub _main_light: RcRefCell<DirectionalLightData>,
     pub _capture_height_map: RcRefCell<DirectionalLightData>,
     pub _light_probe_cameras: Vec<RcRefCell<CameraObjectData>>,
     pub _camera_object_map: CameraObjectMap,
     pub _directional_light_object_map: DirectionalLightObjectMap,
+    pub _effect_create_info_map: EffectCreateInfoMap,
     pub _static_render_object_map: RenderObjectMap,
     pub _skeletal_render_object_map: RenderObjectMap,
     pub _static_render_elements: Vec<RenderElementData>,
@@ -111,7 +114,9 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
 
-    fn open_scene_data(&mut self, resources: &Resources, _scene_data_name: &String) {
+    fn open_scene_data(&mut self, resources: &Resources, scene_data_name: &String) {
+        self._scene_name = scene_data_name.clone();
+
         let camera_create_info = CameraCreateInfo {
             window_width: self._window_width,
             window_height: self._window_height,
@@ -135,19 +140,19 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             ..Default::default()
         });
 
-        self.add_effect(&EffectCreateInfo {
+        self.add_effect("effect0", &EffectCreateInfo {
             _effect_data_name: String::from("default"),
             _effect_position: Vector3::new(0.0, 4.0, 0.0),
             ..Default::default()
         });
 
-        self.add_effect(&EffectCreateInfo {
+        self.add_effect("effect1", &EffectCreateInfo {
             _effect_data_name: String::from("test"),
             _effect_position: Vector3::new(4.0, 4.0, 0.0),
             ..Default::default()
         });
 
-        self.add_effect(&EffectCreateInfo {
+        self.add_effect("effect2", &EffectCreateInfo {
             _effect_data_name: String::from("test2"),
             _effect_position: Vector3::new(8.0, 4.0, 0.0),
             ..Default::default()
@@ -184,12 +189,24 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn close_scene_data(&mut self, _device: &Device) {
         self._camera_object_map.clear();
         self._directional_light_object_map.clear();
+        self._effect_create_info_map.clear();
         self._static_render_object_map.clear();
         self._skeletal_render_object_map.clear();
         self._static_render_elements.clear();
         self._static_shadow_render_elements.clear();
         self._skeletal_render_elements.clear();
         self._skeletal_shadow_render_elements.clear();
+    }
+
+    fn save_scene_data(&mut self) {
+        let mut scene_data_create_info = SceneDataCreateInfo {
+            _cameras: HashMap::new(),
+            _directional_lights: HashMap::new(),
+            _effects: HashMap::new(),
+            _static_objects: HashMap::new(),
+            _skeletal_objects: HashMap::new(),
+        };
+        self.get_project_resources().save_scene_data(&self._scene_name, &scene_data_create_info);
     }
 
     fn destroy_project_scene_manager(&mut self, device: &Device) {
@@ -283,12 +300,14 @@ impl ProjectSceneManager {
             _project_effect_manager: std::ptr::null(),
             _window_width: default_camera._window_width,
             _window_height: default_camera._window_height,
+            _scene_name: String::new(),
             _main_camera: system::newRcRefCell(default_camera),
             _main_light: system::newRcRefCell(default_light),
             _capture_height_map: system::newRcRefCell(capture_height_map),
             _light_probe_cameras: light_probe_cameras,
             _camera_object_map: HashMap::new(),
             _directional_light_object_map: HashMap::new(),
+            _effect_create_info_map: HashMap::default(),
             _static_render_object_map: HashMap::new(),
             _skeletal_render_object_map: HashMap::new(),
             _static_render_elements: Vec::new(),
@@ -346,6 +365,12 @@ impl ProjectSceneManager {
         render_object_data
     }
 
+    pub fn add_effect(&mut self, object_name: &str, effect_create_info: &EffectCreateInfo) -> i64 {
+        let new_object_name = system::generate_unique_name(&self._effect_create_info_map, &object_name);
+        self._effect_create_info_map.insert(new_object_name, newRcRefCell(effect_create_info.clone()));
+        self.get_project_effect_manager_mut().create_effect(effect_create_info)
+    }
+
     pub fn get_static_render_object(&self, object_name: &str) -> Option<&RcRefCell<RenderObjectData>> {
         self._static_render_object_map.get(object_name)
     }
@@ -368,10 +393,6 @@ impl ProjectSceneManager {
 
     pub fn get_skeletal_shadow_render_elements(&self) -> &Vec<RenderElementData> {
         &self._skeletal_shadow_render_elements
-    }
-
-    pub fn add_effect(&mut self, effect_create_info: &EffectCreateInfo) -> i64 {
-        self.get_project_effect_manager_mut().create_effect(effect_create_info)
     }
 
     pub fn get_effect(&self, effect_id: i64) -> Option<&RcRefCell<EffectInstance>> {
