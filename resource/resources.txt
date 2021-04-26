@@ -386,7 +386,6 @@ resource/effects/default.effect
 resource/effects/empty
 resource/effects/test2.effect
 resource/effects/test.effect
-resource/scenes/default.scene
 resource/scenes/empty
 resource/material_instances/system/render_ssao_blur.matinst
 resource/material_instances/system/process_gpu_particle.matinst

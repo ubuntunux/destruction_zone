@@ -114,75 +114,156 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
 
-    fn open_scene_data(&mut self, _resources: &Resources, scene_data_name: &String) {
-        self._scene_name = scene_data_name.clone();
-
-        let camera_create_info = CameraCreateInfo {
-            window_width: self._window_width,
-            window_height: self._window_height,
-            position: Vector3::new(2.0, 2.0, -1.0), // Vector3::new(-7.29, 6.345, -0.33),
-            rotation: Vector3::new(-0.157, 1.3, 0.0), // Vector3::new(-0.287, -1.5625, 0.0),
-            ..Default::default()
+    fn create_default_scene_data(&self, scene_data_name: &String) {
+        let mut scene_data_create_info = SceneDataCreateInfo {
+            _cameras: HashMap::new(),
+            _directional_lights: HashMap::new(),
+            _effects: HashMap::new(),
+            _static_objects: HashMap::new(),
+            _skeletal_objects: HashMap::new(),
         };
+
+        scene_data_create_info._cameras.insert(
+            String::from("main_camera"),
+            CameraCreateInfo {
+                position: Vector3::new(2.0, 2.0, -1.0),
+                rotation: Vector3::new(-0.157, 1.3, 0.0),
+                ..Default::default()
+            }
+        );
+
+        let pitch: f32 = -std::f32::consts::PI * 0.47;
+        scene_data_create_info._directional_lights.insert(
+            String::from("main_light"),
+            DirectionalLightCreateInfo {
+                _position: Vector3::zeros(),
+                _rotation: Vector3::new(pitch, 0.0, 0.3),
+                _light_constants: LightConstants {
+                    _light_direction: Vector3::new(pitch, 0.0, 0.3),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        );
+
+        scene_data_create_info._effects.insert(
+            String::from("effect0"),
+            EffectCreateInfo {
+                _effect_data_name: String::from("default"),
+                _effect_position: Vector3::new(0.0, 4.0, 0.0),
+                ..Default::default()
+            }
+        );
+
+        scene_data_create_info._effects.insert(
+            String::from("effect1"),
+            EffectCreateInfo {
+                _effect_data_name: String::from("test"),
+                _effect_position: Vector3::new(4.0, 4.0, 0.0),
+                ..Default::default()
+            }
+        );
+
+        scene_data_create_info._effects.insert(
+            String::from("effect2"),
+            EffectCreateInfo {
+                _effect_data_name: String::from("test2"),
+                _effect_position: Vector3::new(8.0, 4.0, 0.0),
+                ..Default::default()
+            }
+        );
+        scene_data_create_info._static_objects.insert(
+            String::from("sponza"),
+            RenderObjectCreateInfo {
+                _model_data_name: String::from("sponza/sponza"),
+                _position: Vector3::new(0.0, 0.0, 0.0),
+                _scale: Vector3::new(0.1, 0.1, 0.1),
+                ..Default::default()
+            }
+        );
+        scene_data_create_info._static_objects.insert(
+            String::from("sphere"),
+            RenderObjectCreateInfo {
+                _model_data_name: String::from("sphere"),
+                _position: Vector3::new(-2.0, 1.0, 0.0),
+                _scale: Vector3::new(1.0, 1.0, 1.0),
+                ..Default::default()
+            }
+        );
+
+        for i in 0..3 {
+            scene_data_create_info._skeletal_objects.insert(
+                format!("skeletal_{}", i),
+                RenderObjectCreateInfo {
+                    _model_data_name: String::from("skeletal"),
+                    _position: Vector3::new(i as f32, 1.0, 0.0),
+                    _scale: Vector3::new(0.01, 0.01, 0.01),
+                    ..Default::default()
+                }
+            );
+        }
+
+        self.get_project_resources_mut().save_scene_data(scene_data_name, &scene_data_create_info);
+    }
+
+    fn open_scene_data(&mut self, resources: &Resources, scene_data_name: &String) {
+        self._scene_name = scene_data_name.clone();
 
         self.initialize_light_probe_cameras();
 
-        self._main_camera = self.add_camera_object(&String::from("main_camera"), &camera_create_info);
+        let project_resources = unsafe { &*self._project_resources };
 
-        let pitch: f32 = -std::f32::consts::PI * 0.47;
-        self._main_light = self.add_light_object(&String::from("main_light"), &DirectionalLightCreateInfo {
-            _position: Vector3::zeros(),
-            _rotation: Vector3::new(pitch, 0.0, 0.3),
-            _light_constants: LightConstants {
-                _light_direction: Vector3::new(pitch, 0.0, 0.3),
+        if false == project_resources.has_scene_data(scene_data_name) {
+            self.create_default_scene_data(scene_data_name);
+        }
+
+        let scene_data_create_info = project_resources.get_scene_data(scene_data_name).borrow();
+
+        // cameras
+        for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
+            let camera_create_info = CameraCreateInfo {
+                window_width: self._window_width,
+                window_height: self._window_height,
+                ..camera_create_info.clone()
+            };
+            let camera_object = self.add_camera_object(object_name, &camera_create_info);
+            if 0 == index {
+                self._main_camera = camera_object;
+            }
+        }
+
+        // lights
+        for (index, (object_name, light_create_info)) in scene_data_create_info._directional_lights.iter().enumerate() {
+            let light_create_info = DirectionalLightCreateInfo {
+                _position: light_create_info._position.clone() as Vector3<f32>,
+                _rotation: light_create_info._rotation.clone() as Vector3<f32>,
+                _light_constants: LightConstants {
+                    _light_position: light_create_info._light_constants._light_position.clone() as Vector3<f32>,
+                    _light_direction: light_create_info._light_constants._light_direction.clone() as Vector3<f32>,
+                    _light_color: light_create_info._light_constants._light_color.clone() as Vector3<f32>,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        });
+            };
+            let light_object = self.add_light_object(object_name, &light_create_info);
+            if 0 == index {
+                self._main_light = light_object;
+            }
+        }
 
-        self.add_effect("effect0", &EffectCreateInfo {
-            _effect_data_name: String::from("default"),
-            _effect_position: Vector3::new(0.0, 4.0, 0.0),
-            ..Default::default()
-        });
+        // effects
+        for (object_name, effect_create_info) in scene_data_create_info._effects.iter() {
+            self.add_effect(object_name, effect_create_info);
+        }
 
-        self.add_effect("effect1", &EffectCreateInfo {
-            _effect_data_name: String::from("test"),
-            _effect_position: Vector3::new(4.0, 4.0, 0.0),
-            ..Default::default()
-        });
+        // static objects
+        for (object_name, render_object_create_info) in scene_data_create_info._static_objects.iter() {
+            self.add_static_render_object(object_name, render_object_create_info);
+        }
 
-        self.add_effect("effect2", &EffectCreateInfo {
-            _effect_data_name: String::from("test2"),
-            _effect_position: Vector3::new(8.0, 4.0, 0.0),
-            ..Default::default()
-        });
-
-        self.add_static_render_object("sponza", &RenderObjectCreateInfo {
-            _model_data_name: String::from("sponza/sponza"),
-            _position: Vector3::new(0.0, 0.0, 0.0),
-            _scale: Vector3::new(0.1, 0.1, 0.1),
-            ..Default::default()
-        });
-
-        self.add_static_render_object("sphere", &RenderObjectCreateInfo {
-            _model_data_name: String::from("sphere"),
-            _position: Vector3::new(-2.0, 1.0, 0.0),
-            _scale: Vector3::new(1.0, 1.0, 1.0),
-            ..Default::default()
-        });
-
-        for i in 0..3 {
-            let skeletal_actor = self.add_skeletal_render_object("skeletal", &RenderObjectCreateInfo {
-                _model_data_name: String::from("skeletal"),
-                _position: Vector3::new(i as f32, 1.0, 0.0),
-                _scale: Vector3::new(0.01, 0.01, 0.01),
-                ..Default::default()
-            });
-            skeletal_actor.borrow_mut()._animation_play_info.as_mut().unwrap().set_animation_play_info(&AnimationPlayArgs {
-                _speed: (1.0 + i as f32 * 0.1),
-                ..Default::default()
-            });
+        // skeletal objects
+        for (object_name, render_object_create_info) in scene_data_create_info._skeletal_objects.iter() {
+            self.add_skeletal_render_object(object_name, render_object_create_info);
         }
     }
 
@@ -263,7 +344,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             scene_data_create_info._skeletal_objects.insert(object._render_object_name.clone(), skeletal_object_create_info);
         }
 
-        self.get_project_resources().save_scene_data(&self._scene_name, &scene_data_create_info);
+        self.get_project_resources_mut().save_scene_data(&self._scene_name, &scene_data_create_info);
     }
 
     fn destroy_project_scene_manager(&mut self, device: &Device) {
