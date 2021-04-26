@@ -29,7 +29,7 @@ use crate::resource::project_resource::ProjectResources;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
-type EffectCreateInfoMap = HashMap<String, RcRefCell<EffectCreateInfo>>;
+type EffectIDMap = HashMap<String, i64>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -68,7 +68,7 @@ pub struct ProjectSceneManager {
     pub _light_probe_cameras: Vec<RcRefCell<CameraObjectData>>,
     pub _camera_object_map: CameraObjectMap,
     pub _directional_light_object_map: DirectionalLightObjectMap,
-    pub _effect_create_info_map: EffectCreateInfoMap,
+    pub _effect_id_map: EffectIDMap,
     pub _static_render_object_map: RenderObjectMap,
     pub _skeletal_render_object_map: RenderObjectMap,
     pub _static_render_elements: Vec<RenderElementData>,
@@ -114,7 +114,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
 
-    fn open_scene_data(&mut self, resources: &Resources, scene_data_name: &String) {
+    fn open_scene_data(&mut self, _resources: &Resources, scene_data_name: &String) {
         self._scene_name = scene_data_name.clone();
 
         let camera_create_info = CameraCreateInfo {
@@ -189,7 +189,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn close_scene_data(&mut self, _device: &Device) {
         self._camera_object_map.clear();
         self._directional_light_object_map.clear();
-        self._effect_create_info_map.clear();
+        self._effect_id_map.clear();
         self._static_render_object_map.clear();
         self._skeletal_render_object_map.clear();
         self._static_render_elements.clear();
@@ -206,6 +206,63 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             _static_objects: HashMap::new(),
             _skeletal_objects: HashMap::new(),
         };
+        // cameras
+        for camera_object in self._camera_object_map.values() {
+            let camera = camera_object.borrow();
+            let camera_create_info = CameraCreateInfo {
+                fov: camera._fov,
+                near: camera._near,
+                far: camera._far,
+                position: camera._transform_object.get_position().clone() as Vector3<f32>,
+                rotation: camera._transform_object.get_rotation().clone() as Vector3<f32>,
+                ..Default::default()
+            };
+            scene_data_create_info._cameras.insert(camera._name.clone(), camera_create_info);
+        }
+        // lights
+        for light_object in self._directional_light_object_map.values() {
+            let light = light_object.borrow();
+            let light_create_info = DirectionalLightCreateInfo {
+                _position: light._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: light._transform_object.get_rotation().clone() as Vector3<f32>,
+                ..Default::default()
+            };
+            scene_data_create_info._directional_lights.insert(light._light_name.clone(), light_create_info);
+        }
+        // effects
+        for (effect_name, effect_id) in self._effect_id_map.iter() {
+            let effect = self.get_project_effect_manager().get_effect(*effect_id).unwrap().borrow();
+            let effect_create_info = EffectCreateInfo {
+                _effect_position: effect._effect_transform.get_position().clone() as Vector3<f32>,
+                _effect_rotation: effect._effect_transform.get_rotation().clone() as Vector3<f32>,
+                _effect_scale: effect._effect_transform.get_scale().clone() as Vector3<f32>,
+                _effect_data_name: effect._effect_data.borrow()._effect_data_name.clone(),
+            };
+            scene_data_create_info._effects.insert(effect_name.clone(), effect_create_info);
+        }
+        // static objects
+        for static_object in self._static_render_object_map.values() {
+            let object = static_object.borrow();
+            let static_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
+                _position: object._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
+                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
+            };
+            scene_data_create_info._static_objects.insert(object._render_object_name.clone(), static_object_create_info);
+        }
+        // skeletal objects
+        for skeletal_object in self._skeletal_render_object_map.values() {
+            let object = skeletal_object.borrow();
+            let skeletal_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
+                _position: object._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
+                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
+            };
+            scene_data_create_info._skeletal_objects.insert(object._render_object_name.clone(), skeletal_object_create_info);
+        }
+
         self.get_project_resources().save_scene_data(&self._scene_name, &scene_data_create_info);
     }
 
@@ -307,7 +364,7 @@ impl ProjectSceneManager {
             _light_probe_cameras: light_probe_cameras,
             _camera_object_map: HashMap::new(),
             _directional_light_object_map: HashMap::new(),
-            _effect_create_info_map: HashMap::default(),
+            _effect_id_map: HashMap::default(),
             _static_render_object_map: HashMap::new(),
             _skeletal_render_object_map: HashMap::new(),
             _static_render_elements: Vec::new(),
@@ -366,9 +423,10 @@ impl ProjectSceneManager {
     }
 
     pub fn add_effect(&mut self, object_name: &str, effect_create_info: &EffectCreateInfo) -> i64 {
-        let new_object_name = system::generate_unique_name(&self._effect_create_info_map, &object_name);
-        self._effect_create_info_map.insert(new_object_name, newRcRefCell(effect_create_info.clone()));
-        self.get_project_effect_manager_mut().create_effect(effect_create_info)
+        let new_object_name = system::generate_unique_name(&self._effect_id_map, &object_name);
+        let effect_id = self.get_project_effect_manager_mut().create_effect(effect_create_info);
+        self._effect_id_map.insert(new_object_name, effect_id);
+        effect_id
     }
 
     pub fn get_static_render_object(&self, object_name: &str) -> Option<&RcRefCell<RenderObjectData>> {
