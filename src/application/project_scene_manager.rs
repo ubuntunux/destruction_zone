@@ -33,13 +33,21 @@ type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SceneDataCreateInfo {
-    _static_render_objects: Vec<RenderObjectCreateInfo>,
+    _cameras: HashMap<String, CameraCreateInfo>,
+    _directional_lights: HashMap<String, DirectionalLightCreateInfo>,
+    _effects: HashMap<String, EffectCreateInfo>,
+    _static_objects: HashMap<String, RenderObjectCreateInfo>,
+    _skeletal_objects: HashMap<String, RenderObjectCreateInfo>,
 }
 
 impl Default for SceneDataCreateInfo {
     fn default() -> SceneDataCreateInfo {
         SceneDataCreateInfo {
-            _static_render_objects: Vec::new(),
+            _cameras: HashMap::new(),
+            _directional_lights: HashMap::new(),
+            _effects: HashMap::new(),
+            _static_objects: HashMap::new(),
+            _skeletal_objects: HashMap::new(),
         }
     }
 }
