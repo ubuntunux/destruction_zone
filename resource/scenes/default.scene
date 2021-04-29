@@ -38,11 +38,11 @@
 "_position":[0.0,0.0,0.0],
 "_rotation":[0.0,0.0,0.0],
 "_scale":[100.0,100.0,100.0]}},
-"_skeletal_objects":{"skeletal_0":{"_model_data_name":"Plane00",
+"_skeletal_objects":{"Player":{"_model_data_name":"Plane00",
 "_position":[0.0,1.0,0.0],
 "_rotation":[0.0,0.0,0.0],
 "_scale":[1,1,1]},
-"skeletal_1":{"_model_data_name":"Tank",
+"Enemy00":{"_model_data_name":"Tank",
 "_position":[1.0,1.0,0.0],
 "_rotation":[0.0,0.0,0.0],
 "_scale":[1,1,1]}}}

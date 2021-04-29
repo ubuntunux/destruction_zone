@@ -58,6 +58,7 @@ impl ApplicationBase for Application {
         let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
         let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
 
+        let mut player = self.get_project_scene_manager().get_skeletal_render_object("Player").unwrap().borrow_mut();
         let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
         let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
@@ -128,6 +129,11 @@ impl ApplicationBase for Application {
         else if pressed_key_e {
             main_camera._transform_object.move_up(move_speed);
         }
+
+        let mut player_pos = main_camera._transform_object.get_position() + main_camera._transform_object.get_front() * -8.0;
+        player_pos.y -= 2.0;
+        player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
+        player._transform_object.set_position(&player_pos);
     }
 
     fn terminate_application(&mut self) {
