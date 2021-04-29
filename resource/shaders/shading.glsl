@@ -255,7 +255,7 @@ void apply_image_based_lighting(
     vec3 ibl_diffuse_light = textureLod(texture_probe, N, max_env_mipmap).xyz;
     vec3 ibl_specular_light = textureLod(texture_probe, R, roughness * max_env_mipmap).xyz;
 
-    shadow_factor = pow(max(shadow_factor, vec3(dot(vec3(0.33333333), scene_sky_irradiance))),  vec3(1.5 - sky_visibility * 0.5));
+    shadow_factor = pow(max(shadow_factor, vec3(dot(vec3(0.33333333), scene_sky_irradiance))), vec3(1.5 - sky_visibility * 0.5));
     ibl_diffuse_light *= shadow_factor;
     ibl_specular_light *= shadow_factor;
 
@@ -283,7 +283,7 @@ vec4 surface_shading(
     const in VIEW_CONSTANTS view_constants,
     const in LIGHT_CONSTANTS light_constants,
     //const in POINT_LIGHTS point_lights,
-    const in vec3 base_color,
+    vec3 base_color,
     float opacity,
     const in float metallic,
     float roughness,
@@ -295,14 +295,23 @@ vec4 surface_shading(
     const in sampler2D texture_height_map,
     const in vec2 texCoord,
     const in vec3 world_position,
-    vec3 light_color,
     const in vec3 vertexNormal,
     const in vec3 N,
     const in vec3 V,
-    const in vec3 L,
     const in float depth
 )
 {
+    const vec3 L = normalize(light_constants.LIGHT_DIRECTION);
+    vec3 light_color = light_constants.LIGHT_COLOR.xyz;
+
+    // under water
+    float sea_diff = world_position.y - scene_constants.SEA_HEIGHT;
+    float inv_sea_ratio = saturate(exp(sea_diff * 0.5));
+    float under_water_material = saturate(-(sea_diff - 1.0) / SEA_COASTLINE_THICKNESS);
+    under_water_material = 1.0 - under_water_material * under_water_material * 0.5;
+    roughness *= under_water_material;
+    base_color *= under_water_material;
+
     // safe roughness
     roughness = clamp(roughness, 0.05, 1.0);
     const float roughness2 = roughness * roughness;
@@ -379,6 +388,10 @@ vec4 surface_shading(
         diffuse_light += oren_nayar(roughness2, clampled_NdL, NdV, N, V, L) * (vec3(1.0) - F) * light_color;
         specular_light += cooktorrance_specular(F, clampled_NdL, NdV, NdH, roughness) * clampled_NdL * light_color;
     }
+
+    // apply sea ratio
+    diffuse_light *= inv_sea_ratio;
+    specular_light *= inv_sea_ratio;
 
     // Point Lights
 //    for(int i = 0; i < MAX_POINT_LIGHTS; ++i)

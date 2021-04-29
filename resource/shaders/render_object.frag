@@ -72,16 +72,6 @@ void main() {
     float ssao = 1.0;
     vec4 scene_reflect_color = vec4(0.0);
     vec3 V = normalize(-vs_output.relative_position.xyz);
-    vec3 L = normalize(light_constants.LIGHT_DIRECTION);
-
-    float sea_diff = world_position.y - scene_constants.SEA_HEIGHT;
-    if(sea_diff < SEA_COASTLINE_THICKNESS)
-    {
-        float sea_ratio = saturate(1.0 - sea_diff / SEA_COASTLINE_THICKNESS) * (1.0 - metalicness);
-        sea_ratio = sea_ratio * sea_ratio * 0.9;
-        roughness *= (1.0 - sea_ratio);
-        base_color.xyz *= (1.0 - sea_ratio);
-    }
 
     outColor = surface_shading(
         ATMOSPHERE,
@@ -106,11 +96,9 @@ void main() {
         textureHeightMap,
         screen_texcoord,
         world_position.xyz,
-        light_constants.LIGHT_COLOR.xyz,
         vertex_normal.xyz,
         normal.xyz,
         V,
-        L,
         depth
     );
     outColor.xyz += emissive_color;
