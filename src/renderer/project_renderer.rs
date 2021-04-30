@@ -338,19 +338,6 @@ impl ProjectRendererBase for ProjectRenderer {
         if render_capture_height_map || self._is_first_rendering {
             renderer_data.render_material_instance(command_buffer, swapchain_index, "system/clear_framebuffer", "clear_capture_height_map/clear", &quad_geometry_data, None, None, NONE_PUSH_CONSTANT);
             self.render_solid_object(renderer_data, command_buffer, swapchain_index, RenderMode::CaptureHeightMap, RenderObjectType::Static, &static_render_elements, None);
-
-            // let texture_data = self.get_render_target(RenderTargetType::CaptureHeightMap);
-            // let buffer_size = unsafe { renderer_data.get_device().get_image_memory_requirements(texture_data._image).size };
-            // let mut read_data: Vec<f32> = vec![0.0; buffer_size as usize];
-            // texture::read_texture_data(
-            //     renderer_data.get_device(),
-            //     renderer_data.get_command_pool(),
-            //     renderer_data.get_graphics_queue(),
-            //     renderer_data.get_device_memory_properties(),
-            //     texture_data,
-            //     &mut read_data
-            // );
-            // println!("{:?}", read_data);
         }
 
         // fft-simulation
@@ -485,6 +472,20 @@ impl ProjectRendererBase for ProjectRenderer {
             renderer_data.draw_elements(command_buffer, &quad_geometry_data);
             renderer_data.end_render_pass(command_buffer);
         }
+
+        // read image
+        // let texture_data = self.get_render_target(RenderTargetType::CaptureHeightMap);
+        // let buffer_size = unsafe { renderer_data.get_device().get_image_memory_requirements(texture_data._image).size };
+        // let mut read_data: Vec<f32> = vec![0.0; buffer_size as usize];
+        // texture::read_texture_data(
+        //     renderer_data.get_device(),
+        //     renderer_data.get_command_pool(),
+        //     renderer_data.get_graphics_queue(),
+        //     renderer_data.get_device_memory_properties(),
+        //     texture_data,
+        //     &mut read_data
+        // );
+        // println!("{:?}", read_data);
     }
 }
 
