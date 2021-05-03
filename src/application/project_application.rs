@@ -132,8 +132,8 @@ impl ApplicationBase for Application {
         let height_map_data = self.get_project_scene_manager().get_height_map_data();
         let height_data = height_map_data.get_height(&player_pos);
 
-        main_camera._transform_object.set_position_y(height_data + 2.5);
-        player_pos.y = height_data + 1.0;
+        main_camera._transform_object.set_position_y(height_data + 5.0);
+        player_pos.y = height_data + 3.0;
         player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
         player._transform_object.set_position(&player_pos);
     }
