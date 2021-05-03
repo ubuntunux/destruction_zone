@@ -37,7 +37,7 @@
 "stage":{"_model_data_name":"stage_00",
 "_position":[0.0,0.0,0.0],
 "_rotation":[0.0,0.0,0.0],
-"_scale":[100.0,100.0,100.0]}},
+"_scale":[1.0,1.0,1.0]}},
 "_skeletal_objects":{"Player":{"_model_data_name":"Plane00",
 "_position":[0.0,1.0,0.0],
 "_rotation":[0.0,0.0,0.0],
