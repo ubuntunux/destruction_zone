@@ -54,7 +54,6 @@ use crate::renderer::shader_buffer_datas::{
     ShaderBufferDataMap,
 };
 use crate::render_pass::render_pass;
-use ash::version::DeviceV1_0;
 
 pub type RenderTargetDataMap = HashMap<RenderTargetType, TextureData>;
 

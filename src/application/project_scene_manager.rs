@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::{ PathBuf };
 
 use ash::Device;
 use nalgebra::{
@@ -18,7 +19,7 @@ use rust_engine_3d::renderer::light::{ DirectionalLightCreateInfo, DirectionalLi
 use rust_engine_3d::renderer::render_element::{ RenderElementData };
 use rust_engine_3d::renderer::render_object::{ RenderObjectCreateInfo, RenderObjectData, AnimationPlayArgs };
 use rust_engine_3d::renderer::light::LightConstants;
-use rust_engine_3d::resource::resource::Resources;
+use rust_engine_3d::resource::resource::{ Resources, get_resource_name_from_file_path, TEXTURE_SOURCE_FILE_PATH, IMAGE_SOURCE_EXTS };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
@@ -26,6 +27,7 @@ use crate::application_constants;
 use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::resource::project_resource::ProjectResources;
+use crate::game_module::height_map_data::HeightMapData;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
@@ -69,6 +71,7 @@ pub struct ProjectSceneManager {
     pub _camera_object_map: CameraObjectMap,
     pub _directional_light_object_map: DirectionalLightObjectMap,
     pub _effect_id_map: EffectIDMap,
+    pub _height_map_data: HeightMapData,
     pub _static_render_object_map: RenderObjectMap,
     pub _skeletal_render_object_map: RenderObjectMap,
     pub _static_render_elements: Vec<RenderElementData>,
@@ -265,6 +268,24 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         for (object_name, render_object_create_info) in scene_data_create_info._skeletal_objects.iter() {
             self.add_skeletal_render_object(object_name, render_object_create_info);
         }
+
+        // height map
+        let maybe_stage_model = self._static_render_object_map.get("stage");
+        if maybe_stage_model.is_some() {
+            let stage_model = maybe_stage_model.unwrap().borrow();
+
+            let mut height_map_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
+            height_map_directory.push("heightmap");
+            let height_map_files = resources.collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
+            for height_map_file in height_map_files.iter() {
+                let resource_name = get_resource_name_from_file_path(&height_map_directory, &height_map_file);
+                if resource_name == stage_model._render_object_name {
+                    let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
+                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width, image_height, image_data);
+                    break;
+                }
+            }
+        }
     }
 
     fn close_scene_data(&mut self, _device: &Device) {
@@ -446,6 +467,7 @@ impl ProjectSceneManager {
             _camera_object_map: HashMap::new(),
             _directional_light_object_map: HashMap::new(),
             _effect_id_map: HashMap::default(),
+            _height_map_data: HeightMapData::default(),
             _static_render_object_map: HashMap::new(),
             _skeletal_render_object_map: HashMap::new(),
             _static_render_elements: Vec::new(),
@@ -464,6 +486,7 @@ impl ProjectSceneManager {
     pub fn get_engine_resources_mut(&self) -> &mut Resources { self.get_project_resources().get_engine_resources_mut() }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
+    pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
     pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
     pub fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
     pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {
