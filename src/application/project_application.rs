@@ -90,9 +90,6 @@ impl ApplicationBase for Application {
             main_light._transform_object.rotation_pitch(-rotation_speed);
         }
 
-        // when (0.0 /= scroll_yoffset) $
-        //     writeIORef _cameraMoveSpeed modifiedCameraMoveSpeed
-
         if btn_left && btn_right {
             main_camera._transform_object.move_left(-pan_speed * mouse_delta_x as f32);
             main_camera._transform_object.move_up(pan_speed * mouse_delta_y as f32);
@@ -131,7 +128,12 @@ impl ApplicationBase for Application {
         }
 
         let mut player_pos = main_camera._transform_object.get_position() + main_camera._transform_object.get_front() * -8.0;
-        player_pos.y -= 2.0;
+
+        let height_map_data = self.get_project_scene_manager().get_height_map_data();
+        let height_data = height_map_data.get_height(&player_pos);
+
+        main_camera._transform_object.set_position_y(height_data + 2.5);
+        player_pos.y = height_data + 1.0;
         player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
         player._transform_object.set_position(&player_pos);
     }
