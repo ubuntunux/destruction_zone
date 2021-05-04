@@ -280,7 +280,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
                 let resource_name = get_resource_name_from_file_path(&height_map_directory, &height_map_file);
                 if resource_name == stage_model._model_data.borrow()._model_data_name {
                     let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
-                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width, image_height, image_data);
+                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data);
                     break;
                 }
             }
