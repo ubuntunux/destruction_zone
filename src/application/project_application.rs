@@ -130,7 +130,7 @@ impl ApplicationBase for Application {
         let mut player_pos = main_camera._transform_object.get_position() + main_camera._transform_object.get_front() * -8.0;
 
         let height_map_data = self.get_project_scene_manager().get_height_map_data();
-        let height_data = height_map_data.get_height(&player_pos, 0);
+        let height_data = height_map_data.get_height(&player_pos, 1);
 
         main_camera._transform_object.set_position_y(height_data + 5.0);
         player_pos.y = height_data + 3.0;
