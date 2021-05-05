@@ -2,6 +2,7 @@ use winit::event::VirtualKeyCode;
 
 use crate::application_constants;
 use crate::application::project_application::Application;
+use nalgebra::Vector3;
 
 pub struct GameClient {
 }
@@ -39,13 +40,13 @@ impl GameClient {
         let pressed_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
         let pressed_key_z = keyboard_input_data.get_key_hold(VirtualKeyCode::Z);
         let pressed_key_c = keyboard_input_data.get_key_hold(VirtualKeyCode::C);
-        let pressed_key_comma = keyboard_input_data.get_key_hold(VirtualKeyCode::Comma);
-        let pressed_key_period = keyboard_input_data.get_key_hold(VirtualKeyCode::Period);
-        let released_key_left_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::LBracket);
-        let released_key_right_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::RBracket);
-        let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
-        let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
-        let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
+        // let pressed_key_comma = keyboard_input_data.get_key_hold(VirtualKeyCode::Comma);
+        // let pressed_key_period = keyboard_input_data.get_key_hold(VirtualKeyCode::Period);
+        // let released_key_left_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::LBracket);
+        // let released_key_right_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::RBracket);
+        // let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
+        // let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
+        // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
         let mut main_camera = project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let mut main_light = project_application.get_project_scene_manager()._main_light.borrow_mut();
@@ -54,77 +55,46 @@ impl GameClient {
         let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
         let pan_speed = application_constants::CAMERA_PAN_SPEED * camera_move_speed_multiplier;
         let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
-
-        if released_key_left_bracket {
-            project_application.get_project_renderer_mut().prev_debug_render_target();
-        } else if released_key_right_bracket {
-            project_application.get_project_renderer_mut().next_debug_render_target();
-        }
-
-        if released_key_subtract {
-            project_application.get_project_renderer_mut().prev_debug_render_target_miplevel();
-        } else if released_key_equals {
-            project_application.get_project_renderer_mut().next_debug_render_target_miplevel();
-        }
-
         #[cfg(target_os = "android")]
-            let rotation_speed = 0.02 * delta_time as f32;
+        let rotation_speed = 0.02 * delta_time as f32;
         #[cfg(not(target_os = "android"))]
-            let rotation_speed = delta_time as f32;
+        let rotation_speed = delta_time as f32;
 
-        if pressed_key_comma {
-            main_light._transform_object.rotation_pitch(rotation_speed);
-        } else if pressed_key_period {
-            main_light._transform_object.rotation_pitch(-rotation_speed);
-        }
+        let mut player = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap().borrow_mut();
 
-        if btn_left && btn_right {
-            main_camera._transform_object.move_left(-pan_speed * mouse_delta_x as f32);
-            main_camera._transform_object.move_up(pan_speed * mouse_delta_y as f32);
-        }
-        else if btn_right {
+        if btn_right {
             main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
             main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
         }
 
-        if pressed_key_z {
-            main_camera._transform_object.rotation_roll(-rotation_speed * delta_time as f32);
-        }
-        else if pressed_key_c {
-            main_camera._transform_object.rotation_roll(rotation_speed * delta_time as f32);
-        }
-
         if pressed_key_w {
-            main_camera._transform_object.move_front(-move_speed);
+            player._transform_object.move_front(move_speed);
         }
         else if pressed_key_s {
-            main_camera._transform_object.move_front(move_speed);
+            player._transform_object.move_front(-move_speed);
         }
 
         if pressed_key_a {
-            main_camera._transform_object.move_left(-move_speed);
+            player._transform_object.move_left(move_speed);
         }
         else if pressed_key_d {
-            main_camera._transform_object.move_left(move_speed);
+            player._transform_object.move_left(-move_speed);
         }
 
         if pressed_key_q {
-            main_camera._transform_object.move_up(-move_speed);
+            player._transform_object.move_up(move_speed);
         }
         else if pressed_key_e {
-            main_camera._transform_object.move_up(move_speed);
+            player._transform_object.move_up(-move_speed);
         }
 
-        let mut player = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap().borrow_mut();
-        let mut player_pos = main_camera._transform_object.get_position() + main_camera._transform_object.get_front() * -8.0;
-
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let height_data = height_map_data.get_height(&player_pos, 1);
-
-        main_camera._transform_object.set_position_y(height_data + 5.0);
-        player_pos.y = height_data + 3.0;
+        let height_pos_y = height_map_data.get_height(&player._transform_object.get_position(), 1) + 3.0;
         player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
-        player._transform_object.set_position(&player_pos);
+        player._transform_object.set_position_y(height_pos_y);
+
+        let camera_pos = player._transform_object.get_position() - player._transform_object.get_front() * 8.0 + Vector3::new(0.0, 3.0, 0.0);
+        main_camera._transform_object.set_position(&camera_pos);
     }
 
     pub fn update_game_client(&self) {

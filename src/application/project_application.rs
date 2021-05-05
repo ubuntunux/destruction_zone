@@ -36,11 +36,11 @@ impl ApplicationBase for Application {
             self.get_game_client_mut().update_event(self);
         }
 
-        // EditorMode
         if self.get_application_data()._keyboard_input_data.get_key_hold(VirtualKeyCode::Tab) {
             self.toggle_game_mode();
         }
 
+        // EditorMode
         if false == self._is_game_mode {
             let application_data = self.get_application_data();
             let time_data = &application_data._time_data;
