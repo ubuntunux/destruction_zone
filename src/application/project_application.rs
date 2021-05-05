@@ -11,6 +11,7 @@ use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::renderer::project_effect::ProjectEffectManager;
 use crate::resource::project_resource::ProjectResources;
+use crate::game_module::game_client::GameClient;
 
 
 pub struct Application {
@@ -20,122 +21,126 @@ pub struct Application {
     pub _project_scene_manager: Box<ProjectSceneManager>,
     pub _project_effect_manager: Box<ProjectEffectManager>,
     pub _project_ui_manager: Box<ProjectUIManager>,
+    pub _game_client: Box<GameClient>,
+    pub _is_game_mode: bool,
 }
 
 impl ApplicationBase for Application {
     fn initialize_application(&mut self, application_data: &ApplicationData) {
         self._application_data = application_data;
+        self.get_game_client_mut().initialize_game_client();
     }
 
-    fn update_event(&self) {
-        let application_data = self.get_application_data();
-        let time_data = &application_data._time_data;
-        let mouse_move_data = &application_data._mouse_move_data;
-        let mouse_input_data = &application_data._mouse_input_data;
-        let keyboard_input_data = &application_data._keyboard_input_data;
-
-        const MOUSE_DELTA_RATIO: f32 = 500.0;
-        let delta_time = time_data._delta_time;
-        let _mouse_pos = &mouse_move_data._mouse_pos;
-        let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.0 as f32 * MOUSE_DELTA_RATIO;
-        let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.1 as f32 * MOUSE_DELTA_RATIO;
-        let btn_left: bool = mouse_input_data._btn_l_hold;
-        let btn_right: bool = mouse_input_data._btn_r_hold;
-        let _btn_middle: bool = mouse_input_data._btn_m_hold;
-
-        let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
-        let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
-        let pressed_key_w = keyboard_input_data.get_key_hold(VirtualKeyCode::W);
-        let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
-        let pressed_key_q = keyboard_input_data.get_key_hold(VirtualKeyCode::Q);
-        let pressed_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
-        let pressed_key_z = keyboard_input_data.get_key_hold(VirtualKeyCode::Z);
-        let pressed_key_c = keyboard_input_data.get_key_hold(VirtualKeyCode::C);
-        let pressed_key_comma = keyboard_input_data.get_key_hold(VirtualKeyCode::Comma);
-        let pressed_key_period = keyboard_input_data.get_key_hold(VirtualKeyCode::Period);
-        let released_key_left_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::LBracket);
-        let released_key_right_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::RBracket);
-        let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
-        let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
-
-        let mut player = self.get_project_scene_manager().get_skeletal_render_object("Player").unwrap().borrow_mut();
-        let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
-        let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
-        let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
-        let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
-        let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
-        let pan_speed = application_constants::CAMERA_PAN_SPEED * camera_move_speed_multiplier;
-        let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
-
-        if released_key_left_bracket {
-            self.get_project_renderer_mut().prev_debug_render_target();
-        } else if released_key_right_bracket {
-            self.get_project_renderer_mut().next_debug_render_target();
+    fn update_event(&mut self) {
+        if self._is_game_mode {
+            self.get_game_client_mut().update_event(self);
         }
 
-        if released_key_subtract {
-            self.get_project_renderer_mut().prev_debug_render_target_miplevel();
-        } else if released_key_equals {
-            self.get_project_renderer_mut().next_debug_render_target_miplevel();
+        // EditorMode
+        if self.get_application_data()._keyboard_input_data.get_key_hold(VirtualKeyCode::Tab) {
+            self.toggle_game_mode();
         }
 
-        #[cfg(target_os = "android")]
-            let rotation_speed = 0.02 * delta_time as f32;
-        #[cfg(not(target_os = "android"))]
-            let rotation_speed = delta_time as f32;
+        if false == self._is_game_mode {
+            let application_data = self.get_application_data();
+            let time_data = &application_data._time_data;
+            let mouse_move_data = &application_data._mouse_move_data;
+            let mouse_input_data = &application_data._mouse_input_data;
+            let keyboard_input_data = &application_data._keyboard_input_data;
 
-        if pressed_key_comma {
-            main_light._transform_object.rotation_pitch(rotation_speed);
-        } else if pressed_key_period {
-            main_light._transform_object.rotation_pitch(-rotation_speed);
-        }
+            const MOUSE_DELTA_RATIO: f32 = 500.0;
+            let delta_time = time_data._delta_time;
+            let _mouse_pos = &mouse_move_data._mouse_pos;
+            let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.0 as f32 * MOUSE_DELTA_RATIO;
+            let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.1 as f32 * MOUSE_DELTA_RATIO;
+            let btn_left: bool = mouse_input_data._btn_l_hold;
+            let btn_right: bool = mouse_input_data._btn_r_hold;
+            let _btn_middle: bool = mouse_input_data._btn_m_hold;
 
-        if btn_left && btn_right {
-            main_camera._transform_object.move_left(-pan_speed * mouse_delta_x as f32);
-            main_camera._transform_object.move_up(pan_speed * mouse_delta_y as f32);
-        }
-        else if btn_right {
-            main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
-            main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
-        }
+            let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
+            let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
+            let pressed_key_w = keyboard_input_data.get_key_hold(VirtualKeyCode::W);
+            let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
+            let pressed_key_q = keyboard_input_data.get_key_hold(VirtualKeyCode::Q);
+            let pressed_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
+            let pressed_key_z = keyboard_input_data.get_key_hold(VirtualKeyCode::Z);
+            let pressed_key_c = keyboard_input_data.get_key_hold(VirtualKeyCode::C);
+            let pressed_key_comma = keyboard_input_data.get_key_hold(VirtualKeyCode::Comma);
+            let pressed_key_period = keyboard_input_data.get_key_hold(VirtualKeyCode::Period);
+            let released_key_left_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::LBracket);
+            let released_key_right_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::RBracket);
+            let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
+            let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
 
-        if pressed_key_z {
-            main_camera._transform_object.rotation_roll(-rotation_speed * delta_time as f32);
-        }
-        else if pressed_key_c {
-            main_camera._transform_object.rotation_roll(rotation_speed * delta_time as f32);
-        }
 
-        if pressed_key_w {
-            main_camera._transform_object.move_front(-move_speed);
-        }
-        else if pressed_key_s {
-            main_camera._transform_object.move_front(move_speed);
-        }
+            let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
+            let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
+            let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
+            let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
+            let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
+            let pan_speed = application_constants::CAMERA_PAN_SPEED * camera_move_speed_multiplier;
+            let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
 
-        if pressed_key_a {
-            main_camera._transform_object.move_left(-move_speed);
-        }
-        else if pressed_key_d {
-            main_camera._transform_object.move_left(move_speed);
-        }
+            if released_key_left_bracket {
+                self.get_project_renderer_mut().prev_debug_render_target();
+            } else if released_key_right_bracket {
+                self.get_project_renderer_mut().next_debug_render_target();
+            }
 
-        if pressed_key_q {
-            main_camera._transform_object.move_up(-move_speed);
+            if released_key_subtract {
+                self.get_project_renderer_mut().prev_debug_render_target_miplevel();
+            } else if released_key_equals {
+                self.get_project_renderer_mut().next_debug_render_target_miplevel();
+            }
+
+            #[cfg(target_os = "android")]
+                let rotation_speed = 0.02 * delta_time as f32;
+            #[cfg(not(target_os = "android"))]
+                let rotation_speed = delta_time as f32;
+
+            if pressed_key_comma {
+                main_light._transform_object.rotation_pitch(rotation_speed);
+            } else if pressed_key_period {
+                main_light._transform_object.rotation_pitch(-rotation_speed);
+            }
+
+            if btn_left && btn_right {
+                main_camera._transform_object.move_left(-pan_speed * mouse_delta_x as f32);
+                main_camera._transform_object.move_up(pan_speed * mouse_delta_y as f32);
+            }
+            else if btn_right {
+                main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
+                main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
+            }
+
+            if pressed_key_z {
+                main_camera._transform_object.rotation_roll(-rotation_speed * delta_time as f32);
+            }
+            else if pressed_key_c {
+                main_camera._transform_object.rotation_roll(rotation_speed * delta_time as f32);
+            }
+
+            if pressed_key_w {
+                main_camera._transform_object.move_front(-move_speed);
+            }
+            else if pressed_key_s {
+                main_camera._transform_object.move_front(move_speed);
+            }
+
+            if pressed_key_a {
+                main_camera._transform_object.move_left(-move_speed);
+            }
+            else if pressed_key_d {
+                main_camera._transform_object.move_left(move_speed);
+            }
+
+            if pressed_key_q {
+                main_camera._transform_object.move_up(-move_speed);
+            }
+            else if pressed_key_e {
+                main_camera._transform_object.move_up(move_speed);
+            }
         }
-        else if pressed_key_e {
-            main_camera._transform_object.move_up(move_speed);
-        }
-
-        let mut player_pos = main_camera._transform_object.get_position() + main_camera._transform_object.get_front() * -8.0;
-
-        let height_map_data = self.get_project_scene_manager().get_height_map_data();
-        let height_data = height_map_data.get_height(&player_pos, 1);
-
-        main_camera._transform_object.set_position_y(height_data + 5.0);
-        player_pos.y = height_data + 3.0;
-        player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
-        player._transform_object.set_position(&player_pos);
     }
 
     fn terminate_application(&mut self) {
@@ -179,6 +184,16 @@ impl Application {
     pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
         unsafe { &mut *((self._project_ui_manager.as_ref() as *const ProjectUIManager) as *mut ProjectUIManager) }
     }
+    pub fn get_game_client(&self) -> &GameClient {
+        &self._game_client
+    }
+    pub fn get_game_client_mut(&self) -> &mut GameClient {
+        unsafe { &mut *((self._game_client.as_ref() as *const GameClient) as *mut GameClient) }
+    }
+
+    pub fn toggle_game_mode(&mut self) {
+        self._is_game_mode = !self._is_game_mode;
+    }
 }
 
 pub fn run_application() {
@@ -214,6 +229,9 @@ pub fn run_application() {
         constants::NEAR = 0.1;
         constants::FAR = 2000.0;
         constants::FOV = 60.0;
+        // shadow
+        constants::SHADOW_DISTANCE = 200.0;
+        constants::SHADOW_DEPTH = 200.0;
         // effect
         constants::MAX_EMITTER_COUNT = 1024;
         constants::MAX_PARTICLE_COUNT = 262144;
@@ -225,6 +243,7 @@ pub fn run_application() {
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
+    let game_client = GameClient::create_game_client();
 
     // initialize
     let application = Application {
@@ -234,7 +253,10 @@ pub fn run_application() {
         _project_scene_manager: project_scene_manager,
         _project_effect_manager: project_effect_manager,
         _project_ui_manager: project_ui_manager,
+        _game_client: game_client,
+        _is_game_mode: true,
     };
+
     application::run_application(
         LevelFilter::Info,
         &application,
