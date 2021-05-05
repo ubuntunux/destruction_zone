@@ -93,7 +93,7 @@ impl GameClient {
         player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
         player._transform_object.set_position_y(height_pos_y);
 
-        let camera_pos = player._transform_object.get_position() - player._transform_object.get_front() * 8.0 + Vector3::new(0.0, 3.0, 0.0);
+        let camera_pos = player._transform_object.get_position() + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
         main_camera._transform_object.set_position(&camera_pos);
     }
 
