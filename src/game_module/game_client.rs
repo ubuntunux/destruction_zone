@@ -1,19 +1,23 @@
+use nalgebra::Vector3;
 use winit::event::VirtualKeyCode;
 
 use crate::application_constants;
 use crate::application::project_application::Application;
-use nalgebra::Vector3;
+use crate::game_module::actor_manager::ActorManager;
 
 pub struct GameClient {
+    pub _actor_manager: Box<ActorManager>
 }
 
 impl GameClient {
     pub fn create_game_client() -> Box<GameClient> {
         Box::new(GameClient {
+            _actor_manager: ActorManager::create_actor_manager(),
         })
     }
 
     pub fn initialize_game_client(&mut self) {
+        self._actor_manager.initialize_actor_manager();
     }
 
     pub fn update_event(&self, project_application: &Application) {
@@ -67,37 +71,44 @@ impl GameClient {
             main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
         }
 
+        let mut player_pos: Vector3<f32> = player._transform_object.get_position().clone() as Vector3<f32>;
+
         if pressed_key_w {
-            player._transform_object.move_front(move_speed);
+            player_pos += player._transform_object.get_front() * move_speed;
         }
         else if pressed_key_s {
-            player._transform_object.move_front(-move_speed);
+            player_pos -= player._transform_object.get_front() * move_speed;
         }
 
         if pressed_key_a {
-            player._transform_object.move_left(move_speed);
+            player_pos += player._transform_object.get_left() * move_speed;
         }
         else if pressed_key_d {
-            player._transform_object.move_left(-move_speed);
+            player_pos -= player._transform_object.get_left() * move_speed;
         }
 
         if pressed_key_q {
-            player._transform_object.move_up(move_speed);
+            player_pos += player._transform_object.get_up() * move_speed;
         }
         else if pressed_key_e {
-            player._transform_object.move_up(-move_speed);
+            player_pos -= player._transform_object.get_up() * move_speed;
         }
 
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let height_pos_y = height_map_data.get_height(&player._transform_object.get_position(), 1) + 3.0;
-        player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
-        player._transform_object.set_position_y(height_pos_y);
+        let height_pos_y = height_map_data.get_height(&player_pos, 1) + 3.0;
+        if player_pos.y < height_pos_y {
+            player_pos.y = height_pos_y;
+        } else {
 
-        let camera_pos = player._transform_object.get_position() + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
+        }
+        player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
+        player._transform_object.set_position(&player_pos);
+
+        let camera_pos = &player_pos + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
         main_camera._transform_object.set_position(&camera_pos);
     }
 
-    pub fn update_game_client(&self) {
-
+    pub fn update_game_client(&mut self) {
+        self._actor_manager.update_actor_manager();
     }
 }
