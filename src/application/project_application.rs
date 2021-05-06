@@ -28,7 +28,7 @@ pub struct Application {
 impl ApplicationBase for Application {
     fn initialize_application(&mut self, application_data: &ApplicationData) {
         self._application_data = application_data;
-        self.get_game_client_mut().initialize_game_client();
+        self.get_game_client_mut().initialize_game_client(self);
     }
 
     fn update_event(&mut self) {

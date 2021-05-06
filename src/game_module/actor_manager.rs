@@ -1,7 +1,9 @@
 use std::collections::HashMap;
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 
+use crate::application::project_application::Application;
 use crate::game_module::actors::{ ActorBase, PlayerActor };
+use crate::game_module::game_client::GameClient;
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -24,8 +26,9 @@ impl ActorManager {
         id
     }
 
-    pub fn initialize_actor_manager(&mut self) {
-
+    pub fn initialize_actor_manager(&mut self, project_application: &Application) {
+        let id = self.generate_id();
+        //self._player_actor.initialize_actor(id, );
     }
 
     pub fn update_actor_manager(&mut self) {

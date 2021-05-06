@@ -16,8 +16,8 @@ impl GameClient {
         })
     }
 
-    pub fn initialize_game_client(&mut self) {
-        self._actor_manager.initialize_actor_manager();
+    pub fn initialize_game_client(&mut self, project_application: &Application) {
+        self._actor_manager.initialize_actor_manager(project_application);
     }
 
     pub fn update_event(&self, project_application: &Application) {
@@ -32,7 +32,7 @@ impl GameClient {
         let _mouse_pos = &mouse_move_data._mouse_pos;
         let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.0 as f32 * MOUSE_DELTA_RATIO;
         let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.1 as f32 * MOUSE_DELTA_RATIO;
-        let btn_left: bool = mouse_input_data._btn_l_hold;
+        let _btn_left: bool = mouse_input_data._btn_l_hold;
         let btn_right: bool = mouse_input_data._btn_r_hold;
         let _btn_middle: bool = mouse_input_data._btn_m_hold;
 
@@ -42,8 +42,6 @@ impl GameClient {
         let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
         let pressed_key_q = keyboard_input_data.get_key_hold(VirtualKeyCode::Q);
         let pressed_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
-        let pressed_key_z = keyboard_input_data.get_key_hold(VirtualKeyCode::Z);
-        let pressed_key_c = keyboard_input_data.get_key_hold(VirtualKeyCode::C);
         // let pressed_key_comma = keyboard_input_data.get_key_hold(VirtualKeyCode::Comma);
         // let pressed_key_period = keyboard_input_data.get_key_hold(VirtualKeyCode::Period);
         // let released_key_left_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::LBracket);
@@ -53,11 +51,9 @@ impl GameClient {
         // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
         let mut main_camera = project_application.get_project_scene_manager()._main_camera.borrow_mut();
-        let mut main_light = project_application.get_project_scene_manager()._main_light.borrow_mut();
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
         let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
         let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
-        let pan_speed = application_constants::CAMERA_PAN_SPEED * camera_move_speed_multiplier;
         let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
         #[cfg(target_os = "android")]
         let rotation_speed = 0.02 * delta_time as f32;
