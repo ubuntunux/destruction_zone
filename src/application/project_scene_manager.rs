@@ -117,7 +117,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
 
-    fn create_default_scene_data(&self, scene_data_name: &String) {
+    fn create_default_scene_data(&self, scene_data_name: &str) {
         let mut scene_data_create_info = SceneDataCreateInfo {
             _cameras: HashMap::new(),
             _directional_lights: HashMap::new(),
@@ -209,8 +209,8 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         self.get_project_resources_mut().save_scene_data(scene_data_name, &scene_data_create_info);
     }
 
-    fn open_scene_data(&mut self, resources: &Resources, scene_data_name: &String) {
-        self._scene_name = scene_data_name.clone();
+    fn open_scene_data(&mut self, scene_data_name: &str) {
+        self._scene_name = String::from(scene_data_name);
 
         self.initialize_light_probe_cameras();
 
@@ -275,7 +275,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             let stage_model = maybe_stage_model.unwrap().borrow();
             let mut height_map_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
             height_map_directory.push("heightmap");
-            let height_map_files = resources.collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
+            let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
             for height_map_file in height_map_files.iter() {
                 let resource_name = get_resource_name_from_file_path(&height_map_directory, &height_map_file);
                 if resource_name == stage_model._model_data.borrow()._model_data_name {

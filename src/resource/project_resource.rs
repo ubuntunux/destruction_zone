@@ -84,7 +84,7 @@ impl ProjectResources {
         self._scene_data_create_infos_map.clear();
     }
 
-    pub fn save_scene_data(&mut self, scene_data_name: &String, scene_data_create_info: &SceneDataCreateInfo) {
+    pub fn save_scene_data(&mut self, scene_data_name: &str, scene_data_create_info: &SceneDataCreateInfo) {
         let mut scene_data_filepath = PathBuf::from(SCENE_FILE_PATH);
         scene_data_filepath.push(scene_data_name);
         scene_data_filepath.set_extension(EXT_SCENE);
@@ -93,7 +93,7 @@ impl ProjectResources {
         write_contents = write_contents.replace(",\"", ",\n\"");
         write_file.write(write_contents.as_bytes()).expect("Failed to write");
 
-        self._scene_data_create_infos_map.insert(scene_data_name.clone(), newRcRefCell(scene_data_create_info.clone()));
+        self._scene_data_create_infos_map.insert(String::from(scene_data_name), newRcRefCell(scene_data_create_info.clone()));
     }
 
     pub fn has_scene_data(&self, resource_name: &str) -> bool {

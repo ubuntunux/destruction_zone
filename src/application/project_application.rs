@@ -143,6 +143,11 @@ impl ApplicationBase for Application {
         }
     }
 
+    fn update_application(&mut self) {
+        let application = self as *mut Application;
+        self._game_client.update_game_client(application);
+    }
+
     fn terminate_application(&mut self) {
     }
 }

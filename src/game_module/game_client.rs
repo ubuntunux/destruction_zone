@@ -1,6 +1,8 @@
 use nalgebra::Vector3;
 use winit::event::VirtualKeyCode;
 
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
+
 use crate::application_constants;
 use crate::application::project_application::Application;
 use crate::game_module::actor_manager::ActorManager;
@@ -17,6 +19,9 @@ impl GameClient {
     }
 
     pub fn initialize_game_client(&mut self, project_application: &Application) {
+        // open scene
+        project_application.get_project_scene_manager_mut().open_scene_data("default");
+
         self._actor_manager.initialize_actor_manager(project_application);
     }
 
@@ -104,7 +109,7 @@ impl GameClient {
         main_camera._transform_object.set_position(&camera_pos);
     }
 
-    pub fn update_game_client(&mut self) {
-        self._actor_manager.update_actor_manager();
+    pub fn update_game_client(&mut self, project_application: *mut Application) {
+        self._actor_manager.update_actor_manager(project_application);
     }
 }

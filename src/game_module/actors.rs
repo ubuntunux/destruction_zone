@@ -15,11 +15,17 @@ pub struct PlayerActor {
 }
 
 impl PlayerActor {
+    pub fn create_player_actor(id: u64, render_object: &RcRefCell<RenderObjectData>) -> Box<PlayerActor> {
+        Box::new(PlayerActor {
+            _id: id,
+            _render_object: render_object.clone(),
+            _controller: ActorController::create_actor_controller(),
+        })
+    }
 }
 
 impl ActorBase for PlayerActor {
     fn initialize_actor(&mut self, id: u64, render_object: &RcRefCell<RenderObjectData>) {
-        println!("{}, ", id);
         self._id = id;
         self._render_object = render_object.clone();
         self._controller = ActorController::create_actor_controller();
