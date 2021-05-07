@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use nalgebra::Vector3;
+
 use crate::application::project_application::Application;
 use crate::game_module::actors::{ ActorBase, PlayerActor };
 
@@ -35,12 +37,25 @@ impl ActorManager {
     pub fn initialize_actor_manager(&mut self, project_application: &Application) {
         let id = self.generate_id();
         let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
-        let player_actor = PlayerActor::create_player_actor(id, player_render_object);
-        self._actors.insert(id, player_actor);
+        self._actors.insert(id, PlayerActor::create_player_actor(id, player_render_object));
         self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorBase) as *const PlayerActor;
+        let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
+        player_actor.initialize_actor();
     }
 
-    pub fn update_actor_manager(&mut self, project_application: *mut Application) {
-        //self.get_player_actor_mut()._render_object.borrow_mut()._transform_object.move_up(1.0);
+    pub fn update_actor_manager(&mut self, project_application: &Application, delta_time: f32) {
+        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
+
+        let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
+        let player_actor = self.get_player_actor_mut();
+        player_actor.update_player_actor(delta_time, height_map_data, &main_camera);
+        let camera_pos = player_actor.get_transform().get_position() + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
+        main_camera._transform_object.set_position(&camera_pos);
+
+        for actor in self._actors.values_mut() {
+            if false == actor.is_player_actor() {
+                actor.update_actor(delta_time, height_map_data);
+            }
+        }
     }
 }

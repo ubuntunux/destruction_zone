@@ -1,4 +1,3 @@
-use nalgebra::Vector3;
 use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
@@ -6,6 +5,7 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use crate::application_constants;
 use crate::application::project_application::Application;
 use crate::game_module::actor_manager::ActorManager;
+use crate::game_module::actors::ActorBase;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>
@@ -65,51 +65,37 @@ impl GameClient {
         #[cfg(not(target_os = "android"))]
         let rotation_speed = delta_time as f32;
 
-        let mut player = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap().borrow_mut();
-
         if btn_right {
             main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
             main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
         }
 
-        let mut player_pos: Vector3<f32> = player._transform_object.get_position().clone() as Vector3<f32>;
-
+        let player_actor = self._actor_manager.get_player_actor_mut();
         if pressed_key_w {
-            player_pos += player._transform_object.get_front() * move_speed;
+            player_actor._controller.acceleration_forward();
         }
         else if pressed_key_s {
-            player_pos -= player._transform_object.get_front() * move_speed;
+            player_actor._controller.acceleration_backward();
         }
 
         if pressed_key_a {
-            player_pos += player._transform_object.get_left() * move_speed;
+            player_actor._controller.acceleration_left();
         }
         else if pressed_key_d {
-            player_pos -= player._transform_object.get_left() * move_speed;
+            player_actor._controller.acceleration_right();
         }
 
         if pressed_key_q {
-            player_pos += player._transform_object.get_up() * move_speed;
+            player_actor._controller.acceleration_up();
         }
         else if pressed_key_e {
-            player_pos -= player._transform_object.get_up() * move_speed;
+            player_actor._controller.acceleration_down();
         }
-
-        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let height_pos_y = height_map_data.get_height(&player_pos, 1) + 3.0;
-        if player_pos.y < height_pos_y {
-            player_pos.y = height_pos_y;
-        } else {
-
-        }
-        player._transform_object.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI);
-        player._transform_object.set_position(&player_pos);
-
-        let camera_pos = &player_pos + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
-        main_camera._transform_object.set_position(&camera_pos);
     }
 
     pub fn update_game_client(&mut self, project_application: *mut Application) {
-        self._actor_manager.update_actor_manager(project_application);
+        let project_application = unsafe { &(*project_application) };
+        let delta_time = project_application.get_application_data()._time_data._delta_time as f32;
+        self._actor_manager.update_actor_manager(project_application, delta_time);
     }
 }
