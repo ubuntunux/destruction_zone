@@ -10,6 +10,7 @@ pub struct ActorController {
     pub _prev_floating_velocity: f32,
     pub _floating_velocity: f32,
     pub _acceleration: Vector3<f32>,
+    pub _on_ground: bool,
 }
 
 impl ActorController {
@@ -20,6 +21,7 @@ impl ActorController {
             _prev_floating_velocity: 0.0,
             _floating_velocity: 0.0,
             _acceleration: Vector3::zeros(),
+            _on_ground: false,
         }
     }
 
@@ -84,7 +86,7 @@ impl ActorController {
         }
 
         // apply gravity
-        if 0.0 == self._acceleration.y {
+        if 0.0 == self._acceleration.y && false == self._on_ground {
             self._floating_velocity -= GRAVITY * delta_time;
         }
 
@@ -94,10 +96,12 @@ impl ActorController {
 
         // check height map
         if position != *transform.get_position() {
+            self._on_ground = false;
             let floating_height = height_map_data.get_height(&position, 0) + floating_height;
             if position.y < floating_height {
                 position.y = floating_height;
                 self._floating_velocity = 0.0;
+                self._on_ground = true;
             }
             transform.set_position(&position);
         }
