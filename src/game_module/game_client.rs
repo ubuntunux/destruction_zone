@@ -5,7 +5,6 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use crate::application_constants;
 use crate::application::project_application::Application;
 use crate::game_module::actor_manager::ActorManager;
-use crate::game_module::actors::ActorBase;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>
