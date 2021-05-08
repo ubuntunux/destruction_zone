@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
@@ -57,14 +59,14 @@ impl ActorBase for PlayerActor {
 }
 
 impl PlayerActor {
-    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &CameraObjectData) {
+    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData) {
         let transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
 
         self._controller.update_controller(delta_time, transform);
 
         // check height map
         let mut position = transform.get_position().clone();
-        let floating_height = height_map_data.get_height(&position, 1) + self._floating_height;
+        let floating_height = height_map_data.get_height(&position, 0) + self._floating_height;
         if position.y < floating_height {
             position.y = floating_height;
             transform.set_position(&position);
@@ -73,5 +75,8 @@ impl PlayerActor {
         // follow camera yaw
         let yaw = -transform.get_roll() * 0.5;
         transform.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI + yaw);
+
+        let camera_pos = transform.get_position() + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
+        main_camera._transform_object.set_position(&camera_pos);
     }
 }

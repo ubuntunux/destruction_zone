@@ -36,7 +36,7 @@ impl ApplicationBase for Application {
             self.get_game_client_mut().update_event(self);
         }
 
-        if self.get_application_data()._keyboard_input_data.get_key_hold(VirtualKeyCode::Tab) {
+        if self.get_application_data()._keyboard_input_data.get_key_pressed(VirtualKeyCode::Tab) {
             self.toggle_game_mode();
         }
 

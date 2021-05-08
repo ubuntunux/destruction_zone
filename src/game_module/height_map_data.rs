@@ -87,6 +87,6 @@ impl HeightMapData {
         let height_map_data = &self._max_height_map_data[lod];
         let height_data_0 = lerp(height_map_data[tex_coord_00], height_map_data[tex_coord_01], pixel_pos_x_frac);
         let height_data_1 = lerp(height_map_data[tex_coord_10], height_map_data[tex_coord_11], pixel_pos_x_frac);
-        lerp(height_data_0, height_data_1, pixel_pos_y_frac)
+        self._bounding_box._min.y + lerp(height_data_0, height_data_1, pixel_pos_y_frac)
     }
 }

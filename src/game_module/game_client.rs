@@ -55,9 +55,7 @@ impl GameClient {
         // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
         let mut main_camera = project_application.get_project_scene_manager()._main_camera.borrow_mut();
-        let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
-        let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
-        let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
+        let _modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
         let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
         #[cfg(target_os = "android")]
         let rotation_speed = 0.02 * delta_time as f32;

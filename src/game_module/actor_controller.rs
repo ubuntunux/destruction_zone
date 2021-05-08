@@ -39,19 +39,21 @@ impl ActorController {
     pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData) {
         const MAX_GROUND_SPEED: f32 = 50.0;
         const FORWARD_SPEED: f32 = 30.0;
-        const SIDE_SPEED: f32 = 20.0;
+        const SIDE_SPEED: f32 = 30.0;
         const FLOATING_SPEED: f32 = 30.0;
-        const DAMPING: f32 = 15.0;
+        const DAMPING: f32 = 30.0;
         const ROLL: f32 = 0.5;
         const ROLL_SPEED: f32 = 2.0;
         const GRAVITY: f32 = -9.8;
 
         let mut goal_roll = 0.0;
+        let mut acelleration_on_ground = false;
         if self._acceleration != Vector3::zeros() {
             if 0.0 != self._acceleration.x {
                 let dir_side = Vector2::new(transform.get_left().x, transform.get_left().z).normalize();
                 self._ground_velocity += dir_side * self._acceleration.x * SIDE_SPEED * delta_time;
                 goal_roll = -ROLL * self._acceleration.x;
+                acelleration_on_ground = true;
             }
 
             if 0.0 != self._acceleration.y {
@@ -61,14 +63,14 @@ impl ActorController {
             if 0.0 != self._acceleration.z {
                 let dir_forward = Vector2::new(transform.get_front().x, transform.get_front().z).normalize();
                 self._ground_velocity += dir_forward * self._acceleration.z * FORWARD_SPEED * delta_time;
+                acelleration_on_ground = true;
             }
         }
 
         let mut ground_speed = self._ground_velocity.norm();
         let floating_speed = self._floating_velocity.abs();
         if 0.0 != ground_speed || 0.0 != floating_speed {
-            // ground speed
-            if 0.0 < ground_speed {
+            if 0.0 != ground_speed && false == acelleration_on_ground {
                 let damping = DAMPING * delta_time;
                 ground_speed -= damping;
                 if ground_speed < 0.0 {

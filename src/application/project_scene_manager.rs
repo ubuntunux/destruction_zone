@@ -272,7 +272,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         // height map
         let maybe_stage_model = self._static_render_object_map.get("stage");
         if maybe_stage_model.is_some() {
-            let stage_model = maybe_stage_model.unwrap().borrow();
+            let mut stage_model = maybe_stage_model.unwrap().borrow_mut();
             let mut height_map_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
             height_map_directory.push("heightmap");
             let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
@@ -280,6 +280,8 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
                 let resource_name = get_resource_name_from_file_path(&height_map_directory, &height_map_file);
                 if resource_name == stage_model._model_data.borrow()._model_data_name {
                     let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
+                    stage_model._transform_object.update_transform_object();
+                    stage_model.update_bound_box();
                     self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data);
                     break;
                 }
