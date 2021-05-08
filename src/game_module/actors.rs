@@ -62,15 +62,7 @@ impl PlayerActor {
     pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData) {
         let transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
 
-        self._controller.update_controller(delta_time, transform);
-
-        // check height map
-        let mut position = transform.get_position().clone();
-        let floating_height = height_map_data.get_height(&position, 0) + self._floating_height;
-        if position.y < floating_height {
-            position.y = floating_height;
-            transform.set_position(&position);
-        }
+        self._controller.update_controller(delta_time, transform, self._floating_height, height_map_data);
 
         // follow camera yaw
         let yaw = -transform.get_roll() * 0.5;
