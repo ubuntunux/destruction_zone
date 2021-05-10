@@ -20,6 +20,7 @@ float get_shadow_factor_func(
     const vec2 shadow_uv_min = shadow_texel_size * 0.5;
     const vec2 shadow_uv_max = vec2(1.0) - shadow_texel_size * 0.5;
     vec4 shadow_proj = light_constants.SHADOW_VIEW_PROJECTION * vec4(world_position, 1.0);
+    float shadow_dist = saturate((length(shadow_proj.xy) - 0.9) * 10.0);
     shadow_proj.xyz /= shadow_proj.w;
     shadow_proj.xy = shadow_proj.xy * 0.5 + 0.5;
 
@@ -49,7 +50,7 @@ float get_shadow_factor_func(
             const float shadow_depth = textureLod(texture_shadow, shadow_uv, 0.0).x + shadow_bias;
             if(shadow_depth <= shadow_proj.z)
             {
-                shadow_factors[component_index] = saturate(exp(-light_constants.SHADOW_EXP * (shadow_proj.z - shadow_depth)));
+                shadow_factors[component_index] = saturate(exp(-light_constants.SHADOW_EXP * (shadow_proj.z - shadow_depth)) + shadow_dist);
             }
         }
 
