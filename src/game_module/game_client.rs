@@ -62,10 +62,8 @@ impl GameClient {
         #[cfg(not(target_os = "android"))]
         let rotation_speed = delta_time as f32;
 
-        if btn_right {
-            main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
-            main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
-        }
+        main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
+        main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
 
         let player_actor = self._actor_manager.get_player_actor_mut();
 
