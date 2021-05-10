@@ -8,6 +8,7 @@ use crate::game_module::height_map_data::HeightMapData;
 // Declare
 pub enum ControllerDataType {
     Default,
+    Tank,
 }
 
 pub struct ControllerData {
@@ -36,6 +37,16 @@ pub struct ActorController {
 pub fn create_controller_data(controller_type: ControllerDataType) -> ControllerData {
     match controller_type {
         ControllerDataType::Default => ControllerData {
+            _max_ground_speed: 50.0,
+            _forward_speed: 50.0,
+            _side_speed: 50.0,
+            _floating_speed: 30.0,
+            _damping: 20.0,
+            _side_step_roll: 0.5,
+            _side_step_roll_speed: 2.0,
+            _boost_acceleration: 1.5,
+        },
+        ControllerDataType::Tank => ControllerData {
             _max_ground_speed: 50.0,
             _forward_speed: 50.0,
             _side_speed: 50.0,

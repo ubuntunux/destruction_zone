@@ -6,6 +6,7 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::game_module::actor_controller::{ ControllerDataType, ActorController };
+use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::base_actor::BaseActor;
 use crate::game_module::height_map_data::HeightMapData;
 
@@ -20,7 +21,7 @@ pub struct PlayerActor {
 impl PlayerActor {
     pub fn create_player_actor(id: u64, controller_type: ControllerDataType, render_object: &RcRefCell<RenderObjectData>) -> Box<PlayerActor> {
         let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
-        let floating_height = render_object.borrow()._bound_box._size.y * 0.5 + 2.0;
+        let floating_height = calc_floating_height(&render_object.borrow());
         Box::new(PlayerActor {
             _id: id,
             _render_object: render_object.clone(),

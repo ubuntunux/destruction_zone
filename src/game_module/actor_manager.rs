@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use rust_engine_3d::renderer::render_object::RenderObjectData;
+
 use crate::application::project_application::Application;
 use crate::game_module::actor_controller::ControllerDataType;
 use crate::game_module::base_actor::BaseActor;
@@ -10,6 +12,10 @@ pub struct ActorManager {
     pub _id_generator: u64,
     pub _player_actor: *const PlayerActor,
     pub _actors: HashMap<u64, Box<dyn BaseActor>>,
+}
+
+pub fn calc_floating_height(render_object: &RenderObjectData) -> f32 {
+    render_object._bound_box._size.y * 0.5 + 2.0
 }
 
 impl ActorManager {
@@ -36,7 +42,7 @@ impl ActorManager {
     }
 
     pub fn initialize_actor_manager(&mut self, project_application: &Application) {
-        // PLayer Actor
+        // Player Actor
         {
             let id = self.generate_id();
             let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
@@ -46,13 +52,13 @@ impl ActorManager {
             player_actor.initialize_actor();
         }
 
-        // PLayer Actor
+        // AI Actor
         let actor_names = project_application.get_project_scene_manager()._skeletal_render_object_map.keys();
         for actor_name in actor_names {
             if actor_name.starts_with("Enemy") {
                 let id = self.generate_id();
                 let actor_render_object = project_application.get_project_scene_manager().get_skeletal_render_object(actor_name).unwrap();
-                self._actors.insert(id, AIActor::create_ai_actor(id, ControllerDataType::Default, actor_render_object));
+                self._actors.insert(id, AIActor::create_ai_actor(id, ControllerDataType::Tank, actor_render_object));
                 let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn BaseActor) as *const AIActor;
                 let actor = unsafe { &mut *(actor as *mut AIActor) };
                 actor.initialize_actor();
