@@ -22,7 +22,7 @@ use rust_engine_3d::utilities::system::RcRefCell;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
-// gpu_particle_constant_flags
+// code coupling with effect_constats.glsl
 const GPU_PARTICLE_CONSTANT_FLAG_NONE: u32 = 0;
 const GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE: u32 = 1 << 0;
 
