@@ -55,7 +55,7 @@ impl GameClient {
         // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
         let mut main_camera = project_application.get_project_scene_manager()._main_camera.borrow_mut();
-        let _modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
+        let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
         let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
         #[cfg(target_os = "android")]
         let rotation_speed = 0.02 * delta_time as f32;
@@ -68,6 +68,11 @@ impl GameClient {
         }
 
         let player_actor = self._actor_manager.get_player_actor_mut();
+
+        if modifier_keys_shift {
+            player_actor._controller.boost_on();
+        }
+
         if pressed_key_w {
             player_actor._controller.acceleration_forward();
         }

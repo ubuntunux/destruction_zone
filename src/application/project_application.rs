@@ -235,8 +235,10 @@ pub fn run_application() {
         constants::FAR = 2000.0;
         constants::FOV = 60.0;
         // shadow
+        constants::SHADOW_BIAS = 0.005;
         constants::SHADOW_DISTANCE = 200.0;
-        constants::SHADOW_DEPTH = 200.0;
+        constants::SHADOW_DEPTH = 1000.0;
+        constants::SHADOW_EXP = 500.0;
         // effect
         constants::MAX_EMITTER_COUNT = 1024;
         constants::MAX_PARTICLE_COUNT = 262144;

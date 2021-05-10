@@ -10,6 +10,7 @@ pub struct ActorController {
     pub _prev_floating_velocity: f32,
     pub _floating_velocity: f32,
     pub _acceleration: Vector3<f32>,
+    pub _boost: bool,
     pub _on_ground: bool,
 }
 
@@ -21,10 +22,12 @@ impl ActorController {
             _prev_floating_velocity: 0.0,
             _floating_velocity: 0.0,
             _acceleration: Vector3::zeros(),
+            _boost: false,
             _on_ground: false,
         }
     }
 
+    pub fn boost_on(&mut self) { self._boost = true; }
     pub fn acceleration_forward(&mut self) { self._acceleration.z = 1.0; }
     pub fn acceleration_backward(&mut self) { self._acceleration.z = -1.0; }
     pub fn acceleration_left(&mut self) {
@@ -42,38 +45,41 @@ impl ActorController {
 
     pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, floating_height: f32, height_map_data: &HeightMapData) {
         const MAX_GROUND_SPEED: f32 = 50.0;
-        const FORWARD_SPEED: f32 = 30.0;
-        const SIDE_SPEED: f32 = 30.0;
+        const FORWARD_SPEED: f32 = 50.0;
+        const SIDE_SPEED: f32 = 50.0;
         const FLOATING_SPEED: f32 = 30.0;
-        const DAMPING: f32 = 30.0;
+        const DAMPING: f32 = 20.0;
         const ROLL: f32 = 0.5;
         const ROLL_SPEED: f32 = 2.0;
         const GRAVITY: f32 = 9.8;
+        const BOOST_ACCELERATION: f32 = 1.5;
 
         let mut goal_roll = 0.0;
         let mut acelleration_on_ground = false;
         if self._acceleration != Vector3::zeros() {
+            let boost_acceleration = if self._boost { BOOST_ACCELERATION } else { 1.0 };
+
             if 0.0 != self._acceleration.x {
                 let dir_side = Vector2::new(transform.get_left().x, transform.get_left().z).normalize();
-                self._ground_velocity += dir_side * self._acceleration.x * SIDE_SPEED * delta_time;
+                self._ground_velocity += dir_side * self._acceleration.x * SIDE_SPEED * boost_acceleration * delta_time;
                 goal_roll = -ROLL * self._acceleration.x;
                 acelleration_on_ground = true;
             }
 
             if 0.0 != self._acceleration.y {
-                self._floating_velocity += self._acceleration.y * FLOATING_SPEED * delta_time;
+                self._floating_velocity += self._acceleration.y * FLOATING_SPEED * boost_acceleration * delta_time;
             }
 
             if 0.0 != self._acceleration.z {
                 let dir_forward = Vector2::new(transform.get_front().x, transform.get_front().z).normalize();
-                self._ground_velocity += dir_forward * self._acceleration.z * FORWARD_SPEED * delta_time;
+                self._ground_velocity += dir_forward * self._acceleration.z * FORWARD_SPEED * boost_acceleration * delta_time;
                 acelleration_on_ground = true;
             }
         }
 
         // ground speed
         let mut ground_speed = self._ground_velocity.norm();
-        if 0.0 != ground_speed && false == acelleration_on_ground {
+        if 0.0 != ground_speed {
             let damping = DAMPING * delta_time;
             ground_speed -= damping;
             if ground_speed < 0.0 {
@@ -123,5 +129,6 @@ impl ActorController {
         self._prev_ground_velocity.clone_from(&self._ground_velocity);
         self._prev_floating_velocity = self._floating_velocity;
         self._acceleration = Vector3::zeros();
+        self._boost = false;
     }
 }
