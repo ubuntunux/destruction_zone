@@ -58,6 +58,9 @@ impl PlayerActor {
 
         self._controller.update_controller(delta_time, transform, self._floating_height, height_map_data);
 
+        main_camera._transform_object.rotation_pitch(self._controller.get_velocity_pitch());
+        main_camera._transform_object.rotation_yaw(self._controller.get_velocity_yaw());
+
         // follow camera yaw
         let yaw = -transform.get_roll() * 0.5;
         transform.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI + yaw);

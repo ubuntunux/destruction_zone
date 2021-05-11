@@ -13,24 +13,29 @@ pub enum ControllerDataType {
 
 pub struct ControllerData {
     _max_ground_speed: f32,
-    _forward_speed: f32,
-    _side_speed: f32,
-    _floating_speed: f32,
+    _forward_acceleration: f32,
+    _side_acceleration: f32,
+    _floating_acceleration: f32,
     _damping: f32,
     _side_step_roll: f32,
     _side_step_roll_speed: f32,
     _boost_acceleration: f32,
+    _max_rotation_speed: f32,
+    _rotation_acceleration: f32,
+    _rotation_damping: f32,
 }
 
 pub struct ActorController {
-    pub _controller_data: ControllerData,
-    pub _prev_ground_velocity: Vector2<f32>,
-    pub _ground_velocity: Vector2<f32>,
-    pub _prev_floating_velocity: f32,
-    pub _floating_velocity: f32,
-    pub _acceleration: Vector3<f32>,
-    pub _boost: bool,
-    pub _on_ground: bool,
+    _controller_data: ControllerData,
+    _prev_ground_velocity: Vector2<f32>,
+    _ground_velocity: Vector2<f32>,
+    _prev_floating_velocity: f32,
+    _floating_velocity: f32,
+    _acceleration: Vector3<f32>,
+    _rotation_velocity: Vector2<f32>,
+    _rotation_acceleration: Vector2<f32>,
+    _boost: bool,
+    _on_ground: bool,
 }
 
 // Implementation
@@ -38,23 +43,29 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
     match controller_type {
         ControllerDataType::Default => ControllerData {
             _max_ground_speed: 50.0,
-            _forward_speed: 50.0,
-            _side_speed: 50.0,
-            _floating_speed: 30.0,
+            _forward_acceleration: 50.0,
+            _side_acceleration: 50.0,
+            _floating_acceleration: 30.0,
             _damping: 20.0,
             _side_step_roll: 0.5,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
+            _max_rotation_speed: 0.1,
+            _rotation_acceleration: 0.1,
+            _rotation_damping: 0.05,
         },
         ControllerDataType::Tank => ControllerData {
             _max_ground_speed: 50.0,
-            _forward_speed: 50.0,
-            _side_speed: 50.0,
-            _floating_speed: 30.0,
+            _forward_acceleration: 50.0,
+            _side_acceleration: 50.0,
+            _floating_acceleration: 30.0,
             _damping: 20.0,
             _side_step_roll: 0.5,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
+            _max_rotation_speed: 50.0,
+            _rotation_acceleration: 50.0,
+            _rotation_damping: 30.0,
         },
     }
 }
@@ -68,6 +79,8 @@ impl ActorController {
             _prev_floating_velocity: 0.0,
             _floating_velocity: 0.0,
             _acceleration: Vector3::zeros(),
+            _rotation_acceleration: Vector2::zeros(),
+            _rotation_velocity: Vector2::zeros(),
             _boost: false,
             _on_ground: false,
         }
@@ -76,52 +89,43 @@ impl ActorController {
     pub fn boost_on(&mut self) { self._boost = true; }
     pub fn acceleration_forward(&mut self) { self._acceleration.z = 1.0; }
     pub fn acceleration_backward(&mut self) { self._acceleration.z = -1.0; }
-    pub fn acceleration_left(&mut self) {
-        self._acceleration.x = 1.0;
-    }
-    pub fn acceleration_right(&mut self) {
-        self._acceleration.x = -1.0;
-    }
-    pub fn acceleration_up(&mut self) {
-        self._acceleration.y = 1.0;
-    }
-    pub fn acceleration_down(&mut self) {
-        self._acceleration.y = -1.0;
-    }
+    pub fn acceleration_left(&mut self) { self._acceleration.x = 1.0; }
+    pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
+    pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
+    pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
+    pub fn acceleration_pitch(&mut self, acceleration: i32) { self._rotation_acceleration.x = acceleration as f32; }
+    pub fn acceleration_yaw(&mut self, acceleration: i32) { self._rotation_acceleration.y = acceleration as f32; }
+    pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x }
+    pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y }
 
     pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, floating_height: f32, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
-        if self._acceleration != Vector3::zeros() {
-            let boost_acceleration = if self._boost { self._controller_data._boost_acceleration } else { 1.0 };
 
-            if 0.0 != self._acceleration.x {
-                let dir_side = Vector2::new(transform.get_left().x, transform.get_left().z).normalize();
-                self._ground_velocity += dir_side * self._acceleration.x * self._controller_data._side_speed * boost_acceleration * delta_time;
-                goal_roll = -self._controller_data._side_step_roll * self._acceleration.x;
-            }
+        let boost_acceleration = if self._boost { self._controller_data._boost_acceleration } else { 1.0 };
 
-            if 0.0 != self._acceleration.y {
-                self._floating_velocity += self._acceleration.y * self._controller_data._floating_speed * boost_acceleration * delta_time;
-            }
+        if 0.0 != self._acceleration.x {
+            let dir_side = Vector2::new(transform.get_left().x, transform.get_left().z).normalize();
+            self._ground_velocity += dir_side * self._acceleration.x * self._controller_data._side_acceleration * boost_acceleration * delta_time;
+            goal_roll = -self._controller_data._side_step_roll * self._acceleration.x;
+        }
 
-            if 0.0 != self._acceleration.z {
-                let dir_forward = Vector2::new(transform.get_front().x, transform.get_front().z).normalize();
-                self._ground_velocity += dir_forward * self._acceleration.z * self._controller_data._forward_speed * boost_acceleration * delta_time;
-            }
+        if 0.0 != self._acceleration.y {
+            self._floating_velocity += self._acceleration.y * self._controller_data._floating_acceleration * boost_acceleration * delta_time;
+        }
+
+        if 0.0 != self._acceleration.z {
+            let dir_forward = Vector2::new(transform.get_front().x, transform.get_front().z).normalize();
+            self._ground_velocity += dir_forward * self._acceleration.z * self._controller_data._forward_acceleration * boost_acceleration * delta_time;
         }
 
         // ground speed
-        let mut ground_speed = self._ground_velocity.norm();
-        if 0.0 != ground_speed {
+        if 0.0 != self._ground_velocity.x || 0.0 != self._ground_velocity.y {
+            let mut ground_speed = self._ground_velocity.norm();
+            self._ground_velocity /= ground_speed;
             let damping = self._controller_data._damping * delta_time;
-            ground_speed -= damping;
-            if ground_speed < 0.0 {
-                ground_speed = 0.0;
-            }
-            // ground speed limit
-            ground_speed = ground_speed.min(self._controller_data._max_ground_speed);
-
-            self._ground_velocity = self._ground_velocity.normalize() * ground_speed;
+            ground_speed = 0.0f32.max(ground_speed - damping);
+            ground_speed = self._controller_data._max_ground_speed.min(ground_speed);
+            self._ground_velocity *= ground_speed;
         }
 
         // apply gravity
@@ -132,8 +136,6 @@ impl ActorController {
         // apply velocity
         let velocity = Vector3::new(self._ground_velocity.x, self._floating_velocity, self._ground_velocity.y);
         let mut position = transform.get_position().clone() + &velocity * delta_time;
-
-        // check height map
         if position != *transform.get_position() || false == self._on_ground {
             self._on_ground = false;
             let floating_height = height_map_data.get_height(&position, 0) + floating_height;
@@ -143,6 +145,20 @@ impl ActorController {
                 self._on_ground = true;
             }
             transform.set_position(&position);
+        }
+
+        // rotation speed
+        if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
+            self._rotation_velocity += self._rotation_acceleration.normalize() * self._controller_data._rotation_acceleration * delta_time;
+        }
+
+        if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
+            let mut rotation_velocity = self._rotation_velocity.norm();
+            self._rotation_velocity /= rotation_velocity;
+            let rotation_damping = self._controller_data._rotation_damping * delta_time;
+            rotation_velocity = 0.0f32.max(rotation_velocity - rotation_damping);
+            rotation_velocity = self._controller_data._max_rotation_speed.min(rotation_velocity);
+            self._rotation_velocity *= rotation_velocity;
         }
 
         // roll
@@ -162,6 +178,7 @@ impl ActorController {
         self._prev_ground_velocity.clone_from(&self._ground_velocity);
         self._prev_floating_velocity = self._floating_velocity;
         self._acceleration = Vector3::zeros();
+        self._rotation_acceleration = Vector2::zeros();
         self._boost = false;
     }
 }

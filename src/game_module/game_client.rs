@@ -2,7 +2,6 @@ use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
-use crate::application_constants;
 use crate::application::project_application::Application;
 use crate::game_module::actor_manager::ActorManager;
 
@@ -32,12 +31,11 @@ impl GameClient {
         let keyboard_input_data = &application_data._keyboard_input_data;
 
         const MOUSE_DELTA_RATIO: f32 = 500.0;
-        let delta_time = time_data._delta_time;
+        let _delta_time = time_data._delta_time;
         let _mouse_pos = &mouse_move_data._mouse_pos;
-        let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.0 as f32 * MOUSE_DELTA_RATIO;
-        let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.1 as f32 * MOUSE_DELTA_RATIO;
+        let mouse_delta = &mouse_move_data._mouse_pos_delta;
         let _btn_left: bool = mouse_input_data._btn_l_hold;
-        let btn_right: bool = mouse_input_data._btn_r_hold;
+        let _btn_right: bool = mouse_input_data._btn_r_hold;
         let _btn_middle: bool = mouse_input_data._btn_m_hold;
 
         let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
@@ -54,18 +52,17 @@ impl GameClient {
         // let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
         // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
-        let mut main_camera = project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
-        let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
-        #[cfg(target_os = "android")]
-        let rotation_speed = 0.02 * delta_time as f32;
-        #[cfg(not(target_os = "android"))]
-        let rotation_speed = delta_time as f32;
-
-        main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
-        main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
 
         let player_actor = self._actor_manager.get_player_actor_mut();
+
+        if 0 != mouse_delta.x {
+            player_actor._controller.acceleration_yaw(-mouse_delta.x);
+        }
+
+        if 0 != mouse_delta.y {
+            player_actor._controller.acceleration_pitch(-mouse_delta.y);
+        }
 
         if modifier_keys_shift {
             player_actor._controller.boost_on();
