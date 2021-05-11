@@ -50,9 +50,9 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
             _side_step_roll: 0.5,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
-            _max_rotation_speed: 0.1,
-            _rotation_acceleration: 0.1,
-            _rotation_damping: 0.05,
+            _max_rotation_speed: 0.02,
+            _rotation_acceleration: 0.2,
+            _rotation_damping: 0.1,
         },
         ControllerDataType::Tank => ControllerData {
             _max_ground_speed: 50.0,
