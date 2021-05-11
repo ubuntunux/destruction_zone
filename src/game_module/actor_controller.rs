@@ -20,9 +20,9 @@ pub struct ControllerData {
     _side_step_roll: f32,
     _side_step_roll_speed: f32,
     _boost_acceleration: f32,
-    _max_rotation_speed: f32,
-    _rotation_acceleration: f32,
-    _rotation_damping: f32,
+    _max_rotation_speed: f64,
+    _rotation_acceleration: f64,
+    _rotation_damping: f64,
 }
 
 pub struct ActorController {
@@ -32,8 +32,8 @@ pub struct ActorController {
     _prev_floating_velocity: f32,
     _floating_velocity: f32,
     _acceleration: Vector3<f32>,
-    _rotation_velocity: Vector2<f32>,
-    _rotation_acceleration: Vector2<f32>,
+    _rotation_velocity: Vector2<f64>,
+    _rotation_acceleration: Vector2<f64>,
     _boost: bool,
     _on_ground: bool,
 }
@@ -50,8 +50,8 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
             _side_step_roll: 0.5,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
-            _max_rotation_speed: 0.02,
-            _rotation_acceleration: 0.2,
+            _max_rotation_speed: 0.05,
+            _rotation_acceleration: 0.0001,
             _rotation_damping: 0.1,
         },
         ControllerDataType::Tank => ControllerData {
@@ -93,10 +93,10 @@ impl ActorController {
     pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
     pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
     pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
-    pub fn acceleration_pitch(&mut self, acceleration: i32) { self._rotation_acceleration.x = acceleration as f32; }
-    pub fn acceleration_yaw(&mut self, acceleration: i32) { self._rotation_acceleration.y = acceleration as f32; }
-    pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x }
-    pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y }
+    pub fn acceleration_pitch(&mut self, acceleration: i32) { self._rotation_acceleration.x = acceleration as f64; }
+    pub fn acceleration_yaw(&mut self, acceleration: i32) { self._rotation_acceleration.y = acceleration as f64; }
+    pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
+    pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
 
     pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, floating_height: f32, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
@@ -149,16 +149,23 @@ impl ActorController {
 
         // rotation speed
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
-            self._rotation_velocity += self._rotation_acceleration.normalize() * self._controller_data._rotation_acceleration * delta_time;
+            self._rotation_velocity += &self._rotation_acceleration * self._controller_data._rotation_acceleration;
         }
 
         if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
+            let rotation_damping = self._controller_data._rotation_damping * delta_time as f64;
+            if 0.0 == self._rotation_acceleration.x {
+                self._rotation_velocity.x = 0.0f64.max(self._rotation_velocity.x.abs() - rotation_damping) * self._rotation_velocity.x.signum();
+            }
+
+            if 0.0 == self._rotation_acceleration.y {
+                self._rotation_velocity.y = 0.0f64.max(self._rotation_velocity.y.abs() - rotation_damping) * self._rotation_velocity.y.signum();
+            }
+
             let mut rotation_velocity = self._rotation_velocity.norm();
-            self._rotation_velocity /= rotation_velocity;
-            let rotation_damping = self._controller_data._rotation_damping * delta_time;
-            rotation_velocity = 0.0f32.max(rotation_velocity - rotation_damping);
-            rotation_velocity = self._controller_data._max_rotation_speed.min(rotation_velocity);
-            self._rotation_velocity *= rotation_velocity;
+            if self._controller_data._max_rotation_speed < rotation_velocity {
+                self._rotation_velocity = &self._rotation_velocity / rotation_velocity * self._controller_data._max_rotation_speed;
+            }
         }
 
         // roll

@@ -1,20 +1,12 @@
-use rust_engine_3d::renderer::ui::{
-    ProjectUIManagerBase,
-    UIManagerData,
-    UIWidgetTypes,
-    Widget,
-    UILayoutType,
-    Orientation,
-    HorizontalAlign,
-    VerticalAlign
-};
+use rust_engine_3d::renderer::ui::{ProjectUIManagerBase, UIManagerData, UIWidgetTypes, Widget, UILayoutType, Orientation, HorizontalAlign, VerticalAlign, WidgetDefault};
 use rust_engine_3d::renderer::renderer::RendererData;
 use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::vulkan_context::{ get_color32 };
 
 
 pub struct ProjectUIManager {
-    pub _ui_manager_data: *const UIManagerData
+    pub _ui_manager_data: *const UIManagerData,
+    pub _root_widget: *const dyn Widget,
 }
 
 impl ProjectUIManagerBase for ProjectUIManager {
@@ -26,13 +18,22 @@ impl ProjectUIManagerBase for ProjectUIManager {
         unsafe { &mut *(self._ui_manager_data as *mut UIManagerData) }
     }
 
-    fn initialize_ui_manager(&mut self, ui_manager_data: &UIManagerData) {
+    fn get_root_widget(&self) -> &dyn Widget {
+        unsafe { &*self._root_widget }
+    }
+
+    fn get_root_widget_mut(&self) -> &mut dyn Widget {
+        unsafe { &mut *(self._root_widget as *mut dyn Widget) }
+    }
+
+    fn initialize_project_ui_manager(&mut self, ui_manager_data: &UIManagerData) {
         self._ui_manager_data = ui_manager_data;
+        self._root_widget = self.get_ui_manager_data().get_root_ptr();
     }
 
     fn build_ui(&mut self, _renderer_data: &RendererData, resources: &Resources) {
         unsafe {
-            let root = &mut *(self.get_ui_manager_data().get_root_ptr() as *mut dyn Widget);
+            let root = self.get_root_widget_mut();
 
             static touch_down: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
                 // println!("touch_down");
@@ -176,6 +177,7 @@ impl ProjectUIManager {
     pub fn create_project_ui_manager() -> Box<ProjectUIManager> {
         Box::new(ProjectUIManager {
             _ui_manager_data: std::ptr::null(),
+            _root_widget: std::ptr::null() as *const WidgetDefault,
         })
     }
 }
