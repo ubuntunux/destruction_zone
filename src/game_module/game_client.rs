@@ -98,6 +98,7 @@ impl GameClient {
         let project_application = unsafe { &(*project_application) };
         let delta_time = project_application.get_application_data()._time_data._delta_time as f32;
         self._actor_manager.update_actor_manager(project_application, delta_time);
+        self._game_ui_manager.update_game_ui(project_application, delta_time);
     }
 
     pub fn destroy_game_client(&mut self) {
