@@ -4,15 +4,18 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 use crate::application::project_application::Application;
 use crate::game_module::actor_manager::ActorManager;
+use crate::game_module::game_ui::GameUIManager;
 
 pub struct GameClient {
-    pub _actor_manager: Box<ActorManager>
+    pub _actor_manager: Box<ActorManager>,
+    pub _game_ui_manager: Box<GameUIManager>,
 }
 
 impl GameClient {
     pub fn create_game_client() -> Box<GameClient> {
         Box::new(GameClient {
             _actor_manager: ActorManager::create_actor_manager(),
+            _game_ui_manager: GameUIManager::create_game_ui_manager(),
         })
     }
 
@@ -21,6 +24,7 @@ impl GameClient {
         project_application.get_project_scene_manager_mut().open_scene_data("default");
 
         self._actor_manager.initialize_actor_manager(project_application);
+        self._game_ui_manager.initialize_game_ui_manager(project_application.get_project_ui_manager());
     }
 
     pub fn update_event(&self, project_application: &Application) {
@@ -94,5 +98,9 @@ impl GameClient {
         let project_application = unsafe { &(*project_application) };
         let delta_time = project_application.get_application_data()._time_data._delta_time as f32;
         self._actor_manager.update_actor_manager(project_application, delta_time);
+    }
+
+    pub fn destroy_game_client(&mut self) {
+
     }
 }

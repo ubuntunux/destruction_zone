@@ -72,7 +72,6 @@ impl ApplicationBase for Application {
             let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
             let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
 
-
             let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
             let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
             let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
@@ -145,10 +144,13 @@ impl ApplicationBase for Application {
 
     fn update_application(&mut self) {
         let application = self as *mut Application;
-        self._game_client.update_game_client(application);
+        if self._is_game_mode {
+            self._game_client.update_game_client(application);
+        }
     }
 
     fn terminate_application(&mut self) {
+        self._game_client.destroy_game_client();
     }
 }
 
@@ -197,7 +199,12 @@ impl Application {
     }
 
     pub fn toggle_game_mode(&mut self) {
-        self._is_game_mode = !self._is_game_mode;
+        self.set_game_mode(!self._is_game_mode);
+    }
+
+    pub fn set_game_mode(&mut self, is_game_mode: bool) {
+        self._is_game_mode = is_game_mode;
+        self.get_application_data_mut().set_grab_mode(is_game_mode);
     }
 }
 
@@ -261,7 +268,7 @@ pub fn run_application() {
         _project_effect_manager: project_effect_manager,
         _project_ui_manager: project_ui_manager,
         _game_client: game_client,
-        _is_game_mode: true,
+        _is_game_mode: false,
     };
 
     application::run_application(
