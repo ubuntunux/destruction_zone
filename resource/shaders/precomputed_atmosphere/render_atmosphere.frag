@@ -56,14 +56,14 @@ void main()
     float device_depth = texture(texture_depth, vs_output.uv).x;
     float scene_linear_depth = clamp(device_depth_to_linear_depth(view_constants.NEAR_FAR.x, view_constants.NEAR_FAR.y, device_depth), 0.0, view_constants.NEAR_FAR.y);
     float scene_shadow_length = GetSceneShadowLength(
-    atmosphere_constants,
-    scene_linear_depth,
-    view_constants.NEAR_FAR.y,
-    view_constants.CAMERA_POSITION.xyz,
-    eye_direction,
-    sun_direction,
-    light_constants.SHADOW_VIEW_PROJECTION,
-    texture_shadow
+        atmosphere_constants,
+        scene_linear_depth,
+        view_constants.NEAR_FAR.y,
+        view_constants.CAMERA_POSITION.xyz,
+        eye_direction,
+        sun_direction,
+        light_constants.SHADOW_VIEW_PROJECTION,
+        texture_shadow
     );
 
     // Sky
@@ -86,7 +86,7 @@ void main()
     vec3 sun_disc = vec3(0.0);
     const float sun_absorption = 0.9;
     const float sun_disc_intensity = 20.0;
-    if (false == is_render_light_probe_mode && atmosphere_constants.sun_size.y < VdotL)
+    if (false == is_render_light_probe_mode && atmosphere_constants.sun_size.y < VdotL && 1.0 == device_depth)
     {
         sun_disc = transmittance * solar_radiance.x * light_constants.LIGHT_COLOR.xyz * sun_disc_intensity;
         sun_disc *= pow(clamp((VdotL - atmosphere_constants.sun_size.y) / (1.0 - atmosphere_constants.sun_size.y), 0.0, 1.0), 2.0);

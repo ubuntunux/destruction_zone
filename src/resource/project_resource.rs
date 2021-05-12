@@ -7,6 +7,13 @@ use serde_json::{ self };
 use rust_engine_3d::resource::resource::{ ResourceDataMap, ProjectResourcesBase, Resources, get_unique_resource_name };
 use rust_engine_3d::renderer::renderer::{ RendererData };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
+use rust_engine_3d::renderer::effect::EffectData;
+use rust_engine_3d::renderer::font::FontData;
+use rust_engine_3d::renderer::model::ModelData;
+use rust_engine_3d::renderer::mesh::MeshData;
+use rust_engine_3d::vulkan_context::texture::TextureData;
+use rust_engine_3d::renderer::material::MaterialData;
+use rust_engine_3d::renderer::material_instance::MaterialInstanceData;
 use crate::application::project_scene_manager::{ SceneDataCreateInfo };
 
 pub const SCENE_FILE_PATH: &str = "resource/scenes";
@@ -26,25 +33,58 @@ impl ProjectResourcesBase for ProjectResources {
         self._engine_resources = engine_resources;
         self.load_scene_datas(engine_renderer);
     }
-
     fn destroy_project_resources(&mut self, engine_renderer: &mut RendererData) {
         self.unload_scene_datas(engine_renderer);
     }
-
     fn load_graphics_datas(&mut self, _engine_renderer: &mut RendererData) {
-
     }
-
     fn unload_graphics_datas(&mut self, _engine_renderer: &mut RendererData) {
-
     }
-
     fn regist_resource(&mut self) {
-
     }
-
     fn unregist_resource(&mut self) {
-
+    }
+    fn has_effect_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_effect_data(resource_name)
+    }
+    fn get_effect_data(&self, resource_name: &str) -> &RcRefCell<EffectData> {
+        self.get_engine_resources().get_effect_data(resource_name)
+    }
+    fn get_default_font_data(&self) -> &RcRefCell<FontData> {
+        self.get_engine_resources().get_default_font_data()
+    }
+    fn get_font_data(&self, resource_name: &str) -> &RcRefCell<FontData> {
+        self.get_engine_resources().get_font_data(resource_name)
+    }
+    fn has_model_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_model_data(resource_name)
+    }
+    fn get_model_data(&self, resource_name: &str) -> &RcRefCell<ModelData> {
+        self.get_engine_resources().get_model_data(resource_name)
+    }
+    fn has_mesh_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_mesh_data(resource_name)
+    }
+    fn get_mesh_data(&self, resource_name: &str) -> &RcRefCell<MeshData> {
+        self.get_engine_resources().get_mesh_data(resource_name)
+    }
+    fn has_texture_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_texture_data(resource_name)
+    }
+    fn get_texture_data(&self, resource_name: &str) -> &RcRefCell<TextureData> {
+        self.get_engine_resources().get_texture_data(resource_name)
+    }
+    fn has_material_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_material_data(resource_name)
+    }
+    fn get_material_data(&self, resource_name: &str) -> &RcRefCell<MaterialData> {
+        self.get_engine_resources().get_material_data(resource_name)
+    }
+    fn has_material_instance_data(&self, resource_name: &str) -> bool {
+        self.get_engine_resources().has_material_instance_data(resource_name)
+    }
+    fn get_material_instance_data(&self, resource_name: &str) -> &RcRefCell<MaterialInstanceData> {
+        self.get_engine_resources().get_material_instance_data(resource_name)
     }
 }
 
@@ -55,15 +95,12 @@ impl ProjectResources {
             _scene_data_create_infos_map: SceneDataCreateInfoMap::new(),
         })
     }
-
     pub fn get_engine_resources(&self) -> &Resources {
         unsafe { &*self._engine_resources }
     }
-
     pub fn get_engine_resources_mut(&self) -> &mut Resources {
         unsafe { &mut *(self._engine_resources as *mut Resources) }
     }
-
     pub fn collect_resources(&self, dir: &Path, extensions: &[&str]) -> Vec<PathBuf> {
         self.get_engine_resources().collect_resources(dir, extensions)
     }

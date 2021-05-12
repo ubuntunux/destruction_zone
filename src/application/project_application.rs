@@ -242,7 +242,9 @@ pub fn run_application() {
         constants::FAR = 2000.0;
         constants::FOV = 60.0;
         // shadow
-        constants::SHADOW_BIAS = 0.005;
+        constants::SHADOW_MAP_SIZE = 2048;
+        constants::SHADOW_SAMPLES = 4;
+        constants::SHADOW_BIAS = 0.004;
         constants::SHADOW_DISTANCE = 200.0;
         constants::SHADOW_DEPTH = 1000.0;
         constants::SHADOW_EXP = 500.0;

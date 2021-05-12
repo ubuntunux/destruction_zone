@@ -24,7 +24,7 @@ impl GameClient {
         project_application.get_project_scene_manager_mut().open_scene_data("default");
 
         self._actor_manager.initialize_actor_manager(project_application);
-        self._game_ui_manager.initialize_game_ui_manager(project_application.get_project_ui_manager());
+        self._game_ui_manager.initialize_game_ui_manager(project_application.get_project_ui_manager(), project_application.get_project_resources());
     }
 
     pub fn update_event(&self, project_application: &Application) {
