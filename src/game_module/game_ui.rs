@@ -1,4 +1,4 @@
-use nalgebra::Vector2;
+use nalgebra::{Vector2, Vector4};
 
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use rust_engine_3d::renderer::ui::{
@@ -14,6 +14,8 @@ use rust_engine_3d::renderer::ui::{
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
 
 use crate::application::project_application::Application;
+use crate::game_module::actor_manager::ActorManager;
+use crate::game_module::base_actor::BaseActor;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::resource::project_resource::ProjectResources;
 
@@ -88,6 +90,7 @@ impl GameUIManager {
         ui_component.set_expandable(true);
         ui_component.set_color(get_color32(255, 255, 255, 10));
         root_widget.add_widget(target_info_layout_ptr);
+        self._target_info = target_info_layout_ptr;
 
         let target_info: *mut WidgetDefault = UIManagerData::create_widget("12345678", UIWidgetTypes::Default) as *mut WidgetDefault;
         let ui_component = unsafe { &mut target_info.as_mut().unwrap().get_ui_component_mut() };
@@ -99,10 +102,10 @@ impl GameUIManager {
         ui_component._callback_touch_up = Some(&touch_up);
         ui_component._callback_touch_move = Some(&touch_move);
         target_info_layout.add_widget(target_info);
-        self._target_info = target_info;
     }
 
-    pub fn update_game_ui(&mut self, project_application: &Application, delta_time: f32) {
+    pub fn update_game_ui(&mut self, project_application: &Application, action_manager: &ActorManager, delta_time: f32) {
+        let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_application_data()._window_size;
         self._crosshair_pos.x = window_size.x as f32 * 0.5;
         self._crosshair_pos.y = window_size.y as f32 * 0.5;
@@ -110,7 +113,17 @@ impl GameUIManager {
         let ui_component = crosshair_widget.get_ui_component_mut();
         ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
 
-        // let target_info = unsafe { &mut *(self._target_info as *mut WidgetDefault) };
-        // let ui_component = crosshair_widget.get_ui_component_mut();
+        for (_id, actor) in action_manager._actors.iter() {
+            if false == actor.is_player_actor() {
+                let actor_pos = actor.get_transform().get_position();
+                let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos);
+
+                let target_info = unsafe { &mut *(self._target_info as *mut WidgetDefault) };
+                let ui_component = target_info.get_ui_component_mut();
+                ui_component.set_center(screen_pos.x, screen_pos.y);
+                println!("{:?}", screen_pos);
+                break;
+            }
+        }
     }
 }
