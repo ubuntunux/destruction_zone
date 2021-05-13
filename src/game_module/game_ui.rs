@@ -117,11 +117,9 @@ impl GameUIManager {
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
                 let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos);
-
                 let target_info = unsafe { &mut *(self._target_info as *mut WidgetDefault) };
                 let ui_component = target_info.get_ui_component_mut();
                 ui_component.set_center(screen_pos.x, screen_pos.y);
-                println!("{:?}", screen_pos);
                 break;
             }
         }
