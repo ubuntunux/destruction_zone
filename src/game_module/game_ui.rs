@@ -57,10 +57,11 @@ impl GameUIManager {
     }
 
     pub fn update_game_ui(&mut self, project_application: &Application, delta_time: f32) {
-        let mouse_pos = project_application.get_application_data()._mouse_move_data._mouse_pos;
+        let window_size = &project_application.get_application_data()._window_size;
+        let mut crosshair_pos = project_application.get_application_data()._mouse_move_data._mouse_pos;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
         let ui_component = crosshair_widget.get_ui_component_mut();
-        ui_component.set_pos_x(mouse_pos.x as f32 - ui_component.get_size_x() * 0.5);
-        ui_component.set_pos_y(mouse_pos.y as f32 - ui_component.get_size_y() * 0.5);
+        ui_component.set_pos_x(crosshair_pos.x as f32 - ui_component.get_size_x() * 0.5);
+        ui_component.set_pos_y(crosshair_pos.y as f32 - ui_component.get_size_y() * 0.5);
     }
 }

@@ -51,8 +51,8 @@ impl ApplicationBase for Application {
             const MOUSE_DELTA_RATIO: f32 = 500.0;
             let delta_time = time_data._delta_time;
             let _mouse_pos = &mouse_move_data._mouse_pos;
-            let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.0 as f32 * MOUSE_DELTA_RATIO;
-            let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.1 as f32 * MOUSE_DELTA_RATIO;
+            let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.x as f32 * MOUSE_DELTA_RATIO;
+            let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.y as f32 * MOUSE_DELTA_RATIO;
             let btn_left: bool = mouse_input_data._btn_l_hold;
             let btn_right: bool = mouse_input_data._btn_r_hold;
             let _btn_middle: bool = mouse_input_data._btn_m_hold;

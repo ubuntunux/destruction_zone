@@ -3,6 +3,7 @@ use std::path::{ PathBuf };
 
 use ash::Device;
 use nalgebra::{
+    Vector2,
     Vector3,
     Vector4
 };
@@ -61,8 +62,7 @@ pub struct ProjectSceneManager {
     pub _project_resources: *const ProjectResources,
     pub _project_renderer: *const ProjectRenderer,
     pub _project_effect_manager: *const ProjectEffectManager,
-    pub _window_width: u32,
-    pub _window_height: u32,
+    pub _window_size: Vector2<i32>,
     pub _scene_name: String,
     pub _main_camera: RcRefCell<CameraObjectData>,
     pub _main_light: RcRefCell<DirectionalLightData>,
@@ -84,19 +84,18 @@ pub struct ProjectSceneManager {
 impl ProjectSceneManagerBase for ProjectSceneManager {
     fn initialize_project_scene_manager(
         &mut self,
-        window_width: u32,
-        window_height: u32,
         scene_manager_data: &SceneManagerData,
         renderer_data: &RendererData,
         resources: &Resources,
         effect_manager_data: *const EffectManagerData,
+        window_size: &Vector2<i32>,
     ) {
         self._project_renderer = renderer_data._project_renderer as *const ProjectRenderer;
         self._scene_manager_data = scene_manager_data;
         self._project_resources = resources._project_resources as *const ProjectResources;
         self._project_effect_manager = unsafe { (*effect_manager_data)._project_effect_manager as *const ProjectEffectManager };
 
-        self.resized_window(window_width, window_height);
+        self.resized_window(window_size.x, window_size.y);
     }
 
     fn initialize_scene_graphics_data(&self) {
@@ -105,14 +104,14 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn destroy_scene_graphics_data(&self, _device: &Device) {
     }
 
-    fn get_window_size(&self) -> (u32, u32) {
-        (self._window_width, self._window_height)
+    fn get_window_size(&self) -> &Vector2<i32> {
+        &self._window_size
     }
-    fn set_window_size(&mut self, width: u32, height: u32) {
-        self._window_width = width;
-        self._window_height = height;
+    fn set_window_size(&mut self, width: i32, height: i32) {
+        self._window_size.x = width;
+        self._window_size.y = height;
     }
-    fn resized_window(&mut self, width: u32, height: u32) {
+    fn resized_window(&mut self, width: i32, height: i32) {
         self.set_window_size(width, height);
         self._main_camera.borrow_mut().set_aspect(width, height);
     }
@@ -225,8 +224,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         // cameras
         for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
             let camera_create_info = CameraCreateInfo {
-                window_width: self._window_width,
-                window_height: self._window_height,
+                window_size: self._window_size.into(),
                 ..camera_create_info.clone()
             };
             let camera_object = self.add_camera_object(object_name, &camera_create_info);
@@ -426,8 +424,7 @@ impl ProjectSceneManager {
         let default_camera = CameraObjectData::create_camera_object_data(&String::from("default_camera"), &CameraCreateInfo::default());
         let light_probe_camera_create_info = CameraCreateInfo {
             fov: 90.0,
-            window_width: application_constants::LIGHT_PROBE_SIZE,
-            window_height: application_constants::LIGHT_PROBE_SIZE,
+            window_size: Vector2::new(application_constants::LIGHT_PROBE_SIZE as i32, application_constants::LIGHT_PROBE_SIZE as i32),
             enable_jitter: false,
             ..Default::default()
         };
@@ -458,8 +455,7 @@ impl ProjectSceneManager {
             _project_resources: std::ptr::null(),
             _project_renderer: std::ptr::null(),
             _project_effect_manager: std::ptr::null(),
-            _window_width: default_camera._window_width,
-            _window_height: default_camera._window_height,
+            _window_size: default_camera._window_size.into(),
             _scene_name: String::new(),
             _main_camera: system::newRcRefCell(default_camera),
             _main_light: system::newRcRefCell(default_light),
