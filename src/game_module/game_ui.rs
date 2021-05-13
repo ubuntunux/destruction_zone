@@ -1,14 +1,17 @@
+use nalgebra::Vector2;
+
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use rust_engine_3d::renderer::ui::{ProjectUIManagerBase, UIManagerData, Widget, UIWidgetTypes, WidgetDefault, HorizontalAlign, VerticalAlign};
+use rust_engine_3d::resource::resource::ProjectResourcesBase;
 
+use crate::application::project_application::Application;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::resource::project_resource::ProjectResources;
-use rust_engine_3d::resource::resource::ProjectResourcesBase;
-use crate::application::project_application::Application;
 
 pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
     pub _crosshair_widget: *const WidgetDefault,
+    pub _crosshair_pos: Vector2<f32>,
 }
 
 impl GameUIManager {
@@ -16,6 +19,7 @@ impl GameUIManager {
         Box::new(GameUIManager {
             _project_ui_manager: std::ptr::null(),
             _crosshair_widget: std::ptr::null(),
+            _crosshair_pos: Vector2::zeros(),
         })
     }
 
@@ -58,10 +62,11 @@ impl GameUIManager {
 
     pub fn update_game_ui(&mut self, project_application: &Application, delta_time: f32) {
         let window_size = &project_application.get_application_data()._window_size;
-        let mut crosshair_pos = project_application.get_application_data()._mouse_move_data._mouse_pos;
+        self._crosshair_pos.x = window_size.x as f32 * 0.5;
+        self._crosshair_pos.y = window_size.y as f32 * 0.5;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
         let ui_component = crosshair_widget.get_ui_component_mut();
-        ui_component.set_pos_x(crosshair_pos.x as f32 - ui_component.get_size_x() * 0.5);
-        ui_component.set_pos_y(crosshair_pos.y as f32 - ui_component.get_size_y() * 0.5);
+        ui_component.set_pos_x(self._crosshair_pos.x as f32 - ui_component.get_size_x() * 0.5);
+        ui_component.set_pos_y(self._crosshair_pos.y as f32 - ui_component.get_size_y() * 0.5);
     }
 }

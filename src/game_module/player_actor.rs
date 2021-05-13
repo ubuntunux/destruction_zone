@@ -62,10 +62,12 @@ impl PlayerActor {
         main_camera._transform_object.rotation_yaw(self._controller.get_velocity_yaw());
 
         // follow camera yaw
-        let yaw = -transform.get_roll() * 0.5;
-        transform.set_yaw(main_camera._transform_object.get_yaw() + std::f32::consts::PI + yaw);
+        let yaw = std::f32::consts::PI - transform.get_roll() * 0.5;
+        transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
 
-        let camera_pos = transform.get_position() + main_camera._transform_object.get_front() * 8.0 + Vector3::new(0.0, 2.0, 0.0);
+        const CAMERA_OFFSET_Y: f32 = 3.0;
+        const CAMERA_OFFSET_Z: f32 = 8.0;
+        let camera_pos = transform.get_position() + main_camera._transform_object.get_front() * CAMERA_OFFSET_Z + main_camera._transform_object.get_up() * CAMERA_OFFSET_Y;
         main_camera._transform_object.set_position(&camera_pos);
     }
 }
