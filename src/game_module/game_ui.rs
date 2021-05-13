@@ -79,8 +79,8 @@ impl GameUIManager {
         let mut target_info_layout = unsafe { &mut target_info_layout_ptr.as_mut().unwrap() };
         let ui_component = target_info_layout.get_ui_component_mut();
         let ui_size = 200.0f32;
-        ui_component.set_pos(window_center.x - ui_size * 0.5, window_center.y - ui_size * 0.5);
         ui_component.set_size(ui_size, ui_size);
+        ui_component.set_center(window_center.x, window_center.y);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
         ui_component.set_layout_orientation(Orientation::HORIZONTAL);
         ui_component.set_halign(HorizontalAlign::CENTER);
@@ -108,7 +108,9 @@ impl GameUIManager {
         self._crosshair_pos.y = window_size.y as f32 * 0.5;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
         let ui_component = crosshair_widget.get_ui_component_mut();
-        ui_component.set_pos_x(self._crosshair_pos.x as f32 - ui_component.get_size_x() * 0.5);
-        ui_component.set_pos_y(self._crosshair_pos.y as f32 - ui_component.get_size_y() * 0.5);
+        ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
+
+        // let target_info = unsafe { &mut *(self._target_info as *mut WidgetDefault) };
+        // let ui_component = crosshair_widget.get_ui_component_mut();
     }
 }
