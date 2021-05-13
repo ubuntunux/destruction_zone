@@ -59,7 +59,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0\nbtn0 Child Test"));
+            ui_component.set_text("btn0\nbtn0 Child Test");
             ui_component.set_material_instance(&resources.get_material_instance_data("ui/render_ui_test"));
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
@@ -79,7 +79,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0_0\nbtn0_0 Test"));
+            ui_component.set_text("btn0_0\nbtn0_0 Test");
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
             ui_component._callback_touch_move = Some(&touch_move);
@@ -98,7 +98,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0_0_0\nbtn0_0_0 Test"));
+            ui_component.set_text("btn0_0_0\nbtn0_0_0 Test");
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
             ui_component._callback_touch_move = Some(&touch_move);
@@ -122,7 +122,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0_1\nbtn0_1 Test"));
+            ui_component.set_text("btn0_1\nbtn0_1 Test");
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
             ui_component._callback_touch_move = Some(&touch_move);
@@ -141,7 +141,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0_1_0\nbtn0_1_0 Test"));
+            ui_component.set_text("btn0_1_0\nbtn0_1_0 Test");
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
             ui_component._callback_touch_move = Some(&touch_move);
@@ -164,7 +164,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
-            ui_component.set_text(String::from("btn0_1_1\nbtn0_1_1 Test"));
+            ui_component.set_text("btn0_1_1\nbtn0_1_1 Test");
             ui_component._callback_touch_down = Some(&touch_down);
             ui_component._callback_touch_up = Some(&touch_up);
             ui_component._callback_touch_move = Some(&touch_move);

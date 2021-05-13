@@ -46,7 +46,7 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
             _forward_acceleration: 50.0,
             _side_acceleration: 50.0,
             _floating_acceleration: 30.0,
-            _damping: 20.0,
+            _damping: 30.0,
             _side_step_roll: 0.3,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
@@ -150,7 +150,7 @@ impl ActorController {
         // rotation speed
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
             self._rotation_velocity = &self._rotation_acceleration * self._controller_data._rotation_acceleration;
-            let mut rotation_velocity = self._rotation_velocity.norm();
+            let rotation_velocity = self._rotation_velocity.norm();
             if self._controller_data._max_rotation_speed < rotation_velocity {
                 self._rotation_velocity = &self._rotation_velocity / rotation_velocity * self._controller_data._max_rotation_speed;
             }
