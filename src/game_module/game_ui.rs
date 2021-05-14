@@ -23,7 +23,8 @@ pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
     pub _crosshair_widget: *const WidgetDefault,
     pub _crosshair_pos: Vector2<f32>,
-    pub _target_info: *const WidgetDefault,
+    pub _target_info_layer: *mut WidgetDefault,
+    pub _target_info: *mut WidgetDefault,
 }
 
 impl GameUIManager {
@@ -32,7 +33,8 @@ impl GameUIManager {
             _project_ui_manager: std::ptr::null(),
             _crosshair_widget: std::ptr::null(),
             _crosshair_pos: Vector2::zeros(),
-            _target_info: std::ptr::null(),
+            _target_info_layer: std::ptr::null_mut(),
+            _target_info: std::ptr::null_mut(),
         })
     }
 
@@ -77,8 +79,7 @@ impl GameUIManager {
         root_widget.add_widget(crosshair_widget);
         self._crosshair_widget = crosshair_widget;
 
-        let target_info_layout_ptr: *mut WidgetDefault = UIManagerData::create_widget("target_info_layout", UIWidgetTypes::Default) as *mut WidgetDefault;
-        let mut target_info_layout = unsafe { &mut target_info_layout_ptr.as_mut().unwrap() };
+        let target_info_layout = unsafe { &mut *(UIManagerData::create_widget("target_info_layout", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_info_layout.get_ui_component_mut();
         let ui_size = 200.0f32;
         ui_component.set_size(ui_size, ui_size);
@@ -89,22 +90,26 @@ impl GameUIManager {
         ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_expandable(true);
         ui_component.set_color(get_color32(255, 255, 255, 10));
-        root_widget.add_widget(target_info_layout_ptr);
-        self._target_info = target_info_layout_ptr;
+        root_widget.add_widget(target_info_layout);
+        self._target_info_layer = target_info_layout;
 
-        let target_info: *mut WidgetDefault = UIManagerData::create_widget("12345678", UIWidgetTypes::Default) as *mut WidgetDefault;
-        let ui_component = unsafe { &mut target_info.as_mut().unwrap().get_ui_component_mut() };
-        ui_component.set_expandable(true);
-        ui_component.set_text("12345678");
+        let target_info = unsafe { &mut *(UIManagerData::create_widget("12345678", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_info.get_ui_component_mut();
+        ui_component.set_text("1234");
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_layout_type(UILayoutType::BoxLayout);
+        ui_component.set_halign(HorizontalAlign::CENTER);
+        ui_component.set_valign(VerticalAlign::CENTER);
+        ui_component.set_expandable(true);
         ui_component._callback_touch_down = Some(&touch_down);
         ui_component._callback_touch_up = Some(&touch_up);
         ui_component._callback_touch_move = Some(&touch_move);
         target_info_layout.add_widget(target_info);
+        self._target_info = target_info;
     }
 
-    pub fn update_game_ui(&mut self, project_application: &Application, action_manager: &ActorManager, delta_time: f32) {
+    pub fn update_game_ui(&mut self, project_application: &Application, actor_manager: &ActorManager, delta_time: f32) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_application_data()._window_size;
         self._crosshair_pos.x = window_size.x as f32 * 0.5;
@@ -113,13 +118,21 @@ impl GameUIManager {
         let ui_component = crosshair_widget.get_ui_component_mut();
         ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
 
-        for (_id, actor) in action_manager._actors.iter() {
+        let player_actor_pos = actor_manager.get_player_actor().get_transform().get_position();
+
+        for (_id, actor) in actor_manager._actors.iter() {
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
-                let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos);
-                let target_info = unsafe { &mut *(self._target_info as *mut WidgetDefault) };
-                let ui_component = target_info.get_ui_component_mut();
+                let distance = (actor_pos - player_actor_pos).norm();
+                let clamp: bool = true;
+                let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos, clamp);
+                let target_info_layer = unsafe { self._target_info_layer.as_mut().unwrap() };
+                let ui_component = target_info_layer.get_ui_component_mut();
                 ui_component.set_center(screen_pos.x, screen_pos.y);
+
+                let target_info = unsafe { self._target_info.as_mut().unwrap() };
+                let ui_component = target_info.get_ui_component_mut();
+                ui_component.set_text(&format!("{}m", distance as i32));
                 break;
             }
         }
