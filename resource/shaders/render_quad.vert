@@ -13,7 +13,8 @@ layout(location = 4) in vec2 inTexCoord;
 layout(location = 0) out VERTEX_OUTPUT vs_output;
 
 void main() {
-    gl_Position = vec4(inPosition, 1.0);
+    // NOTE: invert y cause convert world to ndc
+    gl_Position = vec4(inPosition.x, -inPosition.y, inPosition.z, 1.0);
     vs_output.vertexColor = inColor;
     vs_output.vertexNormal = inNormal;
     vs_output.texCoord = inTexCoord;
