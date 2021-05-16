@@ -75,8 +75,9 @@ impl ActorManager {
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
-                actor.get_controller_mut().acceleration_yaw(0.05 * delta_time);
+                actor.get_controller_mut().acceleration_yaw(1000.0 * delta_time);
                 actor.get_controller_mut().acceleration_forward();
+                actor.get_controller_mut().acceleration_right();
                 actor.update_actor(delta_time, height_map_data);
             }
         }

@@ -61,13 +61,13 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
             _forward_acceleration: 50.0,
             _side_acceleration: 50.0,
             _floating_acceleration: 30.0,
-            _damping: 20.0,
-            _side_step_roll: 0.5,
+            _damping: 30.0,
+            _side_step_roll: 0.3,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
-            _max_rotation_speed: 50.0,
-            _rotation_acceleration: 50.0,
-            _rotation_damping: 30.0,
+            _max_rotation_speed: 0.05,
+            _rotation_acceleration: 0.002,
+            _rotation_damping: 0.1,
         },
     }
 }
