@@ -31,6 +31,7 @@ pub struct ActorController {
     _ground_velocity: Vector2<f32>,
     _prev_floating_velocity: f32,
     _floating_velocity: f32,
+    _floating_height: f32,
     _acceleration: Vector3<f32>,
     _rotation_velocity: Vector2<f32>,
     _rotation_acceleration: Vector2<f32>,
@@ -73,13 +74,14 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
 }
 
 impl ActorController {
-    pub fn create_actor_controller(controller_type: ControllerDataType) -> ActorController {
+    pub fn create_actor_controller(controller_type: ControllerDataType, floating_height: f32) -> ActorController {
         ActorController {
             _controller_data: create_controller_data(controller_type),
             _prev_ground_velocity: Vector2::zeros(),
             _ground_velocity: Vector2::zeros(),
             _prev_floating_velocity: 0.0,
             _floating_velocity: 0.0,
+            _floating_height: floating_height,
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
@@ -104,7 +106,7 @@ impl ActorController {
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
     pub fn get_roll(&self) -> f32 { self._roll }
 
-    pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, floating_height: f32, height_map_data: &HeightMapData) {
+    pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
 
         let boost_acceleration = if self._boost { self._controller_data._boost_acceleration } else { 1.0 };
@@ -144,7 +146,7 @@ impl ActorController {
         let mut position = transform.get_position().clone() + &velocity * delta_time;
         if position != *transform.get_position() || false == self._on_ground {
             self._on_ground = false;
-            let floating_height = height_map_data.get_height(&position, 0) + floating_height;
+            let floating_height = height_map_data.get_height(&position, 0) + self._floating_height;
             if position.y < floating_height {
                 position.y = floating_height;
                 self._floating_velocity = 0.0;

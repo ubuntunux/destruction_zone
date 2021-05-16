@@ -23,7 +23,7 @@ impl AIActor {
             _id: id,
             _render_object: render_object.clone(),
             _transform_object: transform_object,
-            _controller: ActorController::create_actor_controller(controller_type),
+            _controller: ActorController::create_actor_controller(controller_type, floating_height),
             _floating_height: floating_height,
         })
     }
@@ -55,7 +55,7 @@ impl BaseActor for AIActor {
 
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
         let transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
-        self._controller.update_controller(delta_time, transform, self._floating_height, height_map_data);
+        self._controller.update_controller(delta_time, transform, height_map_data);
 
         transform.rotation_pitch(self._controller.get_velocity_pitch());
         transform.rotation_yaw(self._controller.get_velocity_yaw());

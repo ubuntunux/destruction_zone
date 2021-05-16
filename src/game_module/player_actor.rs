@@ -26,7 +26,7 @@ impl PlayerActor {
             _id: id,
             _render_object: render_object.clone(),
             _transform_object: transform_object,
-            _controller: ActorController::create_actor_controller(controller_type),
+            _controller: ActorController::create_actor_controller(controller_type, floating_height),
             _floating_height: floating_height,
         })
     }
@@ -64,7 +64,7 @@ impl PlayerActor {
     pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData) {
         let transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
 
-        self._controller.update_controller(delta_time, transform, self._floating_height, height_map_data);
+        self._controller.update_controller(delta_time, transform, height_map_data);
 
         const CAMERA_OFFSET_Y: f32 = 3.0;
         const CAMERA_OFFSET_Z: f32 = 8.0;
