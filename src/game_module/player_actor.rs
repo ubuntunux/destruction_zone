@@ -40,6 +40,14 @@ impl BaseActor for PlayerActor {
         true
     }
 
+    fn get_controller(&self) -> &ActorController {
+        &self._controller
+    }
+
+    fn get_controller_mut(&mut self) -> &mut ActorController {
+        &mut self._controller
+    }
+
     fn get_transform(&self) -> &TransformObjectData {
         unsafe { &(*self._transform_object) }
     }
@@ -58,16 +66,17 @@ impl PlayerActor {
 
         self._controller.update_controller(delta_time, transform, self._floating_height, height_map_data);
 
-        main_camera._transform_object.rotation_pitch(self._controller.get_velocity_pitch());
-        main_camera._transform_object.rotation_yaw(self._controller.get_velocity_yaw());
-
-        // follow camera yaw
-        let yaw = std::f32::consts::PI - transform.get_roll() * 0.5;
-        transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
-
         const CAMERA_OFFSET_Y: f32 = 3.0;
         const CAMERA_OFFSET_Z: f32 = 8.0;
         let camera_pos = transform.get_position() + main_camera._transform_object.get_front() * CAMERA_OFFSET_Z + main_camera._transform_object.get_up() * CAMERA_OFFSET_Y;
         main_camera._transform_object.set_position(&camera_pos);
+        main_camera._transform_object.rotation_pitch(self._controller.get_velocity_pitch());
+        main_camera._transform_object.rotation_yaw(self._controller.get_velocity_yaw());
+
+        let roll = self._controller.get_roll();
+        let yaw = std::f32::consts::PI - roll * 0.5;
+        transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
+        transform.set_roll(roll);
+        transform.set_position(self._controller.get_position());
     }
 }

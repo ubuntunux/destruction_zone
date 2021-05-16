@@ -61,11 +61,11 @@ impl GameClient {
         let player_actor = self._actor_manager.get_player_actor_mut();
 
         if 0 != mouse_delta.x {
-            player_actor._controller.acceleration_yaw(-mouse_delta.x);
+            player_actor._controller.acceleration_yaw(-mouse_delta.x as f32);
         }
 
         if 0 != mouse_delta.y {
-            player_actor._controller.acceleration_pitch(-mouse_delta.y);
+            player_actor._controller.acceleration_pitch(-mouse_delta.y as f32);
         }
 
         if modifier_keys_shift {

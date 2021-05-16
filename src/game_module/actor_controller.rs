@@ -34,6 +34,8 @@ pub struct ActorController {
     _acceleration: Vector3<f32>,
     _rotation_velocity: Vector2<f32>,
     _rotation_acceleration: Vector2<f32>,
+    _position: Vector3<f32>,
+    _roll: f32,
     _boost: bool,
     _on_ground: bool,
 }
@@ -81,6 +83,8 @@ impl ActorController {
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
+            _position: Vector3::zeros(),
+            _roll: 0.0,
             _boost: false,
             _on_ground: false,
         }
@@ -93,10 +97,12 @@ impl ActorController {
     pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
     pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
     pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
-    pub fn acceleration_pitch(&mut self, acceleration: i32) { self._rotation_acceleration.x = acceleration as f32; }
-    pub fn acceleration_yaw(&mut self, acceleration: i32) { self._rotation_acceleration.y = acceleration as f32; }
+    pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = acceleration; }
+    pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = acceleration; }
     pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
+    pub fn get_position(&self) -> &Vector3<f32> { &self._position }
+    pub fn get_roll(&self) -> f32 { self._roll }
 
     pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, floating_height: f32, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
@@ -144,7 +150,7 @@ impl ActorController {
                 self._floating_velocity = 0.0;
                 self._on_ground = true;
             }
-            transform.set_position(&position);
+            self._position = position;
         }
 
         // rotation speed
@@ -169,7 +175,7 @@ impl ActorController {
             } else {
                 roll += roll_speed * roll_diff.abs() / self._controller_data._side_step_roll;
             }
-            transform.set_roll(roll);
+            self._roll = roll;
         }
 
         self._prev_ground_velocity.clone_from(&self._ground_velocity);
