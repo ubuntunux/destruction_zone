@@ -1,5 +1,5 @@
 use std::fs::{ File };
-use std::io::Cursor;
+use std::io::{Cursor, BufReader};
 use std::io::prelude::*;
 use std::path::{ Path, PathBuf };
 
@@ -38,10 +38,12 @@ pub struct ProjectResources {
 impl ProjectResourcesBase for ProjectResources {
     fn initialize_project_resources(&mut self, engine_resources: &Resources, engine_renderer: &mut RendererData) {
         self._engine_resources = engine_resources;
+        self.load_audio_datas();
         self.load_scene_datas(engine_renderer);
     }
     fn destroy_project_resources(&mut self, engine_renderer: &mut RendererData) {
         self.unload_scene_datas(engine_renderer);
+        self.unload_audio_datas();
     }
     fn load_graphics_datas(&mut self, _engine_renderer: &mut RendererData) {
     }
@@ -156,9 +158,7 @@ impl ProjectResources {
         for audio_data_file in audio_data_files {
             let audio_data_name = get_unique_resource_name(&self._audio_data_create_infos_map, &audio_directory, &audio_data_file);
             let loaded_contents = system::load(&audio_data_file);
-
-            //let file = BufReader::new(std::fs::File::open("src/music.ogg").unwrap());
-            let audio_source: rodio::Decoder<Cursor<Vec<u8>>> = rodio::Decoder::new(loaded_contents).unwrap();
+            let audio_source = rodio::Decoder::new(BufReader::new(loaded_contents)).unwrap();
             let audio_data_create_info = AudioDataCreateInfo {
                 _audio_name: audio_data_name.clone(),
                 _audio_source: audio_source,
