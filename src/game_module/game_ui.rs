@@ -1,4 +1,4 @@
-use nalgebra::{Vector2, Vector4};
+use nalgebra::{ Vector2 };
 
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use rust_engine_3d::renderer::ui::{
@@ -13,11 +13,10 @@ use rust_engine_3d::renderer::ui::{
 };
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
 
-use crate::application::project_application::Application;
+use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::base_actor::BaseActor;
 use crate::renderer::project_ui::ProjectUIManager;
-use crate::resource::project_resource::ProjectResources;
 
 pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
@@ -50,7 +49,7 @@ impl GameUIManager {
         unsafe { &mut *(self._project_ui_manager as *mut ProjectUIManager) }
     }
 
-    pub fn initialize_game_ui_manager(&mut self, project_application: &Application) {
+    pub fn initialize_game_ui_manager(&mut self, project_application: &ProjectApplication) {
         let project_resources = project_application.get_project_resources();
         self._project_ui_manager = project_application.get_project_ui_manager();
 
@@ -67,7 +66,7 @@ impl GameUIManager {
             // println!("touch_up");
         };
 
-        let window_size = &project_application.get_application_data()._window_size;
+        let window_size = &project_application.get_engine_application()._window_size;
         let window_center = Vector2::<f32>::new(window_size.x as f32 * 0.5, window_size.y as f32 * 0.5,);
 
         //
@@ -125,9 +124,9 @@ impl GameUIManager {
         self._target_shield = target_shield;
     }
 
-    pub fn update_game_ui(&mut self, project_application: &Application, actor_manager: &ActorManager, delta_time: f32) {
+    pub fn update_game_ui(&mut self, project_application: &ProjectApplication, actor_manager: &ActorManager, _delta_time: f32) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
-        let window_size = &project_application.get_application_data()._window_size;
+        let window_size = &project_application.get_engine_application()._window_size;
         self._crosshair_pos.x = window_size.x as f32 * 0.5;
         self._crosshair_pos.y = window_size.y as f32 * 0.5;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };

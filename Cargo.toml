@@ -33,7 +33,7 @@ xml-rs = "0.8"
 raw-window-handle = ""
 
 # not support andoir
-# rodio = "0.13.1"
+rodio = "0.13.1"
 
 # android
 #anyhow = "1.0.12"

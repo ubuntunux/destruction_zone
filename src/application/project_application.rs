@@ -3,9 +3,10 @@ use log::LevelFilter;
 use ash::vk;
 use winit::event::VirtualKeyCode;
 use rust_engine_3d::constants;
-use rust_engine_3d::application::application::{self, ApplicationBase, ApplicationData};
+use rust_engine_3d::application::application::{self, ApplicationBase, EngineApplication };
 
 use crate::application_constants;
+use crate::application::project_audio_manager::ProjectAudioManager;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::project_ui::ProjectUIManager;
@@ -14,20 +15,22 @@ use crate::resource::project_resource::ProjectResources;
 use crate::game_module::game_client::GameClient;
 
 
-pub struct Application {
-    pub _application_data: *const ApplicationData,
+pub struct ProjectApplication {
+    pub _engine_application: *const EngineApplication,
     pub _project_resources: Box<ProjectResources>,
     pub _project_renderer: Box<ProjectRenderer>,
     pub _project_scene_manager: Box<ProjectSceneManager>,
     pub _project_effect_manager: Box<ProjectEffectManager>,
     pub _project_ui_manager: Box<ProjectUIManager>,
+    pub _project_audio_manager: Box<ProjectAudioManager>,
     pub _game_client: Box<GameClient>,
     pub _is_game_mode: bool,
 }
 
-impl ApplicationBase for Application {
-    fn initialize_application(&mut self, application_data: &ApplicationData) {
-        self._application_data = application_data;
+impl ApplicationBase for ProjectApplication {
+    fn initialize_application(&mut self, engine_application: &EngineApplication) {
+        self._engine_application = engine_application;
+        self._project_audio_manager.initialize_audio_manager(self, self._project_resources.as_ref());
         self.get_game_client_mut().initialize_game_client(self);
     }
 
@@ -36,23 +39,23 @@ impl ApplicationBase for Application {
             self.get_game_client_mut().update_event(self);
         }
 
-        if self.get_application_data()._keyboard_input_data.get_key_pressed(VirtualKeyCode::Tab) {
+        if self.get_engine_application()._keyboard_input_data.get_key_pressed(VirtualKeyCode::Tab) {
             self.toggle_game_mode();
         }
 
         // EditorMode
         if false == self._is_game_mode {
-            let application_data = self.get_application_data();
-            let time_data = &application_data._time_data;
-            let mouse_move_data = &application_data._mouse_move_data;
-            let mouse_input_data = &application_data._mouse_input_data;
-            let keyboard_input_data = &application_data._keyboard_input_data;
+            let engine_application = self.get_engine_application();
+            let time_data = &engine_application._time_data;
+            let mouse_move_data = &engine_application._mouse_move_data;
+            let mouse_input_data = &engine_application._mouse_input_data;
+            let keyboard_input_data = &engine_application._keyboard_input_data;
 
             const MOUSE_DELTA_RATIO: f32 = 500.0;
             let delta_time = time_data._delta_time;
             let _mouse_pos = &mouse_move_data._mouse_pos;
-            let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / application_data._window_size.x as f32 * MOUSE_DELTA_RATIO;
-            let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / application_data._window_size.y as f32 * MOUSE_DELTA_RATIO;
+            let mouse_delta_x = mouse_move_data._mouse_pos_delta.x as f32 / engine_application._window_size.x as f32 * MOUSE_DELTA_RATIO;
+            let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / engine_application._window_size.y as f32 * MOUSE_DELTA_RATIO;
             let btn_left: bool = mouse_input_data._btn_l_hold;
             let btn_right: bool = mouse_input_data._btn_r_hold;
             let _btn_middle: bool = mouse_input_data._btn_m_hold;
@@ -143,7 +146,7 @@ impl ApplicationBase for Application {
     }
 
     fn update_application(&mut self) {
-        let application = self as *mut Application;
+        let application = self as *mut ProjectApplication;
         if self._is_game_mode {
             self._game_client.update_game_client(application);
         }
@@ -154,12 +157,12 @@ impl ApplicationBase for Application {
     }
 }
 
-impl Application {
-    pub fn get_application_data(&self) -> &ApplicationData {
-        unsafe { &*self._application_data }
+impl ProjectApplication {
+    pub fn get_engine_application(&self) -> &EngineApplication {
+        unsafe { &*self._engine_application }
     }
-    pub fn get_application_data_mut(&self) -> &mut ApplicationData {
-        unsafe { &mut *(self._application_data as *mut ApplicationData) }
+    pub fn get_engine_application_mut(&self) -> &mut EngineApplication {
+        unsafe { &mut *(self._engine_application as *mut EngineApplication) }
     }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager {
         &self._project_effect_manager
@@ -191,6 +194,12 @@ impl Application {
     pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
         unsafe { &mut *((self._project_ui_manager.as_ref() as *const ProjectUIManager) as *mut ProjectUIManager) }
     }
+    pub fn get_project_audio_manager(&self) -> &ProjectAudioManager {
+        &self._project_audio_manager
+    }
+    pub fn get_project_audio_manager_mut(&self) -> &mut ProjectAudioManager {
+        unsafe { &mut *((self._project_audio_manager.as_ref() as *const ProjectAudioManager) as *mut ProjectAudioManager) }
+    }
     pub fn get_game_client(&self) -> &GameClient {
         &self._game_client
     }
@@ -204,7 +213,7 @@ impl Application {
 
     pub fn set_game_mode(&mut self, is_game_mode: bool) {
         self._is_game_mode = is_game_mode;
-        self.get_application_data_mut().set_grab_mode(is_game_mode);
+        self.get_engine_application_mut().set_grab_mode(is_game_mode);
     }
 }
 
@@ -259,16 +268,18 @@ pub fn run_application() {
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
+    let project_audio_manager = ProjectAudioManager::create_audio_manager();
     let game_client = GameClient::create_game_client();
 
     // initialize
-    let application = Application {
-        _application_data: std::ptr::null(),
+    let application = ProjectApplication {
+        _engine_application: std::ptr::null(),
         _project_resources: project_resources,
         _project_renderer: project_renderer,
         _project_scene_manager: project_scene_manager,
         _project_effect_manager: project_effect_manager,
         _project_ui_manager: project_ui_manager,
+        _project_audio_manager: project_audio_manager,
         _game_client: game_client,
         _is_game_mode: false,
     };

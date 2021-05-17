@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 
-use crate::application::project_application::Application;
+use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_controller::ControllerDataType;
 use crate::game_module::base_actor::BaseActor;
 use crate::game_module::player_actor::PlayerActor;
@@ -42,7 +42,7 @@ impl ActorManager {
         unsafe { &mut *(self._player_actor as *mut PlayerActor) }
     }
 
-    pub fn initialize_actor_manager(&mut self, project_application: &Application) {
+    pub fn initialize_actor_manager(&mut self, project_application: &ProjectApplication) {
         // Player Actor
         {
             let id = self.generate_id();
@@ -67,7 +67,7 @@ impl ActorManager {
         }
     }
 
-    pub fn update_actor_manager(&mut self, project_application: &Application, delta_time: f32) {
+    pub fn update_actor_manager(&mut self, project_application: &ProjectApplication, delta_time: f32) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
 
         let mut main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();

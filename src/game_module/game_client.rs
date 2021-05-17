@@ -2,7 +2,7 @@ use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
-use crate::application::project_application::Application;
+use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
 
@@ -19,7 +19,7 @@ impl GameClient {
         })
     }
 
-    pub fn initialize_game_client(&mut self, project_application: &Application) {
+    pub fn initialize_game_client(&mut self, project_application: &ProjectApplication) {
         // open scene
         project_application.get_project_scene_manager_mut().open_scene_data("default");
 
@@ -27,8 +27,8 @@ impl GameClient {
         self._game_ui_manager.initialize_game_ui_manager(project_application);
     }
 
-    pub fn update_event(&self, project_application: &Application) {
-        let application_data = project_application.get_application_data();
+    pub fn update_event(&self, project_application: &ProjectApplication) {
+        let application_data = project_application.get_engine_application();
         let time_data = &application_data._time_data;
         let mouse_move_data = &application_data._mouse_move_data;
         let mouse_input_data = &application_data._mouse_input_data;
@@ -94,9 +94,9 @@ impl GameClient {
         }
     }
 
-    pub fn update_game_client(&mut self, project_application: *mut Application) {
+    pub fn update_game_client(&mut self, project_application: *mut ProjectApplication) {
         let project_application = unsafe { &(*project_application) };
-        let delta_time = project_application.get_application_data()._time_data._delta_time as f32;
+        let delta_time = project_application.get_engine_application()._time_data._delta_time as f32;
         self._actor_manager.update_actor_manager(project_application, delta_time);
         self._game_ui_manager.update_game_ui(project_application, self._actor_manager.as_ref(), delta_time);
     }

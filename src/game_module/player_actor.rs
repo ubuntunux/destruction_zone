@@ -1,5 +1,3 @@
-use nalgebra::Vector3;
-
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;

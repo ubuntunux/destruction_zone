@@ -32,7 +32,6 @@ impl AIActor {
 
 impl BaseActor for AIActor {
     fn initialize_actor(&mut self) {
-        unimplemented!()
     }
 
     fn is_player_actor(&self) -> bool {
