@@ -8,3 +8,4 @@ pub mod actor_manager;
 pub mod base_actor;
 pub mod player_actor;
 pub mod ai_actor;
+pub mod armor;

@@ -7,6 +7,7 @@ use crate::game_module::actor_controller::ControllerDataType;
 use crate::game_module::base_actor::BaseActor;
 use crate::game_module::player_actor::PlayerActor;
 use crate::game_module::ai_actor::AIActor;
+use crate::game_module::armor::ArmorDataType;
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -46,7 +47,7 @@ impl ActorManager {
         {
             let id = self.generate_id();
             let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
-            self._actors.insert(id, PlayerActor::create_player_actor(id, ControllerDataType::Default, player_render_object));
+            self._actors.insert(id, PlayerActor::create_player_actor(id, ControllerDataType::Default, ArmorDataType::Default, player_render_object));
             self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn BaseActor) as *const PlayerActor;
             let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
             player_actor.initialize_actor();
@@ -58,7 +59,7 @@ impl ActorManager {
             if actor_name.starts_with("Enemy") {
                 let id = self.generate_id();
                 let actor_render_object = project_application.get_project_scene_manager().get_skeletal_render_object(actor_name).unwrap();
-                self._actors.insert(id, AIActor::create_ai_actor(id, ControllerDataType::Tank, actor_render_object));
+                self._actors.insert(id, AIActor::create_ai_actor(id, ControllerDataType::Tank, ArmorDataType::Default, actor_render_object));
                 let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn BaseActor) as *const AIActor;
                 let actor = unsafe { &mut *(actor as *mut AIActor) };
                 actor.initialize_actor();
