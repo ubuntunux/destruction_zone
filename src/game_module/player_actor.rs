@@ -41,6 +41,14 @@ impl BaseActor for PlayerActor {
         true
     }
 
+    fn get_armor(&self) -> &ArmorInstance {
+        &self._armor
+    }
+
+    fn get_armor_mut(&mut self) -> &mut ArmorInstance {
+        &mut self._armor
+    }
+
     fn get_controller(&self) -> &ActorController {
         &self._controller
     }
@@ -58,6 +66,7 @@ impl BaseActor for PlayerActor {
     }
 
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
+        unimplemented!()
     }
 }
 

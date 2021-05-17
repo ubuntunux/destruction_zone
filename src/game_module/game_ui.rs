@@ -24,7 +24,9 @@ pub struct GameUIManager {
     pub _crosshair_widget: *const WidgetDefault,
     pub _crosshair_pos: Vector2<f32>,
     pub _target_info_layer: *mut WidgetDefault,
-    pub _target_info: *mut WidgetDefault,
+    pub _target_distance: *mut WidgetDefault,
+    pub _target_hp: *mut WidgetDefault,
+    pub _target_shield: *mut WidgetDefault,
 }
 
 impl GameUIManager {
@@ -34,7 +36,9 @@ impl GameUIManager {
             _crosshair_widget: std::ptr::null(),
             _crosshair_pos: Vector2::zeros(),
             _target_info_layer: std::ptr::null_mut(),
-            _target_info: std::ptr::null_mut(),
+            _target_distance: std::ptr::null_mut(),
+            _target_hp: std::ptr::null_mut(),
+            _target_shield: std::ptr::null_mut(),
         })
     }
 
@@ -85,7 +89,7 @@ impl GameUIManager {
         ui_component.set_size(ui_size, ui_size);
         ui_component.set_center(window_center.x, window_center.y);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
-        ui_component.set_layout_orientation(Orientation::HORIZONTAL);
+        ui_component.set_layout_orientation(Orientation::VERTICAL);
         ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_expandable(true);
@@ -93,20 +97,32 @@ impl GameUIManager {
         root_widget.add_widget(target_info_layout);
         self._target_info_layer = target_info_layout;
 
-        let target_info = unsafe { &mut *(UIManagerData::create_widget("12345678", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = target_info.get_ui_component_mut();
-        ui_component.set_text("1234");
+        let target_distance = unsafe { &mut *(UIManagerData::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_distance.get_ui_component_mut();
+        ui_component.set_text("100m");
+        ui_component.set_size(100.0, 20.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_layout_type(UILayoutType::BoxLayout);
-        ui_component.set_halign(HorizontalAlign::CENTER);
-        ui_component.set_valign(VerticalAlign::CENTER);
-        ui_component.set_expandable(true);
-        ui_component._callback_touch_down = Some(&touch_down);
-        ui_component._callback_touch_up = Some(&touch_up);
-        ui_component._callback_touch_move = Some(&touch_move);
-        target_info_layout.add_widget(target_info);
-        self._target_info = target_info;
+        target_info_layout.add_widget(target_distance);
+        self._target_distance = target_distance;
+
+        let target_hp = unsafe { &mut *(UIManagerData::create_widget("target_hp", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_hp.get_ui_component_mut();
+        ui_component.set_text("hp");
+        ui_component.set_size(100.0, 20.0);
+        ui_component.set_color(get_color32(255, 255, 0, 10));
+        ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        target_info_layout.add_widget(target_hp);
+        self._target_hp = target_hp;
+
+        let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_shield.get_ui_component_mut();
+        ui_component.set_text("shield");
+        ui_component.set_size(100.0, 20.0);
+        ui_component.set_color(get_color32(255, 255, 0, 10));
+        ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        target_info_layout.add_widget(target_shield);
+        self._target_shield = target_shield;
     }
 
     pub fn update_game_ui(&mut self, project_application: &Application, actor_manager: &ActorManager, delta_time: f32) {
@@ -124,15 +140,20 @@ impl GameUIManager {
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
                 let distance = (actor_pos - player_actor_pos).norm();
+                let armor = actor.get_armor();
                 let clamp: bool = true;
                 let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos, clamp);
-                let target_info_layer = unsafe { self._target_info_layer.as_mut().unwrap() };
-                let ui_component = target_info_layer.get_ui_component_mut();
-                ui_component.set_center(screen_pos.x, screen_pos.y);
+                let target_info_layer = unsafe { self._target_info_layer.as_mut().unwrap().get_ui_component_mut() };
+                target_info_layer.set_center(screen_pos.x, screen_pos.y);
 
-                let target_info = unsafe { self._target_info.as_mut().unwrap() };
-                let ui_component = target_info.get_ui_component_mut();
-                ui_component.set_text(&format!("{}m", distance as i32));
+                let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
+                target_distance.set_text(&format!("{}m", distance as i32));
+
+                let target_hp = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
+                target_hp.set_text(&format!("{}", armor._hit_point as i32));
+
+                let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
+                target_distance.set_text(&format!("{}", armor._shields as i32));
                 break;
             }
         }

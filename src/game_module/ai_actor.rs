@@ -32,10 +32,19 @@ impl AIActor {
 
 impl BaseActor for AIActor {
     fn initialize_actor(&mut self) {
+        unimplemented!()
     }
 
     fn is_player_actor(&self) -> bool {
         false
+    }
+
+    fn get_armor(&self) -> &ArmorInstance {
+        &self._armor
+    }
+
+    fn get_armor_mut(&mut self) -> &mut ArmorInstance {
+        &mut self._armor
     }
 
     fn get_controller(&self) -> &ActorController {
