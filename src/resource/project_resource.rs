@@ -4,7 +4,6 @@ use std::io::prelude::*;
 use std::path::{ Path, PathBuf };
 
 use serde_json::{ self };
-use rodio;
 
 use rust_engine_3d::resource::resource::{ ResourceDataMap, ProjectResourcesBase, Resources, get_unique_resource_name };
 use rust_engine_3d::renderer::renderer::{ RendererData };
@@ -158,7 +157,7 @@ impl ProjectResources {
         for audio_data_file in audio_data_files {
             let audio_data_name = get_unique_resource_name(&self._audio_data_create_infos_map, &audio_directory, &audio_data_file);
             let loaded_contents = system::load(&audio_data_file);
-            let audio_source = rodio::Decoder::new(BufReader::new(loaded_contents)).unwrap();
+            let audio_source = true;
             let audio_data_create_info = AudioDataCreateInfo {
                 _audio_name: audio_data_name.clone(),
                 _audio_source: audio_source,
