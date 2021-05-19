@@ -87,10 +87,10 @@ impl GameClient {
         }
 
         if pressed_key_q {
-            player_actor._controller.acceleration_up();
+            player_actor._controller.acceleration_down();
         }
         else if pressed_key_e {
-            player_actor._controller.acceleration_down();
+            player_actor._controller.acceleration_up();
         }
     }
 

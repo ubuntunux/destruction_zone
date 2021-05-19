@@ -25,6 +25,24 @@ pub struct ControllerData {
     _rotation_damping: f32,
 }
 
+impl Default for ControllerData {
+    fn default() -> ControllerData {
+        ControllerData {
+            _max_ground_speed: 50.0,
+            _forward_acceleration: 50.0,
+            _side_acceleration: 50.0,
+            _floating_acceleration: 30.0,
+            _damping: 30.0,
+            _side_step_roll: 0.3,
+            _side_step_roll_speed: 2.0,
+            _boost_acceleration: 1.5,
+            _max_rotation_speed: 10.0,
+            _rotation_acceleration: 0.5,
+            _rotation_damping: 0.1,
+        }
+    }
+}
+
 pub struct ActorController {
     _controller_data: ControllerData,
     _prev_ground_velocity: Vector2<f32>,
@@ -44,32 +62,8 @@ pub struct ActorController {
 // Implementation
 pub fn create_controller_data(controller_type: ControllerDataType) -> ControllerData {
     match controller_type {
-        ControllerDataType::Default => ControllerData {
-            _max_ground_speed: 50.0,
-            _forward_acceleration: 50.0,
-            _side_acceleration: 50.0,
-            _floating_acceleration: 30.0,
-            _damping: 30.0,
-            _side_step_roll: 0.3,
-            _side_step_roll_speed: 2.0,
-            _boost_acceleration: 1.5,
-            _max_rotation_speed: 0.05,
-            _rotation_acceleration: 0.002,
-            _rotation_damping: 0.1,
-        },
-        ControllerDataType::Tank => ControllerData {
-            _max_ground_speed: 50.0,
-            _forward_acceleration: 50.0,
-            _side_acceleration: 50.0,
-            _floating_acceleration: 30.0,
-            _damping: 30.0,
-            _side_step_roll: 0.3,
-            _side_step_roll_speed: 2.0,
-            _boost_acceleration: 1.5,
-            _max_rotation_speed: 0.05,
-            _rotation_acceleration: 0.002,
-            _rotation_damping: 0.1,
-        },
+        ControllerDataType::Default => ControllerData::default(),
+        ControllerDataType::Tank => ControllerData::default(),
     }
 }
 
@@ -158,6 +152,7 @@ impl ActorController {
         // rotation speed
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
             self._rotation_velocity = &self._rotation_acceleration * self._controller_data._rotation_acceleration;
+            println!("self._rotation_velocity: {:?}", self._rotation_velocity);
             let rotation_velocity = self._rotation_velocity.norm();
             if self._controller_data._max_rotation_speed < rotation_velocity {
                 self._rotation_velocity = &self._rotation_velocity / rotation_velocity * self._controller_data._max_rotation_speed;

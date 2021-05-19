@@ -66,8 +66,8 @@ impl BaseActor for AIActor {
         let transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
         self._controller.update_controller(delta_time, transform, height_map_data);
 
-        transform.rotation_pitch(self._controller.get_velocity_pitch());
-        transform.rotation_yaw(self._controller.get_velocity_yaw());
+        transform.rotation_pitch(self._controller.get_velocity_pitch() * delta_time);
+        transform.rotation_yaw(self._controller.get_velocity_yaw() * delta_time);
         transform.set_roll(self._controller.get_roll());
         transform.set_position(self._controller.get_position());
     }
