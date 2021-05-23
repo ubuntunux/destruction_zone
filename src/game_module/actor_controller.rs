@@ -152,7 +152,6 @@ impl ActorController {
         // rotation speed
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
             self._rotation_velocity = &self._rotation_acceleration * self._controller_data._rotation_acceleration;
-            println!("self._rotation_velocity: {:?}", self._rotation_velocity);
             let rotation_velocity = self._rotation_velocity.norm();
             if self._controller_data._max_rotation_speed < rotation_velocity {
                 self._rotation_velocity = &self._rotation_velocity / rotation_velocity * self._controller_data._max_rotation_speed;
