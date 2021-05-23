@@ -1,6 +1,7 @@
 use log::LevelFilter;
 
 use ash::vk;
+use sdl2::{ self, Sdl };
 use winit::event::VirtualKeyCode;
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::{self, ApplicationBase, EngineApplication };
@@ -25,6 +26,7 @@ pub struct ProjectApplication {
     pub _project_audio_manager: Box<ProjectAudioManager>,
     pub _game_client: Box<GameClient>,
     pub _is_game_mode: bool,
+    pub _sdl: Sdl
 }
 
 impl ApplicationBase for ProjectApplication {
@@ -32,6 +34,11 @@ impl ApplicationBase for ProjectApplication {
         self._engine_application = engine_application;
         self._project_audio_manager.initialize_audio_manager(self, self._project_resources.as_ref());
         self.get_game_client_mut().initialize_game_client(self);
+    }
+
+    fn terminate_application(&mut self) {
+        self._game_client.destroy_game_client();
+        self._project_audio_manager.destroy_audio_manager();
     }
 
     fn update_event(&mut self) {
@@ -151,13 +158,12 @@ impl ApplicationBase for ProjectApplication {
             self._game_client.update_game_client(application);
         }
     }
-
-    fn terminate_application(&mut self) {
-        self._game_client.destroy_game_client();
-    }
 }
 
 impl ProjectApplication {
+    pub fn get_sdl(&self) -> &Sdl {
+        &self._sdl
+    }
     pub fn get_engine_application(&self) -> &EngineApplication {
         unsafe { &*self._engine_application }
     }
@@ -263,12 +269,13 @@ pub fn run_application() {
     }
 
     // create
+    let sdl = sdl2::init().expect("failed to sdl2::init");
     let project_resources = ProjectResources::create_project_resources();
     let project_renderer = ProjectRenderer::create_project_renderer();
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
-    let project_audio_manager = ProjectAudioManager::create_audio_manager();
+    let project_audio_manager = ProjectAudioManager::create_audio_manager(&sdl);
     let game_client = GameClient::create_game_client();
 
     // initialize
@@ -281,6 +288,7 @@ pub fn run_application() {
         _project_ui_manager: project_ui_manager,
         _project_audio_manager: project_audio_manager,
         _game_client: game_client,
+        _sdl: sdl,
         _is_game_mode: false,
     };
 

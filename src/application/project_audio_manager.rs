@@ -1,40 +1,13 @@
+use std::path::Path;
+
+use sdl2::{ self, Sdl, AudioSubsystem };
+use sdl2::mixer::{InitFlag, AUDIO_S16LSB, DEFAULT_CHANNELS, Sdl2MixerContext, Chunk, Channel};
+
 use rust_engine_3d::utilities::system::{ self, newRcRefCell, RcRefCell };
 
 use crate::application::project_application::ProjectApplication;
 use crate::resource::project_resource::ProjectResources;
 
-
-//
-extern crate sdl2;
-
-use sdl2::audio::{AudioCVT, AudioCallback, AudioSpecDesired, AudioSpecWAV};
-use std::path::{Path, PathBuf};
-use self::sdl2::audio::AudioDevice;
-
-// NOTE: You probably want to investigate the
-// mixer feature for real use cases.
-pub struct Sound {
-    data: Vec<u8>,
-    volume: f32,
-    pos: usize,
-}
-
-impl AudioCallback for Sound {
-    type Channel = u8;
-
-    fn callback(&mut self, out: &mut [u8]) {
-        for dst in out.iter_mut() {
-            let pre_scale = *self.data.get(self.pos).unwrap_or(&128);
-            let scaled_signed_float = (pre_scale as f32 - 128.0) * self.volume;
-            let scaled = (scaled_signed_float + 128.0) as u8;
-            *dst = scaled;
-            self.pos += 1;
-        }
-    }
-}
-
-
-//
 
 pub struct AudioDataCreateInfo {
     pub _audio_name: String,
@@ -51,7 +24,10 @@ pub struct ProjectAudioManager {
     pub _project_resources: *const ProjectResources,
     pub _audios: Vec<RcRefCell<AudioInstance>>,
     pub _bgm: Option<Box<AudioInstance>>,
-    pub _device: Option<AudioDevice<Sound>>
+    pub _audio: AudioSubsystem,
+    pub _mixer_context: Sdl2MixerContext,
+    pub _sound_chunk: Option<Chunk>,
+    pub _channel: Option<Channel>,
 }
 
 impl AudioInstance {
@@ -63,13 +39,40 @@ impl AudioInstance {
 }
 
 impl ProjectAudioManager {
-    pub fn create_audio_manager() -> Box<ProjectAudioManager> {
+    pub fn create_audio_manager(sdl: &Sdl) -> Box<ProjectAudioManager> {
+        log::info!("create_audio_manager");
+        let audio = sdl.audio().expect("failed to sdl.audio");
+        let frequency = 44_100;
+        let format = AUDIO_S16LSB; // signed 16 bit samples, in little-endian byte order
+        let channels = DEFAULT_CHANNELS; // Stereo
+        let chunk_size = 1_024;
+        let _result = sdl2::mixer::open_audio(frequency, format, channels, chunk_size);
+        let mixer_context = sdl2::mixer::init(InitFlag::MP3 | InitFlag::FLAC | InitFlag::MOD | InitFlag::OGG).expect("sdl2::mixer::init");
+
+        log::info!("\tsdl2::mixer::linked version: {}", sdl2::mixer::get_linked_version());
+        sdl2::mixer::allocate_channels(4);
+
+        let n = sdl2::mixer::get_chunk_decoders_number();
+        log::info!("\tavailable chunk(sample) decoders: {}", n);
+        for i in 0..n {
+            log::info!("\t\tdecoder {} => {}", i, sdl2::mixer::get_chunk_decoder(i));
+        }
+        let n = sdl2::mixer::get_music_decoders_number();
+        log::info!("\tavailable music decoders: {}", n);
+        for i in 0..n {
+            log::info!("\t\tdecoder {} => {}", i, sdl2::mixer::get_music_decoder(i));
+        }
+        log::info!("\tquery spec => {:?}", sdl2::mixer::query_spec());
+
         Box::new(ProjectAudioManager {
             _project_application: std::ptr::null(),
             _project_resources: std::ptr::null(),
             _audios: Vec::new(),
             _bgm: None,
-            _device: None,
+            _audio: audio,
+            _mixer_context: mixer_context,
+            _sound_chunk: None,
+            _channel: None,
         })
     }
 
@@ -77,6 +80,10 @@ impl ProjectAudioManager {
         self._project_application = project_application;
         self._project_resources = project_resources;
         self.create_audio("game_load");
+    }
+
+    pub fn destroy_audio_manager(&mut self) {
+        sdl2::mixer::Music::halt();
     }
 
     pub fn get_project_application(&self) -> &ProjectApplication {
@@ -94,40 +101,10 @@ impl ProjectAudioManager {
 
         //
         let wav_file = Path::new("resource/sounds/game_load.wav");
-        let sdl_context = sdl2::init().expect("");
-        let audio_subsystem = sdl_context.audio().expect("");
-        let loaded_contents = system::load(&wav_file);
-
-        let desired_spec = AudioSpecDesired {
-            freq: Some(44_100),
-            channels: Some(1), // mono
-            samples: None,     // default
-        };
-
-        self._device = Some(audio_subsystem.open_playback(None, &desired_spec, |spec| {
-            let wav = AudioSpecWAV::load_wav(wav_file).expect("Could not load test WAV file");
-
-            let cvt = AudioCVT::new(
-                wav.format,
-                wav.channels,
-                wav.freq,
-                spec.format,
-                spec.channels,
-                spec.freq,
-            ).expect("Could not convert WAV file");
-
-            let data = cvt.convert(wav.buffer().to_vec());
-
-            // initialize the audio callback
-            Sound {
-                data,
-                volume: 0.25,
-                pos: 0,
-            }
-        }).expect(""));
-
-        // Start playback
-        self._device.as_ref().unwrap().resume();
+        self._sound_chunk = Some(sdl2::mixer::Chunk::from_file(wav_file).unwrap());
+        println!("chunk volume => {:?}", self._sound_chunk.as_ref().unwrap().get_volume());
+        self._channel = Some(sdl2::mixer::Channel::all().play(&self._sound_chunk.as_ref().unwrap(), 1).expect("failed to play"));
+        //
 
         audio_instance
     }
