@@ -157,6 +157,7 @@ impl ApplicationBase for ProjectApplication {
         if self._is_game_mode {
             self._game_client.update_game_client(application);
         }
+        self.get_project_audio_manager_mut().update_audio_manager();
     }
 }
 
