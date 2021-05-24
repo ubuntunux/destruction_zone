@@ -5,6 +5,7 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
+use crate::application::project_audio_manager::AudioLoop;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>,
@@ -28,19 +29,18 @@ impl GameClient {
     }
 
     pub fn update_event(&self, project_application: &ProjectApplication) {
-        let application_data = project_application.get_engine_application();
-        let time_data = &application_data._time_data;
-        let mouse_move_data = &application_data._mouse_move_data;
-        let mouse_input_data = &application_data._mouse_input_data;
-        let keyboard_input_data = &application_data._keyboard_input_data;
+        let engine_application = project_application.get_engine_application();
+        let time_data = &engine_application._time_data;
+        let mouse_move_data = &engine_application._mouse_move_data;
+        let mouse_input_data = &engine_application._mouse_input_data;
+        let keyboard_input_data = &engine_application._keyboard_input_data;
 
         const MOUSE_DELTA_RATIO: f32 = 500.0;
         let _delta_time = time_data._delta_time;
         let _mouse_pos = &mouse_move_data._mouse_pos;
         let mouse_delta = &mouse_move_data._mouse_pos_delta;
-        let _btn_left: bool = mouse_input_data._btn_l_hold;
-        let _btn_right: bool = mouse_input_data._btn_r_hold;
-        let _btn_middle: bool = mouse_input_data._btn_m_hold;
+        let btn_left: bool = mouse_input_data._btn_l_pressed;
+        let _btn_right_hold: bool = mouse_input_data._btn_r_hold;
 
         let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
         let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
@@ -59,6 +59,10 @@ impl GameClient {
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let player_actor = self._actor_manager.get_player_actor_mut();
+
+        if btn_left {
+            project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+        }
 
         if 0 != mouse_delta.x {
             player_actor._controller.acceleration_yaw(-mouse_delta.x as f32);

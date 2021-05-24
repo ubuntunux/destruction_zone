@@ -50,7 +50,7 @@ impl AudioInstance {
 }
 
 impl ProjectAudioManager {
-    const MAX_CHANNEL_COUNT: i32 = 1;
+    const MAX_CHANNEL_COUNT: i32 = 32;
 
     pub fn create_audio_manager(sdl: &Sdl) -> Box<ProjectAudioManager> {
         log::info!("create_audio_manager");
