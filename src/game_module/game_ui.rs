@@ -99,30 +99,34 @@ impl GameUIManager {
         let target_distance = unsafe { &mut *(UIManagerData::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_distance.get_ui_component_mut();
         ui_component.set_text("100m");
-        ui_component.set_size(100.0, 20.0);
+        ui_component.set_size(50.0, 50.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_halign(HorizontalAlign::RIGHT);
+        ui_component.set_valign(VerticalAlign::TOP);
+        ui_component.set_expandable(true);
         target_info_layout.add_widget(target_distance);
         self._target_distance = target_distance;
 
         let target_hp = unsafe { &mut *(UIManagerData::create_widget("target_hp", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_hp.get_ui_component_mut();
         ui_component.set_text("hp");
-        ui_component.set_size(100.0, 20.0);
+        ui_component.set_size(50.0, 50.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
         ui_component.set_halign(HorizontalAlign::CENTER);
+        ui_component.set_valign(VerticalAlign::CENTER);
         target_info_layout.add_widget(target_hp);
         self._target_hp = target_hp;
 
         let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_shield.get_ui_component_mut();
-        ui_component.set_text("!!shield dqwdwqdwqdwqdwq!!");
-        ui_component.set_size(100.0, 20.0);
-        ui_component.set_color(get_color32(255, 255, 0, 10));
+        ui_component.set_text("shield");
+        ui_component.set_size(50.0, 50.0);
+        ui_component.set_color(get_color32(255, 0, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
         ui_component.set_halign(HorizontalAlign::RIGHT);
+        ui_component.set_valign(VerticalAlign::BOTTOM);
         ui_component.set_expandable(true);
         target_info_layout.add_widget(target_shield);
         self._target_shield = target_shield;
@@ -150,13 +154,13 @@ impl GameUIManager {
                 target_info_layer.set_center(screen_pos.x, screen_pos.y);
 
                 let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
-                target_distance.set_text(&format!("{}m", distance as i32));
+                target_distance.set_text(&format!("{}m", (distance * distance * distance) as i32));
 
-                let target_hp = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
+                let target_hp = unsafe { self._target_hp.as_mut().unwrap().get_ui_component_mut() };
                 target_hp.set_text(&format!("{}", armor._hit_point as i32));
 
-                let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
-                target_distance.set_text(&format!("{}", armor._shields as i32));
+                let target_shield = unsafe { self._target_shield.as_mut().unwrap().get_ui_component_mut() };
+                target_shield.set_text(&format!("{}", armor._shields as i32));
                 break;
             }
         }
