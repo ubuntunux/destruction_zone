@@ -30,7 +30,7 @@ pub struct ProjectAudioManager {
     pub _project_application: *const ProjectApplication,
     pub _project_resources: *const ProjectResources,
     pub _audios: HashMap<i32, RcRefCell<AudioInstance>>,
-    pub _bgm: Option<Box<AudioInstance>>,
+    pub _bgm: Option<RcRefCell<AudioInstance>>,
     pub _audio: AudioSubsystem,
     pub _mixer_context: Sdl2MixerContext,
 }
@@ -92,7 +92,7 @@ impl ProjectAudioManager {
     pub fn initialize_audio_manager(&mut self, project_application: *const ProjectApplication, project_resources: *const ProjectResources) {
         self._project_application = project_application;
         self._project_resources = project_resources;
-        self.create_audio("game_load", AudioLoop::LOOP);
+        self._bgm = Some(self.create_audio("music-for-a-game-by-kris-klavenes", AudioLoop::LOOP));
     }
 
     pub fn destroy_audio_manager(&mut self) {

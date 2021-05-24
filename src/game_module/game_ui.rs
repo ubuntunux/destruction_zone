@@ -99,10 +99,10 @@ impl GameUIManager {
         let target_distance = unsafe { &mut *(UIManagerData::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_distance.get_ui_component_mut();
         ui_component.set_text("100m");
-        ui_component.set_size(50.0, 50.0);
-        ui_component.set_color(get_color32(255, 255, 0, 10));
+        ui_component.set_size(100.0, 50.0);
+        ui_component.set_color(get_color32(255, 0, 0, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_halign(HorizontalAlign::RIGHT);
+        ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::TOP);
         ui_component.set_expandable(true);
         target_info_layout.add_widget(target_distance);
@@ -111,8 +111,8 @@ impl GameUIManager {
         let target_hp = unsafe { &mut *(UIManagerData::create_widget("target_hp", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_hp.get_ui_component_mut();
         ui_component.set_text("hp");
-        ui_component.set_size(50.0, 50.0);
-        ui_component.set_color(get_color32(255, 255, 0, 10));
+        ui_component.set_size(100.0, 50.0);
+        ui_component.set_color(get_color32(0, 255, 0, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
         ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::CENTER);
@@ -122,8 +122,8 @@ impl GameUIManager {
         let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_shield.get_ui_component_mut();
         ui_component.set_text("shield");
-        ui_component.set_size(50.0, 50.0);
-        ui_component.set_color(get_color32(255, 0, 0, 10));
+        ui_component.set_size(100.0, 50.0);
+        ui_component.set_color(get_color32(0, 0, 255, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
         ui_component.set_halign(HorizontalAlign::RIGHT);
         ui_component.set_valign(VerticalAlign::BOTTOM);
