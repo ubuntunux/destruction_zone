@@ -132,6 +132,9 @@ impl GameUIManager {
         self._target_shield = target_shield;
     }
 
+    pub fn destroy_game_ui_manager(&mut self) {
+    }
+
     pub fn update_game_ui(&mut self, project_application: &ProjectApplication, actor_manager: &ActorManager, _delta_time: f32) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_engine_application()._window_size;

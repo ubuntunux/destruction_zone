@@ -67,6 +67,10 @@ impl ActorManager {
         }
     }
 
+    pub fn destroy_actor_manager(&mut self) {
+
+    }
+
     pub fn update_actor_manager(&mut self, project_application: &ProjectApplication, delta_time: f32) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
 

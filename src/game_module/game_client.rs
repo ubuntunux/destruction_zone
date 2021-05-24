@@ -3,13 +3,15 @@ use winit::event::VirtualKeyCode;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 use crate::application::project_application::ProjectApplication;
+use crate::application::project_audio_manager::AudioLoop;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
-use crate::application::project_audio_manager::AudioLoop;
+use crate::game_module::weapon_manager::WeaponManager;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>,
     pub _game_ui_manager: Box<GameUIManager>,
+    pub _weapon_manager: Box<WeaponManager>
 }
 
 impl GameClient {
@@ -17,6 +19,7 @@ impl GameClient {
         Box::new(GameClient {
             _actor_manager: ActorManager::create_actor_manager(),
             _game_ui_manager: GameUIManager::create_game_ui_manager(),
+            _weapon_manager: WeaponManager::create_weapon_manager(),
         })
     }
 
@@ -24,8 +27,15 @@ impl GameClient {
         // open scene
         project_application.get_project_scene_manager_mut().open_scene_data("default");
 
-        self._actor_manager.initialize_actor_manager(project_application);
         self._game_ui_manager.initialize_game_ui_manager(project_application);
+        self._actor_manager.initialize_actor_manager(project_application);
+        self._weapon_manager.initialize_weapon_manager(project_application);
+    }
+
+    pub fn destroy_game_client(&mut self) {
+        self._weapon_manager.destroy_weapon_manager();
+        self._actor_manager.destroy_actor_manager();
+        self._game_ui_manager.destroy_game_ui_manager();
     }
 
     pub fn update_event(&self, project_application: &ProjectApplication) {
@@ -103,9 +113,5 @@ impl GameClient {
         let delta_time = project_application.get_engine_application()._time_data._delta_time as f32;
         self._actor_manager.update_actor_manager(project_application, delta_time);
         self._game_ui_manager.update_game_ui(project_application, self._actor_manager.as_ref(), delta_time);
-    }
-
-    pub fn destroy_game_client(&mut self) {
-
     }
 }
