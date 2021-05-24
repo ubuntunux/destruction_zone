@@ -102,6 +102,7 @@ impl GameUIManager {
         ui_component.set_size(100.0, 20.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_halign(HorizontalAlign::LEFT);
         target_info_layout.add_widget(target_distance);
         self._target_distance = target_distance;
 
@@ -111,15 +112,18 @@ impl GameUIManager {
         ui_component.set_size(100.0, 20.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_halign(HorizontalAlign::CENTER);
         target_info_layout.add_widget(target_hp);
         self._target_hp = target_hp;
 
         let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_shield.get_ui_component_mut();
-        ui_component.set_text("shield");
+        ui_component.set_text("!!shield dqwdwqdwqdwqdwq!!");
         ui_component.set_size(100.0, 20.0);
         ui_component.set_color(get_color32(255, 255, 0, 10));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_halign(HorizontalAlign::RIGHT);
+        ui_component.set_expandable(true);
         target_info_layout.add_widget(target_shield);
         self._target_shield = target_shield;
     }
