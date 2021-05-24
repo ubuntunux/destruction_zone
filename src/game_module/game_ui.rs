@@ -154,7 +154,7 @@ impl GameUIManager {
                 target_info_layer.set_center(screen_pos.x, screen_pos.y);
 
                 let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
-                target_distance.set_text(&format!("{}m", (distance * distance * distance) as i32));
+                target_distance.set_text(&format!("{}m", distance as i32));
 
                 let target_hp = unsafe { self._target_hp.as_mut().unwrap().get_ui_component_mut() };
                 target_hp.set_text(&format!("{}", armor._hit_point as i32));
