@@ -71,7 +71,7 @@ impl GameClient {
         let player_actor = self._actor_manager.get_player_actor_mut();
 
         if btn_left {
-            project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+            self._weapon_manager.add_bullet(project_application);
         }
 
         if 0 != mouse_delta.x {
