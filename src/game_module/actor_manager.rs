@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 
 use crate::application::project_application::ProjectApplication;
-use crate::game_module::actor_controller::ControllerDataType;
-use crate::game_module::base_actor::BaseActor;
-use crate::game_module::player_actor::PlayerActor;
-use crate::game_module::ai_actor::AIActor;
-use crate::game_module::armor::ArmorDataType;
+use crate::game_module::actor_controller::actor_controller::ControllerDataType;
+use crate::game_module::actors::base_actor::BaseActor;
+use crate::game_module::actors::player_actor::PlayerActor;
+use crate::game_module::actors::ai_actor::AIActor;
+use crate::game_module::armor::armor::ArmorDataType;
 
 pub struct ActorManager {
     pub _id_generator: u64,

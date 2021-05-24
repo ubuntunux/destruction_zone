@@ -1,8 +1,8 @@
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
 use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::actor_controller::ActorController;
-use crate::game_module::armor::ArmorInstance;
+use crate::game_module::actor_controller::actor_controller::ActorController;
+use crate::game_module::armor::armor::ArmorInstance;
 
 pub trait BaseActor {
     fn initialize_actor(&mut self);

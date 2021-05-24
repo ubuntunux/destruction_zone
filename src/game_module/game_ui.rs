@@ -15,7 +15,7 @@ use rust_engine_3d::resource::resource::ProjectResourcesBase;
 
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
-use crate::game_module::base_actor::BaseActor;
+use crate::game_module::actors::base_actor::BaseActor;
 use crate::renderer::project_ui::ProjectUIManager;
 
 pub struct GameUIManager {

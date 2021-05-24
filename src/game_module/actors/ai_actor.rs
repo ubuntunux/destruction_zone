@@ -2,11 +2,11 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
-use crate::game_module::actor_controller::{ ControllerDataType, ActorController };
+use crate::game_module::actor_controller::actor_controller::{ ControllerDataType, ActorController };
 use crate::game_module::actor_manager::calc_floating_height;
-use crate::game_module::base_actor::BaseActor;
+use crate::game_module::actors::base_actor::BaseActor;
 use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::armor::{ArmorInstance, ArmorDataType};
+use crate::game_module::armor::armor::{ArmorInstance, ArmorDataType};
 
 pub struct AIActor {
     pub _id: u64,
