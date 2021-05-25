@@ -38,6 +38,8 @@ pub trait WeaponTrait {
 }
 
 pub struct BeamEmitter {
+    pub _weapon_type: WeaponType,
+    pub _weapon_data: *const WeaponData,
     pub _owner_actor: *const dyn BaseActor,
     pub _render_object: RcRefCell<RenderObjectData>,
     pub _transform_object: *mut TransformObjectData,
@@ -50,17 +52,19 @@ pub struct BeamEmitter {
 impl BeamEmitter {
     pub fn create_beam_emitter(
         owner_actor: *const dyn BaseActor,
-        render_object: RcRefCell<RenderObjectData>,
-        offset_transform: &TransformObjectData,
-        bullet_type: BulletType
+        render_object: &RcRefCell<RenderObjectData>,
+        offset_transform: &TransformObjectData
     ) -> Box<BeamEmitter> {
         render_object.borrow_mut()._transform_object = offset_transform.clone();
         let mut transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
+        let weapon_type = WeaponType::BeamEmitter;
         Box::new(BeamEmitter {
+            _weapon_type: weapon_type,
+            _weapon_data: get_weapon_data(weapon_type),
             _owner_actor: owner_actor,
             _render_object: render_object.clone(),
             _transform_object: transform_object,
-            _bullet_type: bullet_type,
+            _bullet_type: BulletType::Beam,
             _bullets: vec![],
             _bullets_id: std::u64::MAX,
         })

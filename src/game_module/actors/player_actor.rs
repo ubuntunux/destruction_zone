@@ -8,6 +8,8 @@ use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::base_actor::BaseActor;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::armor::armor::{ArmorInstance, ArmorDataType};
+use crate::game_module::weapons::weapon::{ WeaponType, WeaponTrait, BeamEmitter };
+use crate::game_module::weapons::bullet::BulletType;
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -15,6 +17,7 @@ pub struct PlayerActor {
     pub _transform_object: *mut TransformObjectData,
     pub _controller: ActorController,
     pub _armor: ArmorInstance,
+    pub _weapons: Vec<Box<dyn WeaponTrait>>,
 }
 
 impl PlayerActor {
@@ -27,12 +30,21 @@ impl PlayerActor {
             _transform_object: transform_object,
             _controller: ActorController::create_actor_controller(controller_type, floating_height),
             _armor: ArmorInstance::create_armor_instance(armor_type),
+            _weapons: Vec::new(),
         })
     }
 }
 
 impl BaseActor for PlayerActor {
+
     fn initialize_actor(&mut self) {
+        let weapon = BeamEmitter::create_beam_emitter(
+            self,
+            &self._render_object,
+            &TransformObjectData::new_transform_object_data()
+        );
+
+        self._weapons.push(weapon);
     }
 
     fn is_player_actor(&self) -> bool {
