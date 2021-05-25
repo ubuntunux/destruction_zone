@@ -3,7 +3,6 @@ use winit::event::VirtualKeyCode;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 use crate::application::project_application::ProjectApplication;
-use crate::application::project_audio_manager::AudioLoop;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;

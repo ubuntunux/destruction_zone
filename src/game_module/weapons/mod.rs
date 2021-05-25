@@ -1,2 +1,2 @@
-pub mod base_bullet;
-pub mod base_weapon;
+pub mod bullet;
+pub mod weapon;

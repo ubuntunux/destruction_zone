@@ -1,10 +1,9 @@
 use std::collections::HashMap;
-use std::path::Path;
 
 use sdl2::{ self, Sdl, AudioSubsystem };
 use sdl2::mixer::{InitFlag, AUDIO_S16LSB, DEFAULT_CHANNELS, Sdl2MixerContext, Chunk, Channel};
 
-use rust_engine_3d::utilities::system::{ self, newRcRefCell, RcRefCell };
+use rust_engine_3d::utilities::system::{ newRcRefCell, RcRefCell };
 
 use crate::application::project_application::ProjectApplication;
 use crate::resource::project_resource::ProjectResources;

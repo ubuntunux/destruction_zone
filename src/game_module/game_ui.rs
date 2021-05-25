@@ -160,7 +160,7 @@ impl GameUIManager {
                 target_distance.set_text(&format!("{}m", distance as i32));
 
                 let target_hp = unsafe { self._target_hp.as_mut().unwrap().get_ui_component_mut() };
-                target_hp.set_text(&format!("{}", armor._hit_point as i32));
+                target_hp.set_text(&format!("{}", armor._hull as i32));
 
                 let target_shield = unsafe { self._target_shield.as_mut().unwrap().get_ui_component_mut() };
                 target_shield.set_text(&format!("{}", armor._shields as i32));

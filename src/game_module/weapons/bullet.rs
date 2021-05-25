@@ -1,13 +1,100 @@
+use rust_engine_3d::renderer::transform_object::TransformObjectData;
+
+use crate::game_module::height_map_data::HeightMapData;
+use crate::game_module::actors::base_actor::BaseActor;
+use nalgebra::Vector3;
+
+
+#[derive(Clone, Copy)]
+pub enum BulletType {
+    Beam,
+    Gatling,
+    Laser,
+    Plasma,
+    Shotgun
+}
+
 pub struct BulletData {
     pub _shield_damage: f32,
     pub _hull_damage: f32,
     pub _bullet_speed: f32,
     pub _bullet_range: f32,
+    pub _bullet_life_time: f32,
 }
 
-pub trait BaseBullet {
-
+pub fn get_bullet_data(bullet_type: BulletType) -> &'static BulletData {
+    static BEAM_BULLET_DATA: BulletData = BulletData {
+        _shield_damage: 1.0,
+        _hull_damage: 1.0,
+        _bullet_speed: 1.0,
+        _bullet_range: 10.0,
+        _bullet_life_time: 10.0,
+    };
+    match bullet_type {
+        BulletType::Beam => &BEAM_BULLET_DATA,
+        BulletType::Gatling => &BEAM_BULLET_DATA,
+        BulletType::Laser => &BEAM_BULLET_DATA,
+        BulletType::Plasma => &BEAM_BULLET_DATA,
+        BulletType::Shotgun => &BEAM_BULLET_DATA,
+    }
 }
+
+pub struct Bullet {
+    pub _bullet_type: BulletType,
+    pub _bullet_data: *const BulletData,
+    pub _owner_actor: *const dyn BaseActor,
+    pub _is_alive: bool,
+    pub _elapsed_time: f32,
+    pub _transform: TransformObjectData,
+    pub _initial_position: Vector3<f32>,
+}
+
+
+// Implementation
+impl Bullet {
+    fn create_bullet(bullet_type: BulletType, owner_actor: *const dyn BaseActor, transform: &TransformObjectData) -> Bullet {
+        Bullet {
+            _bullet_type: bullet_type,
+            _owner_actor: owner_actor,
+            _transform: transform.clone(),
+            _initial_position: transform.get_position().clone() as Vector3<f32>,
+            _bullet_data: get_bullet_data(bullet_type),
+            _elapsed_time: 0.0,
+            _is_alive: true,
+        }
+    }
+
+    fn get_bullet_type(&self) -> BulletType {
+        self._bullet_type
+    }
+
+    fn get_owner_actor(&self) -> &dyn BaseActor {
+        unsafe { &*self._owner_actor }
+    }
+
+    fn get_owner_actor_mut(&self) -> &mut dyn BaseActor {
+        unsafe { &mut *(self._owner_actor as *mut dyn BaseActor) }
+    }
+
+    fn get_bullet_data(&self) -> &BulletData {
+        unsafe { &*self._bullet_data }
+    }
+
+    fn update_bullet(&mut self, delta_time: f32, _height_map_data: &HeightMapData) {
+        let bullet_data = self.get_bullet_data();
+
+        let move_distance = (self._transform.get_position() - &self._initial_position).norm();
+        if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
+            self._is_alive = false;
+            return;
+        }
+
+        self._transform.update_transform_object();
+        self._elapsed_time += delta_time;
+    }
+}
+
+
 
 /*
 class BulletActor:

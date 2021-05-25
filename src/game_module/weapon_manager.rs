@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 //use rust_engine_3d::utilities::system::{ self, newRcRefCell, RcRefCell };
 
-use crate::game_module::weapons::base_bullet::BaseBullet;
+use crate::game_module::weapons::bullet::Bullet;
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_audio_manager::AudioLoop;
 
 pub struct WeaponManager {
     pub _id_generator: u64,
-    pub _bullets: HashMap<u64, Box<dyn BaseBullet>>,
+    pub _bullets: HashMap<u64, Box<Bullet>>,
 }
 
 impl WeaponManager {

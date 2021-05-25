@@ -6,14 +6,14 @@ pub enum ArmorDataType {
 pub struct ArmorData {
     pub _physical_armor: f32,
     pub _shield_armor: f32,
-    pub _max_hit_point: f32,
+    pub _max_hull: f32,
     pub _max_shields: f32,
 }
 
 #[derive(Clone, Debug, Copy)]
 pub struct ArmorInstance {
     pub _armor_data: ArmorData,
-    pub _hit_point: f32,
+    pub _hull: f32,
     pub _shields: f32,
 }
 
@@ -23,7 +23,7 @@ impl ArmorData {
             ArmorDataType::Default => ArmorData {
                 _physical_armor: 0.0,
                 _shield_armor: 0.0,
-                _max_hit_point: 100.0,
+                _max_hull: 100.0,
                 _max_shields: 10.0,
             }
         }
@@ -35,7 +35,7 @@ impl ArmorInstance {
         let armor_data = ArmorData::create_armor_data(armor_data_type);
         ArmorInstance {
             _armor_data: armor_data.clone(),
-            _hit_point: armor_data._max_hit_point,
+            _hull: armor_data._max_hull,
             _shields: armor_data._max_shields,
         }
     }
