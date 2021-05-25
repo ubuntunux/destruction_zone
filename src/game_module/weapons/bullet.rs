@@ -32,10 +32,7 @@ pub fn get_bullet_data(bullet_type: BulletType) -> &'static BulletData {
     };
     match bullet_type {
         BulletType::Beam => &BEAM_BULLET_DATA,
-        BulletType::Gatling => &BEAM_BULLET_DATA,
-        BulletType::Laser => &BEAM_BULLET_DATA,
-        BulletType::Plasma => &BEAM_BULLET_DATA,
-        BulletType::Shotgun => &BEAM_BULLET_DATA,
+        _ => &BEAM_BULLET_DATA,
     }
 }
 
@@ -44,6 +41,7 @@ pub struct Bullet {
     pub _bullet_data: *const BulletData,
     pub _owner_actor: *const dyn BaseActor,
     pub _is_alive: bool,
+    pub _is_collided: bool,
     pub _elapsed_time: f32,
     pub _transform: TransformObjectData,
     pub _initial_position: Vector3<f32>,
@@ -61,6 +59,7 @@ impl Bullet {
             _bullet_data: get_bullet_data(bullet_type),
             _elapsed_time: 0.0,
             _is_alive: true,
+            _is_collided: false,
         }
     }
 
@@ -80,8 +79,11 @@ impl Bullet {
         unsafe { &*self._bullet_data }
     }
 
-    fn update_bullet(&mut self, delta_time: f32, _height_map_data: &HeightMapData) {
-        let bullet_data = self.get_bullet_data();
+    fn update_bullet(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
+        let bullet_data = unsafe { &*self._bullet_data };
+
+        self._transform.update_transform_object();
+        self._elapsed_time += delta_time;
 
         let move_distance = (self._transform.get_position() - &self._initial_position).norm();
         if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
@@ -89,8 +91,12 @@ impl Bullet {
             return;
         }
 
-        self._transform.update_transform_object();
-        self._elapsed_time += delta_time;
+        let floating_height = height_map_data.get_height(&self._transform.get_position(), 0);
+        if floating_height < 0.0 {
+            self._is_alive = false;
+            self._is_collided = true;
+            return;
+        }
     }
 }
 

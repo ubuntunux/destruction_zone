@@ -8,15 +8,23 @@ use crate::application::project_audio_manager::AudioLoop;
 
 pub struct WeaponManager {
     pub _id_generator: u64,
-    pub _bullets: HashMap<u64, Box<Bullet>>,
+    pub _bullets_array: HashMap<u64, *const Vec<Box<Bullet>>>,
 }
 
 impl WeaponManager {
     pub fn create_weapon_manager() -> Box<WeaponManager> {
         Box::new(WeaponManager {
             _id_generator: 0,
-            _bullets: HashMap::new(),
+            _bullets_array: HashMap::new(),
         })
+    }
+
+    pub fn initialize_weapon_manager(&mut self, project_application: &ProjectApplication) {
+
+    }
+
+    pub fn destroy_weapon_manager(&mut self) {
+        self._bullets_array.clear();
     }
 
     pub fn generate_id(&mut self) -> u64 {
@@ -25,14 +33,17 @@ impl WeaponManager {
         id
     }
 
-    pub fn initialize_weapon_manager(&mut self, project_application: &ProjectApplication) {
-
+    pub fn regist_bullets(&mut self, bullets: *const Vec<Box<Bullet>>) -> u64 {
+        let id = self.generate_id();
+        self._bullets_array.insert(id, bullets);
+        id
     }
 
-    pub fn destroy_weapon_manager(&mut self) {
-
+    pub fn unregist_bullets(&mut self, id: u64) {
+        self._bullets_array.remove(&id);
     }
 
+    // 이 함수는 사용 안할거임
     pub fn add_bullet(&self, project_application: &ProjectApplication) {
         project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
         // bullet_model = self.resource_manager.get_model("Cube")
