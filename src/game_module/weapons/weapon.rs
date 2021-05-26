@@ -2,7 +2,7 @@ use rust_engine_3d::utilities::system::RcRefCell;
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
-use crate::game_module::actors::base_actor::BaseActor;
+use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType};
 use nalgebra::Vector3;
@@ -40,7 +40,7 @@ pub trait WeaponTrait {
 pub struct BeamEmitter {
     pub _weapon_type: WeaponType,
     pub _weapon_data: *const WeaponData,
-    pub _owner_actor: *const dyn BaseActor,
+    pub _owner_actor: *const dyn ActorTrait,
     pub _render_object: RcRefCell<RenderObjectData>,
     pub _transform_object: *mut TransformObjectData,
     pub _bullet_type: BulletType,
@@ -51,7 +51,7 @@ pub struct BeamEmitter {
 // Implementation
 impl BeamEmitter {
     pub fn create_beam_emitter(
-        owner_actor: *const dyn BaseActor,
+        owner_actor: *const dyn ActorTrait,
         render_object: &RcRefCell<RenderObjectData>,
         offset_transform: &TransformObjectData
     ) -> Box<BeamEmitter> {

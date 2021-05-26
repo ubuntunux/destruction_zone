@@ -6,6 +6,7 @@ use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;
+use crate::game_module::actors::actor_data::ActorTrait;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>,
@@ -67,43 +68,43 @@ impl GameClient {
 
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
-        let player_actor = self._actor_manager.get_player_actor_mut();
+        let player_actor_controller = self._actor_manager.get_player_actor_mut().get_actor_data_mut().get_controller_mut();
 
         if btn_left {
             self._weapon_manager.add_bullet(project_application);
         }
 
         if 0 != mouse_delta.x {
-            player_actor._controller.acceleration_yaw(-mouse_delta.x as f32);
+            player_actor_controller.acceleration_yaw(-mouse_delta.x as f32);
         }
 
         if 0 != mouse_delta.y {
-            player_actor._controller.acceleration_pitch(-mouse_delta.y as f32);
+            player_actor_controller.acceleration_pitch(-mouse_delta.y as f32);
         }
 
         if modifier_keys_shift {
-            player_actor._controller.boost_on();
+            player_actor_controller.boost_on();
         }
 
         if pressed_key_w {
-            player_actor._controller.acceleration_forward();
+            player_actor_controller.acceleration_forward();
         }
         else if pressed_key_s {
-            player_actor._controller.acceleration_backward();
+            player_actor_controller.acceleration_backward();
         }
 
         if pressed_key_a {
-            player_actor._controller.acceleration_left();
+            player_actor_controller.acceleration_left();
         }
         else if pressed_key_d {
-            player_actor._controller.acceleration_right();
+            player_actor_controller.acceleration_right();
         }
 
         if pressed_key_q {
-            player_actor._controller.acceleration_down();
+            player_actor_controller.acceleration_down();
         }
         else if pressed_key_e {
-            player_actor._controller.acceleration_up();
+            player_actor_controller.acceleration_up();
         }
     }
 

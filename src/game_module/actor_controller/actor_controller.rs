@@ -100,7 +100,7 @@ impl ActorController {
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
     pub fn get_roll(&self) -> f32 { self._roll }
 
-    pub fn update_controller(&mut self, delta_time: f32, transform: &mut TransformObjectData, height_map_data: &HeightMapData) {
+    pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
 
         let boost_acceleration = if self._boost { self._controller_data._boost_acceleration } else { 1.0 };

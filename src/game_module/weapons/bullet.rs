@@ -1,7 +1,7 @@
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
 use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::actors::base_actor::BaseActor;
+use crate::game_module::actors::actor_data::ActorTrait;
 use nalgebra::Vector3;
 
 
@@ -39,7 +39,7 @@ pub fn get_bullet_data(bullet_type: BulletType) -> &'static BulletData {
 pub struct Bullet {
     pub _bullet_type: BulletType,
     pub _bullet_data: *const BulletData,
-    pub _owner_actor: *const dyn BaseActor,
+    pub _owner_actor: *const dyn ActorTrait,
     pub _is_alive: bool,
     pub _is_collided: bool,
     pub _elapsed_time: f32,
@@ -50,7 +50,7 @@ pub struct Bullet {
 
 // Implementation
 impl Bullet {
-    fn create_bullet(bullet_type: BulletType, owner_actor: *const dyn BaseActor, transform: &TransformObjectData) -> Bullet {
+    fn create_bullet(bullet_type: BulletType, owner_actor: *const dyn ActorTrait, transform: &TransformObjectData) -> Bullet {
         Bullet {
             _bullet_type: bullet_type,
             _owner_actor: owner_actor,
@@ -67,12 +67,12 @@ impl Bullet {
         self._bullet_type
     }
 
-    fn get_owner_actor(&self) -> &dyn BaseActor {
+    fn get_owner_actor(&self) -> &dyn ActorTrait {
         unsafe { &*self._owner_actor }
     }
 
-    fn get_owner_actor_mut(&self) -> &mut dyn BaseActor {
-        unsafe { &mut *(self._owner_actor as *mut dyn BaseActor) }
+    fn get_owner_actor_mut(&self) -> &mut dyn ActorTrait {
+        unsafe { &mut *(self._owner_actor as *mut dyn ActorTrait) }
     }
 
     fn get_bullet_data(&self) -> &BulletData {

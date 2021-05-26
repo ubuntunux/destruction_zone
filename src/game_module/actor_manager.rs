@@ -4,15 +4,15 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_controller::actor_controller::ControllerDataType;
-use crate::game_module::actors::base_actor::BaseActor;
+use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
-use crate::game_module::actors::ai_actor::AIActor;
+use crate::game_module::actors::non_player_actor::NonPlayerActor;
 use crate::game_module::armor::armor::ArmorDataType;
 
 pub struct ActorManager {
     pub _id_generator: u64,
     pub _player_actor: *const PlayerActor,
-    pub _actors: HashMap<u64, Box<dyn BaseActor>>,
+    pub _actors: HashMap<u64, Box<dyn ActorTrait>>,
 }
 
 pub fn calc_floating_height(render_object: &RenderObjectData) -> f32 {
@@ -48,7 +48,7 @@ impl ActorManager {
             let id = self.generate_id();
             let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
             self._actors.insert(id, PlayerActor::create_player_actor(id, ControllerDataType::Default, ArmorDataType::Default, player_render_object));
-            self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn BaseActor) as *const PlayerActor;
+            self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const PlayerActor;
             let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
             player_actor.initialize_actor();
         }
@@ -59,9 +59,9 @@ impl ActorManager {
             if actor_name.starts_with("Enemy") {
                 let id = self.generate_id();
                 let actor_render_object = project_application.get_project_scene_manager().get_skeletal_render_object(actor_name).unwrap();
-                self._actors.insert(id, AIActor::create_ai_actor(id, ControllerDataType::Tank, ArmorDataType::Default, actor_render_object));
-                let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn BaseActor) as *const AIActor;
-                let actor = unsafe { &mut *(actor as *mut AIActor) };
+                self._actors.insert(id, NonPlayerActor::create_actor(id, ControllerDataType::Tank, ArmorDataType::Default, actor_render_object));
+                let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const NonPlayerActor;
+                let actor = unsafe { &mut *(actor as *mut NonPlayerActor) };
                 actor.initialize_actor();
             }
         }
@@ -80,9 +80,12 @@ impl ActorManager {
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
-                actor.get_controller_mut().acceleration_yaw(1000.0 * delta_time);
-                actor.get_controller_mut().acceleration_forward();
-                actor.get_controller_mut().acceleration_right();
+                let mut actor_controller = actor.get_actor_data_mut().get_controller_mut();
+                {
+                    actor_controller.acceleration_yaw(1000.0 * delta_time);
+                    actor_controller.acceleration_forward();
+                    actor_controller.acceleration_right();
+                }
                 actor.update_actor(delta_time, height_map_data);
             }
         }
