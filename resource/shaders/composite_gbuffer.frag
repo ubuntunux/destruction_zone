@@ -51,9 +51,10 @@ void main() {
     }
 
     vec4 base_color = texture(textureSceneAlbedo, vs_output.texCoord);
-    float opacity = base_color.w;
-    vec3 emissive_color = vec3(0.0);
+    float opacity = 1.0;
+    vec3 emissive_color = base_color.xyz * decode_emissive_intensity(base_color.w);
 
+    // x: roughness y: metalic, zw: vertex_normal
     vec4 material = texture(textureSceneMaterial, vs_output.texCoord);
     vec4 normal = texture(textureSceneNormal, vs_output.texCoord);
 

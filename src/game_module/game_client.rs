@@ -49,6 +49,7 @@ impl GameClient {
         let _delta_time = time_data._delta_time;
         let _mouse_pos = &mouse_move_data._mouse_pos;
         let mouse_delta = &mouse_move_data._mouse_pos_delta;
+        let scroll_delta = &mouse_move_data._scroll_delta;
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let _btn_right_hold: bool = mouse_input_data._btn_r_hold;
 

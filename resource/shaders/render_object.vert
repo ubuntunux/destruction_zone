@@ -23,21 +23,31 @@ void main() {
     vec3 vertex_tangent = vec3(0.0);
 
 #if (RenderObjectType_Skeletal == RenderObjectType)
-    const uint prev_bone_matrix_offset = pushConstant._bone_matrix_offset;
-    const uint bone_matrix_offset = prev_bone_matrix_offset + pushConstant._bone_matrix_count;
-    for(int i = 0; i < MAX_BONES_PER_VERTEX; ++i)
+    if (0 < pushConstant._bone_matrix_count)
     {
-        const float boneWeight = inBoneWeights[i];
-        if(0.0 < boneWeight)
+        const uint prev_bone_matrix_offset = pushConstant._bone_matrix_offset;
+        const uint bone_matrix_offset = prev_bone_matrix_offset + pushConstant._bone_matrix_count;
+        for(int i = 0; i < MAX_BONES_PER_VERTEX; ++i)
         {
-            prev_position += (bone_matrices[prev_bone_matrix_offset + int(inBoneIndices[i])] * vec4(inPosition, 1.0)) * boneWeight;
-            position += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inPosition, 1.0)) * boneWeight;
-            vertex_normal += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inNormal, 0.0)).xyz * boneWeight;
-            vertex_tangent += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inTangent, 0.0)).xyz * boneWeight;
+            const float boneWeight = inBoneWeights[i];
+            if(0.0 < boneWeight)
+            {
+                prev_position += (bone_matrices[prev_bone_matrix_offset + int(inBoneIndices[i])] * vec4(inPosition, 1.0)) * boneWeight;
+                position += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inPosition, 1.0)) * boneWeight;
+                vertex_normal += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inNormal, 0.0)).xyz * boneWeight;
+                vertex_tangent += (bone_matrices[bone_matrix_offset + int(inBoneIndices[i])] * vec4(inTangent, 0.0)).xyz * boneWeight;
+            }
         }
+        position /= position.w;
+        prev_position /= prev_position.w;
     }
-    position /= position.w;
-    prev_position /= prev_position.w;
+    else
+    {
+        position = vec4(inPosition, 1.0);
+        prev_position = vec4(inPosition, 1.0);
+        vertex_normal = inNormal;
+        vertex_tangent = inTangent;
+    }
 #else
     position = vec4(inPosition, 1.0);
     prev_position = vec4(inPosition, 1.0);
@@ -48,10 +58,16 @@ void main() {
     vertex_tangent = normalize(vertex_tangent);
 
     mat4 localMatrix = pushConstant._localMatrix;
+#if (RenderObjectType_Skeletal == RenderObjectType)
+    mat4 localMatrixPrev = pushConstant._localMatrixPrev;
+#else
+    mat4 localMatrixPrev = localMatrix;
+#endif
     localMatrix[3].xyz -= view_constants.CAMERA_POSITION;
+    localMatrixPrev[3].xyz -= view_constants.CAMERA_POSITION_PREV;
 
     vec3 relative_pos = (localMatrix * position).xyz;
-    vec3 relative_pos_prev = (localMatrix * prev_position).xyz + (view_constants.CAMERA_POSITION - view_constants.CAMERA_POSITION_PREV);
+    vec3 relative_pos_prev = (localMatrixPrev * prev_position).xyz;
 
 #if (RenderMode_GBuffer == RenderMode || RenderMode_Forward == RenderMode)
     vs_output.projection_pos_prev = view_constants.VIEW_ORIGIN_PROJECTION_PREV_JITTER * vec4(relative_pos_prev, 1.0);

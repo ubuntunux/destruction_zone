@@ -80,7 +80,7 @@ impl ActorManager {
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
-                let mut actor_controller = actor.get_actor_data_mut().get_controller_mut();
+                let actor_controller = actor.get_actor_data_mut().get_controller_mut();
                 {
                     actor_controller.acceleration_yaw(1000.0 * delta_time);
                     actor_controller.acceleration_forward();

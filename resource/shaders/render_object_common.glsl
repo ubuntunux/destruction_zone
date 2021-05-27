@@ -34,6 +34,7 @@ layout( push_constant ) uniform PushConstant_StaticRenderObject
 layout( push_constant ) uniform PushConstant_SkeletalRenderObject
 {
     mat4 _localMatrix;
+    mat4 _localMatrixPrev;
     uint _bone_matrix_offset;
     uint _bone_matrix_count;
     uint _reserved0;

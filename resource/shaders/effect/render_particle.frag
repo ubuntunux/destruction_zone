@@ -23,6 +23,7 @@ void main() {
     }
     #endif
 
+    // x: roughness, y: metalicness, z: emissive intensity
     vec4 material = texture(textureMaterial, vs_output.texCoord);
     vec3 normal = normalize(vs_output.tangent_to_world * (texture(textureNormal, vs_output.texCoord).xyz * 2.0 - 1.0));
     vec3 vertex_normal = normalize(vs_output.tangent_to_world[2]);
@@ -30,7 +31,7 @@ void main() {
     float depth = gl_FragCoord.z;
     vec3 world_position = vs_output.relative_position.xyz + view_constants.CAMERA_POSITION;
     float opacity = base_color.w;
-    vec3 emissive_color = vec3(0.0);
+    vec3 emissive_color = base_color.xyz * material.z;
     float roughness = material.x;
     float metalicness = material.y;
     float reflectance = 0.0;

@@ -7,6 +7,7 @@ use rust_engine_3d::utilities::system::{ newRcRefCell, RcRefCell };
 
 use crate::application::project_application::ProjectApplication;
 use crate::resource::project_resource::ProjectResources;
+use crate::application_constants::DEFAULT_AUDIO_VOLUME;
 
 pub enum AudioLoop {
     ONCE,
@@ -32,6 +33,7 @@ pub struct ProjectAudioManager {
     pub _bgm: Option<RcRefCell<AudioInstance>>,
     pub _audio: AudioSubsystem,
     pub _mixer_context: Sdl2MixerContext,
+    pub _volume: i32,
 }
 
 impl AudioInstance {
@@ -85,6 +87,7 @@ impl ProjectAudioManager {
             _bgm: None,
             _audio: audio,
             _mixer_context: mixer_context,
+            _volume: DEFAULT_AUDIO_VOLUME,
         })
     }
 
@@ -117,7 +120,11 @@ impl ProjectAudioManager {
         let audio_data = self.get_project_resources().get_audio_data(audio_name);
         let audio = AudioInstance::create_audio(&audio_data, audio_loop);
         match audio.borrow()._channel {
-            Ok(Channel(channel)) => self._audios.insert(channel, audio.clone()),
+            Ok(channel) => {
+                channel.set_volume(self._volume);
+                let Channel(channel_num) = channel;
+                self._audios.insert(channel_num, audio.clone())
+            },
             _ => None
         };
         audio

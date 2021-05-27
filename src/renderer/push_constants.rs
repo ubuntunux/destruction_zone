@@ -25,6 +25,7 @@ impl Default for PushConstant_StaticRenderObject {
 #[derive(Debug, Clone)]
 pub struct PushConstant_SkeletalRenderObject {
     pub _local_matrix: Matrix4<f32>,
+    pub _local_matrix_prev: Matrix4<f32>,
     pub _bone_matrix_offset: u32,
     pub _bone_matrix_count: u32,
     pub _reserved0: u32,
@@ -35,6 +36,7 @@ impl Default for PushConstant_SkeletalRenderObject {
     fn default() -> PushConstant_SkeletalRenderObject {
         PushConstant_SkeletalRenderObject {
             _local_matrix: Matrix4::identity(),
+            _local_matrix_prev: Matrix4::identity(),
             _bone_matrix_offset: 0,
             _bone_matrix_count: 0,
             _reserved0: 0,

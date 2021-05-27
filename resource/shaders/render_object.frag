@@ -47,14 +47,18 @@ void main() {
     }
 
 #if (RenderMode_GBuffer == RenderMode || RenderMode_Forward == RenderMode)
+    // x: roughness, y: metalicness, z: emissive intensity
     vec4 material = texture(textureMaterial, vs_output.texCoord);
     vec3 normal = normalize(vs_output.tangent_to_world * (texture(textureNormal, vs_output.texCoord).xyz * 2.0 - 1.0));
     vec3 vertex_normal = normalize(vs_output.tangent_to_world[2]);
 #endif
 
 #if (RenderMode_GBuffer == RenderMode)
-    outAlbedo = base_color;
-    outMaterial.xy = material.xy; // x : roughness, y: metalicness
+    // xyz: albedo, w: emissive_intensity
+    outAlbedo.xyz = base_color.xyz;
+    outAlbedo.w = material.z;
+    // x: roughness y: metalic, zw: vertex_normal
+    outMaterial.xy = material.xy;
     outMaterial.zw = vertex_normal.xy * 0.5 + 0.5;
     outNormal.xyz = normal * 0.5 + 0.5;
     outNormal.w = vertex_normal.z * 0.5 + 0.5;

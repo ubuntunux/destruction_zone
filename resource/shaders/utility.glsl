@@ -244,4 +244,14 @@ float distance_field_font_opacity(float opacity)
     const float threshold = 0.2;
     return smoothstep(threshold, 1.0, exp(-saturate(1.0 - opacity) * 5.0));
 }
+
+float encode_emissive_intensity(float emissive_intensity)
+{
+    return saturate(emissive_intensity * 0.1);
+}
+
+float decode_emissive_intensity(float emissive_intensity)
+{
+    return emissive_intensity * 10.0;
+}
 #endif // _UTILITY_

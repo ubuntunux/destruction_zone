@@ -5,7 +5,6 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType};
-use nalgebra::Vector3;
 
 #[derive(Clone, Copy)]
 pub enum WeaponType {
@@ -56,7 +55,7 @@ impl BeamEmitter {
         offset_transform: &TransformObjectData
     ) -> Box<BeamEmitter> {
         render_object.borrow_mut()._transform_object = offset_transform.clone();
-        let mut transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
+        let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
         let weapon_type = WeaponType::BeamEmitter;
         Box::new(BeamEmitter {
             _weapon_type: weapon_type,

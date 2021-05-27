@@ -851,18 +851,20 @@ impl ProjectRenderer {
                     RenderObjectType::Static => {
                     },
                     RenderObjectType::Skeletal => {
-                        let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object.get_prev_animation_buffer(0);
-                        let animation_buffer: &Vec<Matrix4<f32>> = render_object.get_animation_buffer(0);
-                        let bone_count = prev_animation_buffer.len() as vk::DeviceSize;
-                        let prev_animation_buffer_offset = bone_metrices_offset * std::mem::size_of::<Matrix4<f32>>() as vk::DeviceSize;
-                        let animation_buffer_offset = (bone_metrices_offset + bone_count) * std::mem::size_of::<Matrix4<f32>>() as vk::DeviceSize;
+                        if render_object.has_animation_play_info() {
+                            let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object.get_prev_animation_buffer(0);
+                            let animation_buffer: &Vec<Matrix4<f32>> = render_object.get_animation_buffer(0);
+                            let bone_count = prev_animation_buffer.len() as vk::DeviceSize;
+                            let prev_animation_buffer_offset = bone_metrices_offset * std::mem::size_of::<Matrix4<f32>>() as vk::DeviceSize;
+                            let animation_buffer_offset = (bone_metrices_offset + bone_count) * std::mem::size_of::<Matrix4<f32>>() as vk::DeviceSize;
 
-                        // TODO : Upload at once
-                        self.upload_shader_buffer_datas_offset(command_buffer, swapchain_index, &ShaderBufferDataType::BoneMatrices, &prev_animation_buffer, prev_animation_buffer_offset);
-                        self.upload_shader_buffer_datas_offset(command_buffer, swapchain_index, &ShaderBufferDataType::BoneMatrices, &animation_buffer, animation_buffer_offset);
+                            // TODO : Upload at once
+                            self.upload_shader_buffer_datas_offset(command_buffer, swapchain_index, &ShaderBufferDataType::BoneMatrices, &prev_animation_buffer, prev_animation_buffer_offset);
+                            self.upload_shader_buffer_datas_offset(command_buffer, swapchain_index, &ShaderBufferDataType::BoneMatrices, &animation_buffer, animation_buffer_offset);
 
-                        // bone_count = (curr_animation_bone_count + prev_animation_bone_count)
-                        bone_metrices_offset += bone_count * 2;
+                            // bone_count = (curr_animation_bone_count + prev_animation_bone_count)
+                            bone_metrices_offset += bone_count * 2;
+                        }
                     },
                 };
             }
@@ -901,13 +903,19 @@ impl ProjectRenderer {
                         );
                     },
                     RenderObjectType::Skeletal => {
-                        let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object.get_prev_animation_buffer(0);
-                        let bone_count = prev_animation_buffer.len() as vk::DeviceSize;
+                        let bone_count = if render_object.has_animation_play_info() {
+                            let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object.get_prev_animation_buffer(0);
+                            prev_animation_buffer.len() as vk::DeviceSize
+                        } else {
+                            0 as vk::DeviceSize
+                        };
+
                         renderer_data.upload_push_constant_data(
                             command_buffer,
                             pipeline_data,
                             &PushConstant_SkeletalRenderObject {
                                 _local_matrix: render_object._transform_object.get_matrix().clone() as Matrix4<f32>,
+                                _local_matrix_prev: render_object._transform_object.get_prev_matrix().clone() as Matrix4<f32>,
                                 _bone_matrix_offset: bone_metrices_offset as u32,
                                 _bone_matrix_count: bone_count as u32,
                                 ..Default::default()
