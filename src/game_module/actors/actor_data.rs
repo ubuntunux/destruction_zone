@@ -30,7 +30,6 @@ pub trait ActorTrait {
     fn get_transform(&self) -> &TransformObjectData;
     fn get_transform_mut(&self) -> &mut TransformObjectData;
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData);
-    fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData);
 }
 
 // Implementation

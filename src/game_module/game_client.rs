@@ -7,6 +7,7 @@ use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;
 use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::game_constants::SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>,
@@ -38,7 +39,7 @@ impl GameClient {
         self._game_ui_manager.destroy_game_ui_manager();
     }
 
-    pub fn update_event(&self, project_application: &ProjectApplication) {
+    pub fn update_event(&mut self, project_application: &ProjectApplication) {
         let engine_application = project_application.get_engine_application();
         let time_data = &engine_application._time_data;
         let mouse_move_data = &engine_application._mouse_move_data;
@@ -68,6 +69,10 @@ impl GameClient {
         // let pressed_key_tab = keyboard_input_data.get_key_hold(VirtualKeyCode::Tab);
 
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
+
+        if 0 != scroll_delta.y {
+            self._actor_manager.update_camera_distance(-scroll_delta.y as f32 * SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED);
+        }
 
         let player_actor_controller = self._actor_manager.get_player_actor_mut().get_actor_data_mut().get_controller_mut();
 

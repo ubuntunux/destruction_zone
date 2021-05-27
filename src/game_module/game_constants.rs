@@ -1,1 +1,6 @@
 pub const GRAVITY: f32 = 9.8;
+
+pub const SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED: f32 = 2.0;
+pub const CAMERA_DISTANCE_MIN: f32 = 2.0;
+pub const CAMERA_DISTANCE_MAX: f32 = 15.0;
+pub const CAMERA_DISTANCE_SPEED: f32 = 3.0;

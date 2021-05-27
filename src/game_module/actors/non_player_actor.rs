@@ -70,10 +70,6 @@ impl ActorTrait for NonPlayerActor {
         transform.set_roll(actor_controller.get_roll());
         transform.set_position(actor_controller.get_position());
     }
-
-    fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData) {
-        unimplemented!()
-    }
 }
 
 impl NonPlayerActor {
