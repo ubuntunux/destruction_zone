@@ -5,6 +5,7 @@ use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 #[derive(Clone)]
 pub struct HeightMapData {
+    _sea_height: f32,
     _bounding_box: BoundingBox,
     _lod_count: i32,
     _width: Vec<i32>,
@@ -15,6 +16,7 @@ pub struct HeightMapData {
 impl Default for HeightMapData {
     fn default() -> HeightMapData {
         HeightMapData {
+            _sea_height: 0.0,
             _bounding_box: BoundingBox::default(),
             _lod_count: 0,
             _width: Vec::new(),
@@ -25,7 +27,8 @@ impl Default for HeightMapData {
 }
 
 impl HeightMapData {
-    pub fn initialize_height_map_data(&mut self, bounding_box: &BoundingBox, width: i32, height: i32, height_map_data: Vec<u8>) {
+    pub fn initialize_height_map_data(&mut self, bounding_box: &BoundingBox, width: i32, height: i32, height_map_data: Vec<u8>, sea_height: f32) {
+        self._sea_height = sea_height;
         self._bounding_box = bounding_box.clone();
         let max_height = bounding_box._size.y;
         let lod_count_x = (width as f32).log2() as i32 + 1;
@@ -87,6 +90,7 @@ impl HeightMapData {
         let height_map_data = &self._max_height_map_data[lod];
         let height_data_0 = lerp(height_map_data[tex_coord_00], height_map_data[tex_coord_01], pixel_pos_x_frac);
         let height_data_1 = lerp(height_map_data[tex_coord_10], height_map_data[tex_coord_11], pixel_pos_x_frac);
-        self._bounding_box._min.y + lerp(height_data_0, height_data_1, pixel_pos_y_frac)
+        let height = self._bounding_box._min.y + lerp(height_data_0, height_data_1, pixel_pos_y_frac);
+        self._sea_height.max(height)
     }
 }

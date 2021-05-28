@@ -287,7 +287,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
                     let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
                     stage_model._transform_object.update_transform_object();
                     stage_model.update_bound_box();
-                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data);
+                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data, scene_data_create_info._sea_height);
                     break;
                 }
             }
