@@ -22,10 +22,13 @@ pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
     pub _crosshair_widget: *const WidgetDefault,
     pub _crosshair_pos: Vector2<f32>,
-    pub _target_info_layer: *mut WidgetDefault,
+    pub _target_hud_layer: *mut WidgetDefault,
     pub _target_distance: *mut WidgetDefault,
-    pub _target_hp: *mut WidgetDefault,
+    pub _target_hull: *mut WidgetDefault,
     pub _target_shield: *mut WidgetDefault,
+    pub _player_hud_layer: *mut WidgetDefault,
+    pub _player_hull: *mut WidgetDefault,
+    pub _player_shield: *mut WidgetDefault,
 }
 
 impl GameUIManager {
@@ -34,10 +37,13 @@ impl GameUIManager {
             _project_ui_manager: std::ptr::null(),
             _crosshair_widget: std::ptr::null(),
             _crosshair_pos: Vector2::zeros(),
-            _target_info_layer: std::ptr::null_mut(),
+            _target_hud_layer: std::ptr::null_mut(),
             _target_distance: std::ptr::null_mut(),
-            _target_hp: std::ptr::null_mut(),
+            _target_hull: std::ptr::null_mut(),
             _target_shield: std::ptr::null_mut(),
+            _player_hud_layer: std::ptr::null_mut(),
+            _player_hull: std::ptr::null_mut(),
+            _player_shield: std::ptr::null_mut(),
         })
     }
 
@@ -82,54 +88,113 @@ impl GameUIManager {
         root_widget.add_widget(crosshair_widget);
         self._crosshair_widget = crosshair_widget;
 
-        let target_info_layout = unsafe { &mut *(UIManagerData::create_widget("target_info_layout", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = target_info_layout.get_ui_component_mut();
-        let ui_size = 200.0f32;
-        ui_component.set_size(ui_size, ui_size);
+        let hud_layer_width: f32 = 100.0;
+        let hud_layer_height: f32 = 100.0;
+        let hud_layer_padding: f32 = 10.0;
+        let hud_ui_width: f32 = 100.0;
+        let hud_ui_height: f32 = 25.0;
+        let hud_ui_margine: f32 = 2.0;
+        let hud_ui_padding: f32 = 4.0;
+
+        // Target Hud
+        let target_hud_layer = unsafe { &mut *(UIManagerData::create_widget("target_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_hud_layer.get_ui_component_mut();
+        ui_component.set_size(hud_layer_width, hud_layer_height);
         ui_component.set_center(window_center.x, window_center.y);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
         ui_component.set_layout_orientation(Orientation::VERTICAL);
         ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_expandable(true);
+        ui_component.set_padding(hud_layer_padding);
         ui_component.set_color(get_color32(255, 255, 255, 10));
-        root_widget.add_widget(target_info_layout);
-        self._target_info_layer = target_info_layout;
+        root_widget.add_widget(target_hud_layer);
+        self._target_hud_layer = target_hud_layer;
 
         let target_distance = unsafe { &mut *(UIManagerData::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_distance.get_ui_component_mut();
         ui_component.set_text("100m");
-        ui_component.set_size(100.0, 50.0);
+        ui_component.set_size(hud_ui_width, hud_ui_height);
+        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_color(get_color32(255, 0, 0, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_halign(HorizontalAlign::CENTER);
-        ui_component.set_valign(VerticalAlign::TOP);
+        ui_component.set_margine(hud_ui_margine);
+        ui_component.set_padding(hud_ui_padding);
         ui_component.set_expandable(true);
-        target_info_layout.add_widget(target_distance);
+        target_hud_layer.add_widget(target_distance);
         self._target_distance = target_distance;
 
-        let target_hp = unsafe { &mut *(UIManagerData::create_widget("target_hp", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = target_hp.get_ui_component_mut();
+        let target_hull = unsafe { &mut *(UIManagerData::create_widget("target_hull", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_hull.get_ui_component_mut();
         ui_component.set_text("hp");
-        ui_component.set_size(100.0, 50.0);
+        ui_component.set_size(hud_ui_width, hud_ui_height);
+        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_color(get_color32(0, 255, 0, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_halign(HorizontalAlign::CENTER);
-        ui_component.set_valign(VerticalAlign::CENTER);
-        target_info_layout.add_widget(target_hp);
-        self._target_hp = target_hp;
+        ui_component.set_margine(hud_ui_margine);
+        ui_component.set_padding(hud_ui_padding);
+        ui_component.set_expandable(true);
+        target_hud_layer.add_widget(target_hull);
+        self._target_hull = target_hull;
 
         let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_shield.get_ui_component_mut();
         ui_component.set_text("shield");
-        ui_component.set_size(100.0, 50.0);
+        ui_component.set_size(hud_ui_width, hud_ui_height);
+        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_valign(VerticalAlign::CENTER);
         ui_component.set_color(get_color32(0, 0, 255, 20));
         ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_halign(HorizontalAlign::RIGHT);
-        ui_component.set_valign(VerticalAlign::BOTTOM);
+        ui_component.set_margine(hud_ui_margine);
+        ui_component.set_padding(hud_ui_padding);
         ui_component.set_expandable(true);
-        target_info_layout.add_widget(target_shield);
+        target_hud_layer.add_widget(target_shield);
         self._target_shield = target_shield;
+
+        // Player Hud
+        let player_hud_layer = unsafe { &mut *(UIManagerData::create_widget("player_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = player_hud_layer.get_ui_component_mut();
+        ui_component.set_size(hud_layer_width, hud_layer_height);
+        ui_component.set_pos(window_size.x as f32 - 200.0, window_center.y);
+        ui_component.set_layout_type(UILayoutType::BoxLayout);
+        ui_component.set_layout_orientation(Orientation::VERTICAL);
+        ui_component.set_halign(HorizontalAlign::CENTER);
+        ui_component.set_valign(VerticalAlign::CENTER);
+        ui_component.set_expandable(true);
+        ui_component.set_padding(hud_layer_padding);
+        ui_component.set_color(get_color32(255, 255, 255, 10));
+        root_widget.add_widget(player_hud_layer);
+        self._player_hud_layer = player_hud_layer;
+
+        let player_hull = unsafe { &mut *(UIManagerData::create_widget("player_hull", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = player_hull.get_ui_component_mut();
+        ui_component.set_text("hp");
+        ui_component.set_size(hud_ui_width, hud_ui_height);
+        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_valign(VerticalAlign::CENTER);
+        ui_component.set_color(get_color32(0, 255, 0, 20));
+        ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_margine(hud_ui_margine);
+        ui_component.set_padding(hud_ui_padding);
+        ui_component.set_expandable(true);
+        player_hud_layer.add_widget(player_hull);
+        self._player_hull = player_hull;
+
+        let player_shield = unsafe { &mut *(UIManagerData::create_widget("player_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = player_shield.get_ui_component_mut();
+        ui_component.set_text("shield");
+        ui_component.set_size(hud_ui_width, hud_ui_height);
+        ui_component.set_halign(HorizontalAlign::LEFT);
+        ui_component.set_valign(VerticalAlign::CENTER);
+        ui_component.set_color(get_color32(0, 0, 255, 20));
+        ui_component.set_font_color(get_color32(255, 255, 255, 255));
+        ui_component.set_margine(hud_ui_margine);
+        ui_component.set_padding(hud_ui_padding);
+        ui_component.set_expandable(true);
+        player_hud_layer.add_widget(player_shield);
+        self._player_shield = player_shield;
     }
 
     pub fn destroy_game_ui_manager(&mut self) {
@@ -138,14 +203,28 @@ impl GameUIManager {
     pub fn update_game_ui(&mut self, project_application: &ProjectApplication, actor_manager: &ActorManager, _delta_time: f32) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_engine_application()._window_size;
+
+        // Cross Hair
         self._crosshair_pos.x = window_size.x as f32 * 0.5;
         self._crosshair_pos.y = window_size.y as f32 * 0.5;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
         let ui_component = crosshair_widget.get_ui_component_mut();
         ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
 
-        let player_actor_pos = actor_manager.get_player_actor().get_transform().get_position();
+        // Player Hud
+        {
+            let player_actor = actor_manager.get_player_actor();
+            let armor = player_actor.get_armor();
 
+            let player_hull = unsafe { self._player_hull.as_mut().unwrap().get_ui_component_mut() };
+            player_hull.set_text(&format!("Hull: {}", armor._hull as i32));
+
+            let player_shield = unsafe { self._player_shield.as_mut().unwrap().get_ui_component_mut() };
+            player_shield.set_text(&format!("Shield: {}", armor._shields as i32));
+        }
+
+        // Target Hud
+        let player_actor_pos = actor_manager.get_player_actor().get_transform().get_position();
         for (_id, actor) in actor_manager._actors.iter() {
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
@@ -153,17 +232,17 @@ impl GameUIManager {
                 let armor = actor.get_armor();
                 let clamp: bool = true;
                 let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos, clamp);
-                let target_info_layer = unsafe { self._target_info_layer.as_mut().unwrap().get_ui_component_mut() };
-                target_info_layer.set_center(screen_pos.x, screen_pos.y);
+                let target_hud_layer = unsafe { self._target_hud_layer.as_mut().unwrap().get_ui_component_mut() };
+                target_hud_layer.set_center(screen_pos.x, screen_pos.y);
 
                 let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
                 target_distance.set_text(&format!("{}m", distance as i32));
 
-                let target_hp = unsafe { self._target_hp.as_mut().unwrap().get_ui_component_mut() };
-                target_hp.set_text(&format!("{}", armor._hull as i32));
+                let target_hull = unsafe { self._target_hull.as_mut().unwrap().get_ui_component_mut() };
+                target_hull.set_text(&format!("Hull: {}", armor._hull as i32));
 
                 let target_shield = unsafe { self._target_shield.as_mut().unwrap().get_ui_component_mut() };
-                target_shield.set_text(&format!("{}", armor._shields as i32));
+                target_shield.set_text(&format!("Shield: {}", armor._shields as i32));
                 break;
             }
         }
