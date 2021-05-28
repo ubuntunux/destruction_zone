@@ -7,7 +7,6 @@ use crate::game_module::actor_controller::actor_controller::{ ControllerDataType
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::armor::armor::{ArmorInstance, ArmorDataType};
-use nalgebra::Vector3;
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -96,7 +95,12 @@ impl PlayerActor {
         let BOUND_BOX_MIN: f32 = 2.0;
         front_xz = front_xz * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
         front_xz.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
-        let camera_pos = actor_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + front_xz;
+
+        let mut camera_pos = actor_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + front_xz;
+        let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
+        if camera_pos.y < floating_height {
+            camera_pos.y = floating_height;
+        }
         main_camera._transform_object.set_position(&camera_pos);
 
         // update player transform

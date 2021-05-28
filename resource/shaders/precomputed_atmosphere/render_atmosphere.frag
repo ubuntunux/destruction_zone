@@ -208,9 +208,16 @@ void main()
             float march_step = atmosphere_constants.cloud_height / float(march_count);
             float cloud_march_step = march_step;
             float increase_march_step = march_step * 0.05;
+            float ray_start_dist = length(ray_start_pos.xyz);
             for(int i = 0; i < march_count; ++i)
             {
-                vec3 ray_pos = ray_start_pos.xyz + eye_direction.xyz * float(i) * cloud_march_step;
+                float ray_dist = float(i) * cloud_march_step;
+                if (scene_linear_depth <= ((ray_start_dist + ray_dist) * ATMOSPHERE_RATIO))
+                {
+                    continue;
+                }
+
+                vec3 ray_pos = ray_start_pos.xyz + eye_direction.xyz * ray_dist;
 
                 // fade top and bottom
                 float relative_altitude = length(ray_pos - earth_center_pos.xyz) - cloud_bottom_dist;

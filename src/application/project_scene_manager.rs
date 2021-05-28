@@ -37,16 +37,18 @@ type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SceneDataCreateInfo {
-    _cameras: HashMap<String, CameraCreateInfo>,
-    _directional_lights: HashMap<String, DirectionalLightCreateInfo>,
-    _effects: HashMap<String, EffectCreateInfo>,
-    _static_objects: HashMap<String, RenderObjectCreateInfo>,
-    _skeletal_objects: HashMap<String, RenderObjectCreateInfo>,
+    pub _sea_height: f32,
+    pub _cameras: HashMap<String, CameraCreateInfo>,
+    pub _directional_lights: HashMap<String, DirectionalLightCreateInfo>,
+    pub _effects: HashMap<String, EffectCreateInfo>,
+    pub _static_objects: HashMap<String, RenderObjectCreateInfo>,
+    pub _skeletal_objects: HashMap<String, RenderObjectCreateInfo>,
 }
 
 impl Default for SceneDataCreateInfo {
     fn default() -> SceneDataCreateInfo {
         SceneDataCreateInfo {
+            _sea_height: 0.0,
             _cameras: HashMap::new(),
             _directional_lights: HashMap::new(),
             _effects: HashMap::new(),
@@ -64,6 +66,7 @@ pub struct ProjectSceneManager {
     pub _project_effect_manager: *const ProjectEffectManager,
     pub _window_size: Vector2<i32>,
     pub _scene_name: String,
+    pub _sea_height: f32,
     pub _main_camera: RcRefCell<CameraObjectData>,
     pub _main_light: RcRefCell<DirectionalLightData>,
     pub _capture_height_map: RcRefCell<DirectionalLightData>,
@@ -118,6 +121,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
 
     fn create_default_scene_data(&self, scene_data_name: &str) {
         let mut scene_data_create_info = SceneDataCreateInfo {
+            _sea_height: 0.0,
             _cameras: HashMap::new(),
             _directional_lights: HashMap::new(),
             _effects: HashMap::new(),
@@ -221,6 +225,9 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
 
         let scene_data_create_info = project_resources.get_scene_data(scene_data_name).borrow();
 
+        self._sea_height = scene_data_create_info._sea_height;
+        self.get_project_renderer_mut()._fft_ocean.set_height(scene_data_create_info._sea_height);
+
         // cameras
         for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
             let camera_create_info = CameraCreateInfo {
@@ -301,6 +308,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
 
     fn save_scene_data(&mut self) {
         let mut scene_data_create_info = SceneDataCreateInfo {
+            _sea_height: self._sea_height,
             _cameras: HashMap::new(),
             _directional_lights: HashMap::new(),
             _effects: HashMap::new(),
@@ -457,6 +465,7 @@ impl ProjectSceneManager {
             _project_effect_manager: std::ptr::null(),
             _window_size: default_camera._window_size.into(),
             _scene_name: String::new(),
+            _sea_height: 0.0,
             _main_camera: system::newRcRefCell(default_camera),
             _main_light: system::newRcRefCell(default_light),
             _capture_height_map: system::newRcRefCell(capture_height_map),
@@ -484,6 +493,7 @@ impl ProjectSceneManager {
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
+    pub fn get_sea_height(&self) -> f32 { self._sea_height }
     pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
     pub fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
     pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {

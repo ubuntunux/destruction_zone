@@ -1,4 +1,5 @@
-{"_cameras":{"main_camera":{"meter_per_unit":1.0,
+{"_sea_height": 12.0,
+"_cameras":{"main_camera":{"meter_per_unit":1.0,
 "near":0.1,
 "far":2000.0,
 "fov":60.0,

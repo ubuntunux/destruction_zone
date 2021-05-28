@@ -187,6 +187,10 @@ impl FFTOcean {
         self._height
     }
 
+    pub fn set_height(&mut self, sea_height: f32) {
+        self._height = sea_height
+    }
+
     pub fn regist_fft_ocean_textures(&mut self, renderer_data: &RendererData, resources: &mut Resources) {
         let mut spectrum12_data: Vec<f32> = vec![0.0; (FFT_SIZE * FFT_SIZE * 4) as usize];
         let mut spectrum34_data: Vec<f32> = vec![0.0; (FFT_SIZE * FFT_SIZE * 4) as usize];
