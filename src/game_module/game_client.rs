@@ -46,7 +46,6 @@ impl GameClient {
         let mouse_input_data = &engine_application._mouse_input_data;
         let keyboard_input_data = &engine_application._keyboard_input_data;
 
-        const MOUSE_DELTA_RATIO: f32 = 500.0;
         let _delta_time = time_data._delta_time;
         let _mouse_pos = &mouse_move_data._mouse_pos;
         let mouse_delta = &mouse_move_data._mouse_pos_delta;

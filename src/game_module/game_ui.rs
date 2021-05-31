@@ -15,8 +15,10 @@ use rust_engine_3d::resource::resource::ProjectResourcesBase;
 
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
-use crate::renderer::project_ui::ProjectUIManager;
 use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::ui_widgets::numeric_bar_widget::HullPointWidget;
+use crate::renderer::project_ui::ProjectUIManager;
+
 
 pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
@@ -24,7 +26,7 @@ pub struct GameUIManager {
     pub _crosshair_pos: Vector2<f32>,
     pub _target_hud_layer: *mut WidgetDefault,
     pub _target_distance: *mut WidgetDefault,
-    pub _target_hull: *mut WidgetDefault,
+    pub _target_hull_point_widget: Option<HullPointWidget>,
     pub _target_shield: *mut WidgetDefault,
     pub _player_hud_layer: *mut WidgetDefault,
     pub _player_hull: *mut WidgetDefault,
@@ -39,7 +41,7 @@ impl GameUIManager {
             _crosshair_pos: Vector2::zeros(),
             _target_hud_layer: std::ptr::null_mut(),
             _target_distance: std::ptr::null_mut(),
-            _target_hull: std::ptr::null_mut(),
+            _target_hull_point_widget: None,
             _target_shield: std::ptr::null_mut(),
             _player_hud_layer: std::ptr::null_mut(),
             _player_hull: std::ptr::null_mut(),
@@ -125,19 +127,7 @@ impl GameUIManager {
         target_hud_layer.add_widget(target_distance);
         self._target_distance = target_distance;
 
-        let target_hull = unsafe { &mut *(UIManagerData::create_widget("target_hull", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = target_hull.get_ui_component_mut();
-        ui_component.set_text("hp");
-        ui_component.set_size(hud_ui_width, hud_ui_height);
-        ui_component.set_halign(HorizontalAlign::LEFT);
-        ui_component.set_valign(VerticalAlign::CENTER);
-        ui_component.set_color(get_color32(0, 255, 0, 20));
-        ui_component.set_font_color(get_color32(255, 255, 255, 255));
-        ui_component.set_margine(hud_ui_margine);
-        ui_component.set_padding(hud_ui_padding);
-        ui_component.set_expandable(true);
-        target_hud_layer.add_widget(target_hull);
-        self._target_hull = target_hull;
+        self._target_hull_point_widget = Some(HullPointWidget::create_hull_point_widget(target_hud_layer));
 
         let target_shield = unsafe { &mut *(UIManagerData::create_widget("target_shield", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_shield.get_ui_component_mut();
@@ -238,8 +228,7 @@ impl GameUIManager {
                 let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
                 target_distance.set_text(&format!("{}m", distance as i32));
 
-                let target_hull = unsafe { self._target_hull.as_mut().unwrap().get_ui_component_mut() };
-                target_hull.set_text(&format!("Hull: {}", armor._hull as i32));
+                self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(armor._hull as i32);
 
                 let target_shield = unsafe { self._target_shield.as_mut().unwrap().get_ui_component_mut() };
                 target_shield.set_text(&format!("Shield: {}", armor._shields as i32));

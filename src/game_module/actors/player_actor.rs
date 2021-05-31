@@ -92,7 +92,7 @@ impl PlayerActor {
         front_xz.y = 0.0;
         front_xz.normalize_mut();
         let bound_box = &self._actor_data._render_object.borrow()._bound_box;
-        let BOUND_BOX_MIN: f32 = 2.0;
+        const BOUND_BOX_MIN: f32 = 2.0;
         front_xz = front_xz * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
         front_xz.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
 

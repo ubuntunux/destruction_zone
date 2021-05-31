@@ -74,7 +74,7 @@ impl WeaponTrait for BeamEmitter {
     fn initialize_weapon(&mut self) {
     }
 
-    fn update_weapon(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
+    fn update_weapon(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
         unimplemented!()
     }
 }

@@ -19,7 +19,7 @@ impl WeaponManager {
         })
     }
 
-    pub fn initialize_weapon_manager(&mut self, project_application: &ProjectApplication) {
+    pub fn initialize_weapon_manager(&mut self, _project_application: &ProjectApplication) {
 
     }
 

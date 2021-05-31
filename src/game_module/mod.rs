@@ -9,3 +9,4 @@ pub mod armor;
 pub mod weapons;
 pub mod actor_manager;
 pub mod weapon_manager;
+pub mod ui_widgets;
