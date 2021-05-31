@@ -1,2 +1,2 @@
-pub mod numeric_bar_widget;
+pub mod hit_point_widgets;
 pub mod target_info_widget;

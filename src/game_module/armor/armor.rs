@@ -39,4 +39,20 @@ impl ArmorInstance {
             _shields: armor_data._max_shields,
         }
     }
+
+    pub fn get_hull_point(&self) -> f32 {
+        self._hull
+    }
+
+    pub fn get_max_hull_point(&self) -> f32 {
+        self._armor_data._max_hull
+    }
+
+    pub fn get_shield_point(&self) -> f32 {
+        self._shields
+    }
+
+    pub fn get_max_shield_point(&self) -> f32 {
+        self._armor_data._max_shields
+    }
 }
