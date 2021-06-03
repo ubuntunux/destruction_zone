@@ -5,7 +5,7 @@ use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::actor_controller::actor_controller::{ ControllerDataType, ActorController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::armor::armor::{ArmorInstance, ArmorDataType};
+use crate::game_module::ship::ship::{ShipInstance, ShipDataType};
 
 pub struct NonPlayerActor {
     pub _id: u64,
@@ -32,12 +32,12 @@ impl ActorTrait for NonPlayerActor {
         &mut self._actor_data
     }
 
-    fn get_armor(&self) -> &ArmorInstance {
-        &self._actor_data._armor
+    fn get_ship(&self) -> &ShipInstance {
+        &self._actor_data._ship
     }
 
-    fn get_armor_mut(&mut self) -> &mut ArmorInstance {
-        &mut self._actor_data._armor
+    fn get_ship_mut(&mut self) -> &mut ShipInstance {
+        &mut self._actor_data._ship
     }
 
     fn get_controller(&self) -> &ActorController {
@@ -75,12 +75,12 @@ impl NonPlayerActor {
     pub fn create_actor(
         id: u64,
         controller_type: ControllerDataType,
-        armor_type: ArmorDataType,
+        ship_type: ShipDataType,
         render_object: &RcRefCell<RenderObjectData>
     ) -> Box<NonPlayerActor> {
         Box::new(NonPlayerActor {
             _id: id,
-            _actor_data: ActorData::create_actor_data(controller_type, armor_type, render_object),
+            _actor_data: ActorData::create_actor_data(controller_type, ship_type, render_object),
         })
     }
 }

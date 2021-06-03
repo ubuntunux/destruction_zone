@@ -4,7 +4,7 @@ use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::game_module::actor_controller::actor_controller::{ ControllerDataType, ActorController };
 use crate::game_module::actor_manager::calc_floating_height;
-use crate::game_module::armor::armor::{ ArmorInstance, ArmorDataType };
+use crate::game_module::ship::ship::{ ShipInstance, ShipDataType };
 use crate::game_module::weapons::weapon::{WeaponTrait, BeamEmitter, WeaponData};
 use crate::game_module::height_map_data::HeightMapData;
 
@@ -12,7 +12,7 @@ pub struct ActorData {
     pub _render_object: RcRefCell<RenderObjectData>,
     pub _transform_object: *mut TransformObjectData,
     pub _controller: ActorController,
-    pub _armor: ArmorInstance,
+    pub _ship: ShipInstance,
     pub _weapons: Vec<Box<dyn WeaponTrait>>,
 }
 
@@ -22,8 +22,8 @@ pub trait ActorTrait {
     fn is_player_actor(&self) -> bool;
     fn get_actor_data(&self) -> &ActorData;
     fn get_actor_data_mut(&mut self) -> &mut ActorData;
-    fn get_armor(&self) -> &ArmorInstance;
-    fn get_armor_mut(&mut self) -> &mut ArmorInstance;
+    fn get_ship(&self) -> &ShipInstance;
+    fn get_ship_mut(&mut self) -> &mut ShipInstance;
     fn get_controller(&self) -> &ActorController;
     fn get_controller_mut(&mut self) -> &mut ActorController;
     fn get_transform(&self) -> &TransformObjectData;
@@ -36,7 +36,7 @@ pub trait ActorTrait {
 impl ActorData {
     pub fn create_actor_data(
         controller_type: ControllerDataType,
-        armor_type: ArmorDataType,
+        ship_type: ShipDataType,
         render_object: &RcRefCell<RenderObjectData>
     ) -> ActorData {
         let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
@@ -45,7 +45,7 @@ impl ActorData {
             _render_object: render_object.clone(),
             _transform_object: transform_object,
             _controller: ActorController::create_actor_controller(controller_type, floating_height),
-            _armor: ArmorInstance::create_armor_instance(armor_type),
+            _ship: ShipInstance::create_ship_instance(ship_type),
             _weapons: Vec::new(),
         }
     }
@@ -59,12 +59,12 @@ impl ActorData {
         self._weapons.push(weapon);
     }
 
-    pub fn get_armor(&self) -> &ArmorInstance {
-        &self._armor
+    pub fn get_ship(&self) -> &ShipInstance {
+        &self._ship
     }
 
-    pub fn get_armor_mut(&mut self) -> &mut ArmorInstance {
-        &mut self._armor
+    pub fn get_ship_mut(&mut self) -> &mut ShipInstance {
+        &mut self._ship
     }
 
     pub fn get_controller(&self) -> &ActorController {

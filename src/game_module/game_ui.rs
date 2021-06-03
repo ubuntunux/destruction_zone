@@ -166,9 +166,9 @@ impl GameUIManager {
         // Player Hud
         {
             let player_actor = actor_manager.get_player_actor();
-            let armor = player_actor.get_armor();
-            self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(armor.get_hull_point() / 2.0, armor.get_max_hull_point());
-            self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(armor.get_shield_point() / 2.0, armor.get_max_shield_point());
+            let ship = player_actor.get_ship();
+            self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(ship.get_hull_point() / 2.0, ship.get_max_hull_point());
+            self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(ship.get_shield_point() / 2.0, ship.get_max_shield_point());
         }
 
         // Target Hud
@@ -177,7 +177,7 @@ impl GameUIManager {
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
                 let distance = (actor_pos - player_actor_pos).norm();
-                let armor = actor.get_armor();
+                let ship = actor.get_ship();
                 let clamp: bool = true;
                 let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos, clamp);
                 let target_hud_layer = unsafe { self._target_hud_layer.as_mut().unwrap().get_ui_component_mut() };
@@ -186,8 +186,8 @@ impl GameUIManager {
                 let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
                 target_distance.set_text(&format!("{}m", distance as i32));
 
-                self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(armor.get_hull_point() / 2.0, armor.get_max_hull_point());
-                self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(armor.get_shield_point() / 2.0, armor.get_max_shield_point());
+                self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(ship.get_hull_point() / 2.0, ship.get_max_hull_point());
+                self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(ship.get_shield_point() / 2.0, ship.get_max_shield_point());
                 break;
             }
         }

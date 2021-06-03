@@ -1,13 +1,9 @@
 use std::collections::HashMap;
 
-use rust_engine_3d::utilities::system::{ self, newRcRefCell, RcRefCell };
-
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BULLET_TYPES, BulletData};
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_audio_manager::AudioLoop;
 use crate::game_module::weapons::weapon::{WeaponData, WeaponType, WEAPON_TYPES};
-use rust_engine_3d::renderer::render_object::RenderObjectData;
-use std::cell::RefCell;
 
 pub struct WeaponManager {
     pub _id_generator: u64,

@@ -8,7 +8,7 @@ use crate::game_module::actor_controller::actor_controller::ControllerDataType;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
-use crate::game_module::armor::armor::ArmorDataType;
+use crate::game_module::ship::ship::ShipDataType;
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
 
 pub struct ActorManager {
@@ -40,7 +40,7 @@ impl ActorManager {
         {
             let id = self.generate_id();
             let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
-            self._actors.insert(id, PlayerActor::create_player_actor(id, ControllerDataType::Default, ArmorDataType::Default, player_render_object));
+            self._actors.insert(id, PlayerActor::create_player_actor(id, ControllerDataType::Default, ShipDataType::Scout, player_render_object));
             self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const PlayerActor;
             let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
             player_actor.initialize_actor();
@@ -52,7 +52,7 @@ impl ActorManager {
             if actor_name.starts_with("Enemy") {
                 let id = self.generate_id();
                 let actor_render_object = project_application.get_project_scene_manager().get_skeletal_render_object(actor_name).unwrap();
-                self._actors.insert(id, NonPlayerActor::create_actor(id, ControllerDataType::Tank, ArmorDataType::Default, actor_render_object));
+                self._actors.insert(id, NonPlayerActor::create_actor(id, ControllerDataType::Tank, ShipDataType::Scout, actor_render_object));
                 let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const NonPlayerActor;
                 let actor = unsafe { &mut *(actor as *mut NonPlayerActor) };
                 actor.initialize_actor();
