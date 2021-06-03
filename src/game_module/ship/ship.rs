@@ -1,6 +1,6 @@
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
@@ -25,7 +25,7 @@ pub struct ShipData {
 }
 
 pub struct ShipInstance {
-    pub _ship_data: ShipData,
+    pub _ship_data: RcRefCell<ShipData>,
     pub _hull: f32,
     pub _shields: f32,
     pub _render_object: RcRefCell<RenderObjectData>,
@@ -36,8 +36,8 @@ pub struct ShipInstance {
 
 // Implementation
 impl ShipData {
-    pub fn create_ship_data(ship_data_type: ShipDataType) -> ShipData {
-        match ship_data_type {
+    pub fn create_ship_data(ship_data_type: ShipDataType) -> RcRefCell<ShipData> {
+        let ship_data = match ship_data_type {
             ShipDataType::Scout => ShipData {
                 _ship_name: "".to_string(),
                 _ship_type: ShipDataType::Scout,
@@ -47,7 +47,8 @@ impl ShipData {
                 _max_hull: 100.0,
                 _max_shields: 10.0,
             }
-        }
+        };
+        newRcRefCell(ship_data)
     }
 }
 
@@ -62,8 +63,8 @@ impl ShipInstance {
         let floating_height = calc_floating_height(&render_object.borrow());
         ShipInstance {
             _ship_data: ship_data.clone(),
-            _hull: ship_data._max_hull,
-            _shields: ship_data._max_shields,
+            _hull: 0.0,
+            _shields: 0.0,
             _render_object: render_object.clone(),
             _transform_object: transform_object,
             _controller: ShipController::create_ship_controller(controller_type, floating_height),
@@ -72,6 +73,10 @@ impl ShipInstance {
     }
 
     pub fn initialize_ship_instance(&mut self, owner_actor: *const dyn ActorTrait, weapon_data: *const WeaponData) {
+        let ship_data = unsafe { &*self._ship_data.as_ptr() };
+        self._hull = ship_data._max_hull;
+        self._shields = ship_data._max_shields;
+
         let weapon = BeamEmitter::create_beam_emitter(
             owner_actor,
             weapon_data,
@@ -81,11 +86,7 @@ impl ShipInstance {
     }
 
     pub fn get_ship_data(&self) -> &ShipData {
-        &self._ship_data
-    }
-
-    pub fn get_ship_mut(&mut self) -> &mut ShipData {
-        &mut self._ship_data
+        unsafe { &*self._ship_data.as_ptr() }
     }
 
     pub fn get_controller(&self) -> &ShipController {
@@ -109,7 +110,7 @@ impl ShipInstance {
     }
 
     pub fn get_max_hull_point(&self) -> f32 {
-        self._ship_data._max_hull
+        self.get_ship_data()._max_hull
     }
 
     pub fn get_shield_point(&self) -> f32 {
@@ -117,6 +118,6 @@ impl ShipInstance {
     }
 
     pub fn get_max_shield_point(&self) -> f32 {
-        self._ship_data._max_shields
+        self.get_ship_data()._max_shields
     }
 }
