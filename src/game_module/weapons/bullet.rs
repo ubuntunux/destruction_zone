@@ -1,11 +1,13 @@
-use rust_engine_3d::renderer::transform_object::TransformObjectData;
-
-use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::actors::actor_data::ActorTrait;
 use nalgebra::Vector3;
 
+use rust_engine_3d::renderer::render_object::RenderObjectData;
+use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
-#[derive(Clone, Copy)]
+use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::height_map_data::HeightMapData;
+
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum BulletType {
     Beam,
     Gatling,
@@ -14,7 +16,17 @@ pub enum BulletType {
     Shotgun
 }
 
+pub const BULLET_TYPES: [BulletType; 5] = [
+    BulletType::Beam,
+    BulletType::Gatling,
+    BulletType::Laser,
+    BulletType::Plasma,
+    BulletType::Shotgun
+];
+
+#[derive(Clone, Copy)]
 pub struct BulletData {
+    pub _bullet_type: BulletType,
     pub _shield_damage: f32,
     pub _hull_damage: f32,
     pub _bullet_speed: f32,
@@ -22,22 +34,7 @@ pub struct BulletData {
     pub _bullet_life_time: f32,
 }
 
-pub fn get_bullet_data(bullet_type: BulletType) -> &'static BulletData {
-    static BEAM_BULLET_DATA: BulletData = BulletData {
-        _shield_damage: 1.0,
-        _hull_damage: 1.0,
-        _bullet_speed: 1.0,
-        _bullet_range: 10.0,
-        _bullet_life_time: 10.0,
-    };
-    match bullet_type {
-        BulletType::Beam => &BEAM_BULLET_DATA,
-        _ => &BEAM_BULLET_DATA,
-    }
-}
-
 pub struct Bullet {
-    pub _bullet_type: BulletType,
     pub _bullet_data: *const BulletData,
     pub _owner_actor: *const dyn ActorTrait,
     pub _is_alive: bool,
@@ -50,21 +47,16 @@ pub struct Bullet {
 
 // Implementation
 impl Bullet {
-    fn create_bullet(bullet_type: BulletType, owner_actor: *const dyn ActorTrait, transform: &TransformObjectData) -> Bullet {
+    fn create_bullet(bullet_data: *const BulletData, owner_actor: *const dyn ActorTrait, transform: &TransformObjectData) -> Bullet {
         Bullet {
-            _bullet_type: bullet_type,
             _owner_actor: owner_actor,
             _transform: transform.clone(),
             _initial_position: transform.get_position().clone() as Vector3<f32>,
-            _bullet_data: get_bullet_data(bullet_type),
+            _bullet_data: bullet_data,
             _elapsed_time: 0.0,
             _is_alive: true,
             _is_collided: false,
         }
-    }
-
-    fn get_bullet_type(&self) -> BulletType {
-        self._bullet_type
     }
 
     fn get_owner_actor(&self) -> &dyn ActorTrait {
@@ -74,6 +66,8 @@ impl Bullet {
     fn get_owner_actor_mut(&self) -> &mut dyn ActorTrait {
         unsafe { &mut *(self._owner_actor as *mut dyn ActorTrait) }
     }
+
+    fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
 
     fn get_bullet_data(&self) -> &BulletData {
         unsafe { &*self._bullet_data }

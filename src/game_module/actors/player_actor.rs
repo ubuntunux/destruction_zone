@@ -88,15 +88,15 @@ impl PlayerActor {
         main_camera._transform_object.update_transform_object();
 
         // set camera offset
-        let mut front_xz = main_camera._transform_object.get_front().clone();
-        front_xz.y = 0.0;
-        front_xz.normalize_mut();
+        let mut cockpit_offset = main_camera._transform_object.get_front().clone();
+        cockpit_offset.y = 0.0;
+        cockpit_offset.normalize_mut();
         let bound_box = &self._actor_data._render_object.borrow()._bound_box;
         const BOUND_BOX_MIN: f32 = 2.0;
-        front_xz = front_xz * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
-        front_xz.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
+        cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
+        cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
 
-        let mut camera_pos = actor_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + front_xz;
+        let mut camera_pos = actor_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + cockpit_offset;
         let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
         if camera_pos.y < floating_height {
             camera_pos.y = floating_height;

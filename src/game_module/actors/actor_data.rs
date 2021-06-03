@@ -5,7 +5,7 @@ use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::actor_controller::actor_controller::{ ControllerDataType, ActorController };
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::armor::armor::{ ArmorInstance, ArmorDataType };
-use crate::game_module::weapons::weapon::{ WeaponTrait, BeamEmitter };
+use crate::game_module::weapons::weapon::{WeaponTrait, BeamEmitter, WeaponData};
 use crate::game_module::height_map_data::HeightMapData;
 
 pub struct ActorData {
@@ -50,10 +50,10 @@ impl ActorData {
         }
     }
 
-    pub fn initialize_actor_data(&mut self, owner_actor: *const dyn ActorTrait) {
+    pub fn initialize_actor_data(&mut self, owner_actor: *const dyn ActorTrait, weapon_data: *const WeaponData) {
         let weapon = BeamEmitter::create_beam_emitter(
             owner_actor,
-            &self._render_object,
+            weapon_data,
             &TransformObjectData::new_transform_object_data()
         );
         self._weapons.push(weapon);
