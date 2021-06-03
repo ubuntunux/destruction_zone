@@ -73,43 +73,43 @@ impl GameClient {
             self._actor_manager.update_camera_distance(-scroll_delta.y as f32 * SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED);
         }
 
-        let player_actor_controller = self._actor_manager.get_player_actor_mut().get_actor_data_mut().get_controller_mut();
+        let player_ship_controller = self._actor_manager.get_player_actor_mut().get_ship_mut().get_controller_mut();
 
         if btn_left {
             self._weapon_manager.add_bullet(project_application);
         }
 
         if 0 != mouse_delta.x {
-            player_actor_controller.acceleration_yaw(-mouse_delta.x as f32);
+            player_ship_controller.acceleration_yaw(-mouse_delta.x as f32);
         }
 
         if 0 != mouse_delta.y {
-            player_actor_controller.acceleration_pitch(-mouse_delta.y as f32);
+            player_ship_controller.acceleration_pitch(-mouse_delta.y as f32);
         }
 
         if modifier_keys_shift {
-            player_actor_controller.boost_on();
+            player_ship_controller.boost_on();
         }
 
         if pressed_key_w {
-            player_actor_controller.acceleration_forward();
+            player_ship_controller.acceleration_forward();
         }
         else if pressed_key_s {
-            player_actor_controller.acceleration_backward();
+            player_ship_controller.acceleration_backward();
         }
 
         if pressed_key_a {
-            player_actor_controller.acceleration_left();
+            player_ship_controller.acceleration_left();
         }
         else if pressed_key_d {
-            player_actor_controller.acceleration_right();
+            player_ship_controller.acceleration_right();
         }
 
         if pressed_key_q {
-            player_actor_controller.acceleration_down();
+            player_ship_controller.acceleration_down();
         }
         else if pressed_key_e {
-            player_actor_controller.acceleration_up();
+            player_ship_controller.acceleration_up();
         }
     }
 

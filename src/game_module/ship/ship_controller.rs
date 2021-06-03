@@ -6,11 +6,13 @@ use crate::game_module::game_constants::GRAVITY;
 use crate::game_module::height_map_data::HeightMapData;
 
 // Declare
+#[derive(Clone, Debug)]
 pub enum ControllerDataType {
     Default,
     Tank,
 }
 
+#[derive(Clone, Debug)]
 pub struct ControllerData {
     _max_ground_speed: f32,
     _forward_acceleration: f32,
@@ -43,7 +45,8 @@ impl Default for ControllerData {
     }
 }
 
-pub struct ActorController {
+#[derive(Clone, Debug)]
+pub struct ShipController {
     _controller_data: ControllerData,
     _prev_ground_velocity: Vector2<f32>,
     _ground_velocity: Vector2<f32>,
@@ -67,9 +70,9 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> Controller
     }
 }
 
-impl ActorController {
-    pub fn create_actor_controller(controller_type: ControllerDataType, floating_height: f32) -> ActorController {
-        ActorController {
+impl ShipController {
+    pub fn create_ship_controller(controller_type: ControllerDataType, floating_height: f32) -> ShipController {
+        ShipController {
             _controller_data: create_controller_data(controller_type),
             _prev_ground_velocity: Vector2::zeros(),
             _ground_velocity: Vector2::zeros(),

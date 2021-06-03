@@ -4,7 +4,7 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::utilities::math::lerp;
 
 use crate::application::project_application::ProjectApplication;
-use crate::game_module::actor_controller::actor_controller::ControllerDataType;
+use crate::game_module::ship::ship_controller::ControllerDataType;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
@@ -100,11 +100,11 @@ impl ActorManager {
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
-                let actor_controller = actor.get_actor_data_mut().get_controller_mut();
+                let ship_controller = actor.get_ship_mut().get_controller_mut();
                 {
-                    actor_controller.acceleration_yaw(1000.0 * delta_time);
-                    actor_controller.acceleration_forward();
-                    actor_controller.acceleration_right();
+                    ship_controller.acceleration_yaw(1000.0 * delta_time);
+                    ship_controller.acceleration_forward();
+                    ship_controller.acceleration_right();
                 }
                 actor.update_actor(delta_time, height_map_data);
             }

@@ -2,7 +2,7 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
-use crate::game_module::actor_controller::actor_controller::{ ControllerDataType, ActorController };
+use crate::game_module::ship::ship_controller::{ ControllerDataType, ShipController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipDataType};
@@ -10,6 +10,7 @@ use crate::game_module::ship::ship::{ShipInstance, ShipDataType};
 pub struct NonPlayerActor {
     pub _id: u64,
     pub _actor_data: ActorData,
+    pub _ship: ShipInstance,
 }
 
 impl ActorTrait for NonPlayerActor {
@@ -33,41 +34,41 @@ impl ActorTrait for NonPlayerActor {
     }
 
     fn get_ship(&self) -> &ShipInstance {
-        &self._actor_data._ship
+        &self._ship
     }
 
     fn get_ship_mut(&mut self) -> &mut ShipInstance {
-        &mut self._actor_data._ship
+        &mut self._ship
     }
 
-    fn get_controller(&self) -> &ActorController {
-        &self._actor_data._controller
+    fn get_controller(&self) -> &ShipController {
+        &self._ship._controller
     }
 
-    fn get_controller_mut(&mut self) -> &mut ActorController {
-        &mut self._actor_data._controller
+    fn get_controller_mut(&mut self) -> &mut ShipController {
+        &mut self._ship._controller
     }
 
     fn get_transform(&self) -> &TransformObjectData {
-        self._actor_data.get_transform()
+        self._ship.get_transform()
     }
 
     fn get_transform_mut(&self) -> &mut TransformObjectData {
-        self._actor_data.get_transform_mut()
+        self._ship.get_transform_mut()
     }
 
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
-        let transform = unsafe { &mut *(self._actor_data._transform_object as *mut TransformObjectData) };
+        let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 
         // update actor controller
-        let actor_controller = &mut self._actor_data._controller;
-        actor_controller.update_controller(delta_time, transform, height_map_data);
+        let ship_controller = &mut self._ship._controller;
+        ship_controller.update_controller(delta_time, transform, height_map_data);
 
         // update transform
-        transform.rotation_pitch(actor_controller.get_velocity_pitch() * delta_time);
-        transform.rotation_yaw(actor_controller.get_velocity_yaw() * delta_time);
-        transform.set_roll(actor_controller.get_roll());
-        transform.set_position(actor_controller.get_position());
+        transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
+        transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+        transform.set_roll(ship_controller.get_roll());
+        transform.set_position(ship_controller.get_position());
     }
 }
 
@@ -80,7 +81,8 @@ impl NonPlayerActor {
     ) -> Box<NonPlayerActor> {
         Box::new(NonPlayerActor {
             _id: id,
-            _actor_data: ActorData::create_actor_data(controller_type, ship_type, render_object),
+            _actor_data: ActorData {},
+            _ship: ShipInstance::create_ship_instance(controller_type, ship_type, render_object),
         })
     }
 }
