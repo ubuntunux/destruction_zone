@@ -3,7 +3,7 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
-use crate::game_module::ship::ship_controller::{ ControllerDataType, ShipController };
+use crate::game_module::ship::ship_controller::{ ShipController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
@@ -66,14 +66,13 @@ impl ActorTrait for PlayerActor {
 impl PlayerActor {
     pub fn create_player_actor(
         id: u64,
-        controller_type: ControllerDataType,
         ship_data: &RcRefCell<ShipData>,
         render_object: &RcRefCell<RenderObjectData>
     ) -> Box<PlayerActor> {
         Box::new(PlayerActor {
             _id: id,
             _actor_data: ActorData {},
-            _ship: ShipInstance::create_ship_instance(controller_type, ship_data, render_object),
+            _ship: ShipInstance::create_ship_instance(ship_data, render_object),
         })
     }
 
