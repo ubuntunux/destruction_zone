@@ -4,7 +4,7 @@ use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::ship::ship_controller::{ShipController, ControllerDataType, create_controller_data};
+use crate::game_module::ship::ship_controller::{ShipController, ControllerDataType, create_controller_data, ControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
 
@@ -22,6 +22,7 @@ pub struct ShipData {
     pub _shield_armor: f32,
     pub _max_hull: f32,
     pub _max_shields: f32,
+    pub _contoller_data: RcRefCell<ControllerData>,
 }
 
 pub struct ShipInstance {
@@ -37,6 +38,7 @@ pub struct ShipInstance {
 // Implementation
 impl ShipData {
     pub fn create_ship_data(ship_data_type: ShipDataType) -> RcRefCell<ShipData> {
+        let controller_data = create_controller_data(ControllerDataType::ShipController);
         let ship_data = match ship_data_type {
             ShipDataType::Scout => ShipData {
                 _ship_name: "".to_string(),
@@ -46,6 +48,7 @@ impl ShipData {
                 _shield_armor: 0.0,
                 _max_hull: 100.0,
                 _max_shields: 10.0,
+                _contoller_data: controller_data,
             }
         };
         newRcRefCell(ship_data)
@@ -59,14 +62,13 @@ impl ShipInstance {
     ) -> ShipInstance {
         let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
         let floating_height = calc_floating_height(&render_object.borrow());
-        let controller_data = create_controller_data(ControllerDataType::ShipController);
         ShipInstance {
             _ship_data: ship_data.clone(),
             _hull: 0.0,
             _shields: 0.0,
             _render_object: render_object.clone(),
             _transform_object: transform_object,
-            _controller: ShipController::create_ship_controller(&controller_data, floating_height),
+            _controller: ShipController::create_ship_controller(&ship_data.borrow()._contoller_data, floating_height),
             _weapons: Vec::new(),
         }
     }
