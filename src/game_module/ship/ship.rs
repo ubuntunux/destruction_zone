@@ -55,10 +55,9 @@ impl ShipData {
 impl ShipInstance {
     pub fn create_ship_instance(
         controller_type: ControllerDataType,
-        ship_data_type: ShipDataType,
+        ship_data: &RcRefCell<ShipData>,
         render_object: &RcRefCell<RenderObjectData>
     ) -> ShipInstance {
-        let ship_data = ShipData::create_ship_data(ship_data_type);
         let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
         let floating_height = calc_floating_height(&render_object.borrow());
         ShipInstance {
