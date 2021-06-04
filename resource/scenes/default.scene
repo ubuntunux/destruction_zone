@@ -38,11 +38,5 @@
 "_position":[0.0,-20.0,0.0],
 "_rotation":[0.0,0.0,0.0],
 "_scale":[2000.0,1000.0,2000.0]}},
-"_skeletal_objects":{"Player":{"_model_data_name":"ship/trident",
-"_position":[0.0,1.0,0.0],
-"_rotation":[0.0,0.0,0.0],
-"_scale":[1,1,1]},
-"Enemy00":{"_model_data_name":"Tank",
-"_position":[1.0,1.0,0.0],
-"_rotation":[0.0,0.0,0.0],
-"_scale":[1,1,1]}}}
+"_skeletal_objects":{}
+}

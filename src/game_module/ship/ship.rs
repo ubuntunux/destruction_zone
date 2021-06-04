@@ -1,16 +1,30 @@
+use serde::{ Serialize, Deserialize };
+
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::ship::ship_controller::{ShipController, ControllerDataType, create_controller_data, ControllerData};
+use crate::game_module::ship::ship_controller::{ShipController, ControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
     Scout,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct ShipDataCreateInfo {
+    pub _ship_name: String,
+    pub _ship_type: ShipDataType,
+    pub _model_data_name: String,
+    pub _hull_armor: f32,
+    pub _shield_armor: f32,
+    pub _max_hull: f32,
+    pub _max_shields: f32,
+    pub _contoller_data_name: String,
 }
 
 #[derive(Clone, Debug)]
@@ -37,21 +51,17 @@ pub struct ShipInstance {
 
 // Implementation
 impl ShipData {
-    pub fn create_ship_data(ship_data_type: ShipDataType) -> RcRefCell<ShipData> {
-        let controller_data = create_controller_data(ControllerDataType::ShipController);
-        let ship_data = match ship_data_type {
-            ShipDataType::Scout => ShipData {
-                _ship_name: "".to_string(),
-                _ship_type: ShipDataType::Scout,
-                _model_data_name: "".to_string(),
-                _hull_armor: 0.0,
-                _shield_armor: 0.0,
-                _max_hull: 100.0,
-                _max_shields: 10.0,
-                _contoller_data: controller_data,
-            }
-        };
-        newRcRefCell(ship_data)
+    pub fn create_ship_data(ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ControllerData>) -> RcRefCell<ShipData> {
+        newRcRefCell(ShipData {
+            _ship_name: ship_data_create_info._ship_name.clone(),
+            _ship_type: ship_data_create_info._ship_type,
+            _model_data_name: ship_data_create_info._model_data_name.clone(),
+            _hull_armor: ship_data_create_info._hull_armor,
+            _shield_armor: ship_data_create_info._shield_armor,
+            _max_hull: ship_data_create_info._max_hull,
+            _max_shields: ship_data_create_info._max_shields,
+            _contoller_data: controller_data.clone(),
+        })
     }
 }
 

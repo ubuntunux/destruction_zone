@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
-use rust_engine_3d::renderer::render_object::RenderObjectData;
+use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::utilities::math::lerp;
 
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
-use crate::game_module::ship::ship::{ShipDataType, ShipData};
+use crate::game_module::ship::ship::{ShipDataType, ShipData, ShipDataCreateInfo};
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
+use crate::game_module::ship::ship_controller::{create_controller_data, ControllerDataType};
+use nalgebra::Vector3;
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -38,26 +40,53 @@ impl ActorManager {
         // Player Actor
         {
             let id = self.generate_id();
-            let player_render_object = project_application.get_project_scene_manager().get_skeletal_render_object("Player").unwrap();
-            let ship_data = ShipData::create_ship_data(ShipDataType::Scout);
-            self._actors.insert(id, PlayerActor::create_player_actor(id, &ship_data, player_render_object));
+            let ship_data_create_info = ShipDataCreateInfo {
+                _ship_name: "scout".to_string(),
+                _ship_type: ShipDataType::Scout,
+                _model_data_name: "ship/trident".to_string(),
+                _hull_armor: 0.0,
+                _shield_armor: 0.0,
+                _max_hull: 100.0,
+                _max_shields: 10.0,
+                _contoller_data_name: "ship_controller/light_ship_controller".to_string(),
+            };
+            let ship_controller_data = create_controller_data(ControllerDataType::ShipController);
+            let render_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: ship_data_create_info._model_data_name.clone(),
+                ..Default::default()
+            };
+            let ship_data = ShipData::create_ship_data(&ship_data_create_info, &ship_controller_data);
+            let player_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Player", &render_object_create_info);
+            self._actors.insert(id, PlayerActor::create_player_actor(id, &ship_data, &player_render_object));
             self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const PlayerActor;
             let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
             player_actor.initialize_actor();
         }
 
         // AI Actor
-        let actor_names = project_application.get_project_scene_manager()._skeletal_render_object_map.keys();
-        for actor_name in actor_names {
-            if actor_name.starts_with("Enemy") {
-                let id = self.generate_id();
-                let ship_data = ShipData::create_ship_data(ShipDataType::Scout);
-                let actor_render_object = project_application.get_project_scene_manager().get_skeletal_render_object(actor_name).unwrap();
-                self._actors.insert(id, NonPlayerActor::create_actor(id, &ship_data, actor_render_object));
-                let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const NonPlayerActor;
-                let actor = unsafe { &mut *(actor as *mut NonPlayerActor) };
-                actor.initialize_actor();
-            }
+        {
+            let id = self.generate_id();
+            let ship_data_create_info = ShipDataCreateInfo {
+                _ship_name: "scout".to_string(),
+                _ship_type: ShipDataType::Scout,
+                _model_data_name: "ship/trident".to_string(),
+                _hull_armor: 0.0,
+                _shield_armor: 0.0,
+                _max_hull: 100.0,
+                _max_shields: 10.0,
+                _contoller_data_name: "ship_controller/light_ship_controller".to_string(),
+            };
+            let ship_controller_data = create_controller_data(ControllerDataType::ShipController);
+            let render_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: ship_data_create_info._model_data_name.clone(),
+                ..Default::default()
+            };
+            let ship_data = ShipData::create_ship_data(&ship_data_create_info, &ship_controller_data);
+            let actor_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Enemy", &render_object_create_info);
+            self._actors.insert(id, NonPlayerActor::create_actor(id, &ship_data, &actor_render_object));
+            let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const NonPlayerActor;
+            let actor = unsafe { &mut *(actor as *mut NonPlayerActor) };
+            actor.initialize_actor();
         }
     }
 
