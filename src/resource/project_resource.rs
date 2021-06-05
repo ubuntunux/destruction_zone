@@ -270,7 +270,10 @@ impl ProjectResources {
         default_ship_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
         if false == default_ship_data_file_path.is_file() {
-            let default_ship_data_create_info = ShipDataCreateInfo::default();
+            let default_ship_data_create_info = ShipDataCreateInfo {
+                _controller_data_name: DEFAULT_GAME_DATA_NAME.to_string(),
+                ..Default::default()
+            };
             let mut write_file = File::create(&default_ship_data_file_path).expect("Failed to create file");
             let mut write_contents: String = serde_json::to_string(&default_ship_data_create_info).expect("Failed to serialize.");
             write_contents = write_contents.replace(",\"", ",\n\"");
@@ -350,7 +353,10 @@ impl ProjectResources {
         default_weapon_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
         if false == default_weapon_data_file_path.is_file() {
-            let default_weapon_data_create_info = WeaponDataCreateInfo::default();
+            let default_weapon_data_create_info = WeaponDataCreateInfo {
+                _bullet_data_name: DEFAULT_GAME_DATA_NAME.to_string(),
+                ..Default::default()
+            };
             let mut write_file = File::create(&default_weapon_data_file_path).expect("Failed to create file");
             let mut write_contents: String = serde_json::to_string(&default_weapon_data_create_info).expect("Failed to serialize.");
             write_contents = write_contents.replace(",\"", ",\n\"");
