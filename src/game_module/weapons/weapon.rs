@@ -1,10 +1,13 @@
+use serde::{ Serialize, Deserialize };
+
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
+use rust_engine_3d::utilities::system::RcRefCell;
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
     BeamEmitter,
     Gatling,
@@ -21,12 +24,31 @@ pub const WEAPON_TYPES: [WeaponType; 5] = [
     WeaponType::Shotgun
 ];
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct WeaponDataCreateInfo {
+    pub _weapon_type: WeaponType,
+    pub _rate_of_fire: f32,
+    pub _bullet_amount: i32,
+    pub _bullet_data_name: String,
+}
+
+impl Default for WeaponDataCreateInfo {
+    fn default() -> WeaponDataCreateInfo {
+        WeaponDataCreateInfo {
+            _weapon_type: WeaponType::BeamEmitter,
+            _rate_of_fire: 1.0,
+            _bullet_amount: 1,
+            _bullet_data_name: "".to_string()
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct WeaponData {
     pub _weapon_type: WeaponType,
     pub _rate_of_fire: f32,
     pub _bullet_amount: i32,
-    pub _bullet_data: *const BulletData,
+    pub _bullet_data: RcRefCell<BulletData>,
     //pub _render_object: RcRefCell<RenderObjectData>,
 }
 
@@ -71,7 +93,7 @@ impl WeaponTrait for BeamEmitter {
 
     fn get_owner_actor(&self) -> &dyn ActorTrait { unsafe { &*self._owner_actor } }
     fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
-    fn get_bullet_data(&self) -> &BulletData { unsafe { &*self.get_weapon_data()._bullet_data } }
+    fn get_bullet_data(&self) -> &BulletData { unsafe { &*self.get_weapon_data()._bullet_data.as_ptr() } }
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }
     fn get_weapon_data(&self) -> &WeaponData {
         unsafe { &*self._weapon_data }

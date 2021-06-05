@@ -18,6 +18,7 @@ use crate::application::project_scene_manager::SceneDataCreateInfo;
 use crate::application::project_audio_manager::AudioData;
 use crate::game_module::ship::ship::{ShipDataCreateInfo, ShipData};
 use crate::game_module::ship::ship_controller::ShipControllerData;
+use crate::game_module::weapons::bullet::BulletData;
 
 pub const SCENE_FILE_PATH: &str = "resource/scenes";
 pub const AUDIO_FILE_PATH: &str = "resource/sounds";
@@ -36,7 +37,7 @@ pub const DEFAULT_GAME_DATA_NAME: &str = "default";
 pub type SceneDataCreateInfoMap = ResourceDataMap<SceneDataCreateInfo>;
 pub type AudioDataMap = ResourceDataMap<AudioData>;
 pub type BuildingDataMap = ResourceDataMap<bool>;
-pub type BulletDataMap = ResourceDataMap<bool>;
+pub type BulletDataMap = ResourceDataMap<BulletData>;
 pub type ShipDataMap = ResourceDataMap<ShipData>;
 pub type ShipControllerDataMap = ResourceDataMap<ShipControllerData>;
 pub type WeaponDataMap = ResourceDataMap<bool>;
@@ -218,6 +219,7 @@ impl ProjectResources {
         self._weapon_data_map.clear();
     }
 
+    // ship controller data
     fn load_ship_controller_datas(&mut self) {
         let game_data_directory = PathBuf::from(SHIP_CONTROLLER_DATA_FILE_PATH);
 
@@ -256,6 +258,7 @@ impl ProjectResources {
         self._ship_controller_data_map.get(resource_name).unwrap()
     }
 
+    // ship data
     fn load_ship_datas(&mut self) {
         let game_data_directory = PathBuf::from(SHIP_DATA_FILE_PATH);
 
@@ -294,5 +297,44 @@ impl ProjectResources {
 
     pub fn get_ship_data(&self, resource_name: &str) -> &RcRefCell<ShipData> {
         self._ship_data_map.get(resource_name).unwrap()
+    }
+
+    // bullet data
+    fn load_bullet_datas(&mut self) {
+        let game_data_directory = PathBuf::from(BULLET_DATA_FILE_PATH);
+
+        // create bullet data
+        let mut default_bullet_data_file_path: PathBuf = game_data_directory.clone();
+        default_bullet_data_file_path.push(&DEFAULT_GAME_DATA_NAME);
+        default_bullet_data_file_path.set_extension(EXT_GAME_DATA);
+        #[cfg(not(target_os = "android"))]
+        if false == default_bullet_data_file_path.is_file() {
+            let default_bullet_data_create_info = BulletData::default();
+            let mut write_file = File::create(&default_bullet_data_file_path).expect("Failed to create file");
+            let mut write_contents: String = serde_json::to_string(&default_bullet_data_create_info).expect("Failed to serialize.");
+            write_contents = write_contents.replace(",\"", ",\n\"");
+            write_file.write(write_contents.as_bytes()).expect("Failed to write");
+        }
+
+        // load bullet data
+        let game_data_files: Vec<PathBuf> = self.collect_resources(&game_data_directory, &[EXT_GAME_DATA]);
+        for game_data_file in game_data_files {
+            let game_data_name = get_unique_resource_name(&self._bullet_data_map, &game_data_directory, &game_data_file);
+            let loaded_contents = system::load(&game_data_file);
+            let bullet_data: BulletData = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
+            self._bullet_data_map.insert(game_data_name.clone(), newRcRefCell(bullet_data));
+        }
+    }
+
+    fn unload_bullet_datas(&mut self) {
+        self._bullet_data_map.clear();
+    }
+
+    pub fn has_bullet_data(&self, resource_name: &str) -> bool {
+        self._bullet_data_map.get(resource_name).is_some()
+    }
+
+    pub fn get_bullet_data(&self, resource_name: &str) -> &RcRefCell<BulletData> {
+        self._bullet_data_map.get(resource_name).unwrap()
     }
 }

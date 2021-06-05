@@ -1,4 +1,5 @@
 use nalgebra::Vector3;
+use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
@@ -6,7 +7,7 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Copy)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum BulletType {
     Beam,
     Gatling,
@@ -23,7 +24,7 @@ pub const BULLET_TYPES: [BulletType; 5] = [
     BulletType::Shotgun
 ];
 
-#[derive(Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct BulletData {
     pub _bullet_type: BulletType,
     pub _shield_damage: f32,
@@ -31,6 +32,19 @@ pub struct BulletData {
     pub _bullet_speed: f32,
     pub _bullet_range: f32,
     pub _bullet_life_time: f32,
+}
+
+impl Default for BulletData {
+    fn default() -> BulletData {
+        BulletData {
+            _bullet_type: BulletType::Beam,
+            _shield_damage: 1.0,
+            _hull_damage: 1.0,
+            _bullet_speed: 1.0,
+            _bullet_range: 10.0,
+            _bullet_life_time: 10.0,
+        }
+    }
 }
 
 pub struct Bullet {
