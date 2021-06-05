@@ -227,10 +227,7 @@ impl ProjectResources {
         default_ship_controller_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
         if false == default_ship_controller_data_file_path.is_file() {
-            let default_ship_controller_data_create_info = ShipControllerData {
-                _controller_data_name: DEFAULT_GAME_DATA_NAME.to_string(),
-                ..Default::default()
-            };
+            let default_ship_controller_data_create_info = ShipControllerData::default();
             let mut write_file = File::create(&default_ship_controller_data_file_path).expect("Failed to create file");
             let mut write_contents: String = serde_json::to_string(&default_ship_controller_data_create_info).expect("Failed to serialize.");
             write_contents = write_contents.replace(",\"", ",\n\"");
@@ -268,10 +265,7 @@ impl ProjectResources {
         default_ship_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
         if false == default_ship_data_file_path.is_file() {
-            let default_ship_data_create_info = ShipDataCreateInfo {
-                _controller_data_name: DEFAULT_GAME_DATA_NAME.to_string(),
-                ..Default::default()
-            };
+            let default_ship_data_create_info = ShipDataCreateInfo::default();
             let mut write_file = File::create(&default_ship_data_file_path).expect("Failed to create file");
             let mut write_contents: String = serde_json::to_string(&default_ship_data_create_info).expect("Failed to serialize.");
             write_contents = write_contents.replace(",\"", ",\n\"");
@@ -285,7 +279,7 @@ impl ProjectResources {
             let loaded_contents = system::load(&game_data_file);
             let ship_data_create_info: ShipDataCreateInfo = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
             let ship_controller_data = self.get_ship_controller_data(&ship_data_create_info._controller_data_name);
-            let ship_data = ShipData::create_ship_data(&ship_data_create_info, ship_controller_data);
+            let ship_data = ShipData::create_ship_data(&game_data_name, &ship_data_create_info, ship_controller_data);
             self._ship_data_map.insert(game_data_name.clone(), ship_data);
         }
     }

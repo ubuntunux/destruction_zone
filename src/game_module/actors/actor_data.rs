@@ -4,6 +4,10 @@ use crate::game_module::ship::ship::{ ShipInstance };
 use crate::game_module::ship::ship_controller::ShipController;
 use crate::game_module::height_map_data::HeightMapData;
 
+pub struct ActorCreateInfo {
+
+}
+
 pub struct ActorData {
 
 }

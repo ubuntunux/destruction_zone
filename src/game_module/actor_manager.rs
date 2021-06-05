@@ -7,9 +7,7 @@ use crate::application::project_application::ProjectApplication;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
-use crate::game_module::ship::ship::{ShipDataType, ShipData, ShipDataCreateInfo};
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
-use crate::game_module::ship::ship_controller::{create_controller_data, ShipControllerDataType};
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -37,56 +35,11 @@ impl ActorManager {
 
     pub fn initialize_actor_manager(&mut self, project_application: &ProjectApplication) {
         // Player Actor
-        {
-            let id = self.generate_id();
-            let ship_data_create_info = ShipDataCreateInfo {
-                _ship_name: "scout".to_string(),
-                _ship_type: ShipDataType::Scout,
-                _model_data_name: "ship/trident".to_string(),
-                _hull_armor: 0.0,
-                _shield_armor: 0.0,
-                _max_hull: 100.0,
-                _max_shields: 10.0,
-                _controller_data_name: "light_ship_controller".to_string(),
-            };
-            let ship_controller_data = create_controller_data(ShipControllerDataType::ShipController);
-            let render_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: ship_data_create_info._model_data_name.clone(),
-                ..Default::default()
-            };
-            let ship_data = ShipData::create_ship_data(&ship_data_create_info, &ship_controller_data);
-            let player_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Player", &render_object_create_info);
-            self._actors.insert(id, PlayerActor::create_player_actor(id, &ship_data, &player_render_object));
-            self._player_actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const PlayerActor;
-            let player_actor = unsafe { &mut *(self._player_actor as *mut PlayerActor) };
-            player_actor.initialize_actor();
-        }
+        let player_actor = self.create_actor(project_application, "scout", true);
+        self._player_actor = (player_actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;
 
         // AI Actor
-        {
-            let id = self.generate_id();
-            let ship_data_create_info = ShipDataCreateInfo {
-                _ship_name: "scout".to_string(),
-                _ship_type: ShipDataType::Scout,
-                _model_data_name: "ship/trident".to_string(),
-                _hull_armor: 0.0,
-                _shield_armor: 0.0,
-                _max_hull: 100.0,
-                _max_shields: 10.0,
-                _controller_data_name: "light_ship_controller".to_string(),
-            };
-            let ship_controller_data = create_controller_data(ShipControllerDataType::ShipController);
-            let render_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: ship_data_create_info._model_data_name.clone(),
-                ..Default::default()
-            };
-            let ship_data = ShipData::create_ship_data(&ship_data_create_info, &ship_controller_data);
-            let actor_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Enemy", &render_object_create_info);
-            self._actors.insert(id, NonPlayerActor::create_actor(id, &ship_data, &actor_render_object));
-            let actor = (self._actors.get(&id).unwrap().as_ref() as *const dyn ActorTrait) as *const NonPlayerActor;
-            let actor = unsafe { &mut *(actor as *mut NonPlayerActor) };
-            actor.initialize_actor();
-        }
+        self.create_actor(project_application, "scout", false);
     }
 
     pub fn destroy_actor_manager(&mut self) {
@@ -97,6 +50,26 @@ impl ActorManager {
         let id = self._id_generator;
         self._id_generator += 1;
         id
+    }
+
+    pub fn create_actor(&mut self, project_application: &ProjectApplication, ship_data_name: &str, is_player_actor: bool) -> &Box<dyn ActorTrait> {
+        let id = self.generate_id();
+        let ship_data = project_application.get_project_resources().get_ship_data(ship_data_name);
+        let render_object_create_info = RenderObjectCreateInfo {
+            _model_data_name: ship_data.borrow()._model_data_name.clone(),
+            ..Default::default()
+        };
+        let actor_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Player", &render_object_create_info);
+        let mut actor: Box<dyn ActorTrait> = if is_player_actor {
+            PlayerActor::create_player_actor(id, &ship_data, &actor_render_object)
+        } else {
+            NonPlayerActor::create_actor(id, &ship_data, &actor_render_object)
+        };
+
+        actor.as_mut().initialize_actor();
+
+        self._actors.insert(id, actor);
+        self._actors.get(&id).unwrap()
     }
 
     pub fn get_player_actor(&self) -> &PlayerActor {

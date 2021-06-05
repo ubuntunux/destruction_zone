@@ -2,7 +2,7 @@ use nalgebra::{ Vector2, Vector3 };
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
+use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::game_module::game_constants::GRAVITY;
 use crate::game_module::height_map_data::HeightMapData;
@@ -68,21 +68,7 @@ pub struct ShipController {
     pub _on_ground: bool,
 }
 
-// Implementation
-pub fn create_controller_data(controller_type: ShipControllerDataType) -> RcRefCell<ShipControllerData> {
-    let controller_data = match controller_type {
-        ShipControllerDataType::ShipController => ShipControllerData {
-            _controller_data_name: "LightShipController".to_string(),
-            ..Default::default()
-        },
-        ShipControllerDataType::TankController => ShipControllerData {
-            _controller_data_name: "LightTankController".to_string(),
-            ..Default::default()
-        },
-    };
-    newRcRefCell(controller_data)
-}
-
+// implementation
 impl ShipController {
     pub fn create_ship_controller(controller_data: &RcRefCell<ShipControllerData>, floating_height: f32) -> ShipController {
         ShipController {

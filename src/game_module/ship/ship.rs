@@ -17,7 +17,6 @@ pub enum ShipDataType {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ShipDataCreateInfo {
-    pub _ship_name: String,
     pub _ship_type: ShipDataType,
     pub _model_data_name: String,
     pub _hull_armor: f32,
@@ -30,7 +29,6 @@ pub struct ShipDataCreateInfo {
 impl Default for ShipDataCreateInfo {
     fn default() -> ShipDataCreateInfo {
         ShipDataCreateInfo {
-            _ship_name: "".to_string(),
             _ship_type: ShipDataType::Scout,
             _model_data_name: "".to_string(),
             _hull_armor: 0.0,
@@ -66,9 +64,9 @@ pub struct ShipInstance {
 
 // Implementation
 impl ShipData {
-    pub fn create_ship_data(ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ShipControllerData>) -> RcRefCell<ShipData> {
+    pub fn create_ship_data(ship_data_name: &str, ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ShipControllerData>) -> RcRefCell<ShipData> {
         newRcRefCell(ShipData {
-            _ship_name: ship_data_create_info._ship_name.clone(),
+            _ship_name: ship_data_name.to_string(),
             _ship_type: ship_data_create_info._ship_type,
             _model_data_name: ship_data_create_info._model_data_name.clone(),
             _hull_armor: ship_data_create_info._hull_armor,
