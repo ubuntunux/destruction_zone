@@ -6,7 +6,7 @@ use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::ship::ship_controller::{ShipController, ControllerData};
+use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
 
@@ -24,7 +24,22 @@ pub struct ShipDataCreateInfo {
     pub _shield_armor: f32,
     pub _max_hull: f32,
     pub _max_shields: f32,
-    pub _contoller_data_name: String,
+    pub _controller_data_name: String,
+}
+
+impl Default for ShipDataCreateInfo {
+    fn default() -> ShipDataCreateInfo {
+        ShipDataCreateInfo {
+            _ship_name: "".to_string(),
+            _ship_type: ShipDataType::Scout,
+            _model_data_name: "".to_string(),
+            _hull_armor: 0.0,
+            _shield_armor: 0.0,
+            _max_hull: 100.0,
+            _max_shields: 10.0,
+            _controller_data_name: "".to_string(),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -36,7 +51,7 @@ pub struct ShipData {
     pub _shield_armor: f32,
     pub _max_hull: f32,
     pub _max_shields: f32,
-    pub _contoller_data: RcRefCell<ControllerData>,
+    pub _contoller_data: RcRefCell<ShipControllerData>,
 }
 
 pub struct ShipInstance {
@@ -51,7 +66,7 @@ pub struct ShipInstance {
 
 // Implementation
 impl ShipData {
-    pub fn create_ship_data(ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ControllerData>) -> RcRefCell<ShipData> {
+    pub fn create_ship_data(ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ShipControllerData>) -> RcRefCell<ShipData> {
         newRcRefCell(ShipData {
             _ship_name: ship_data_create_info._ship_name.clone(),
             _ship_type: ship_data_create_info._ship_type,

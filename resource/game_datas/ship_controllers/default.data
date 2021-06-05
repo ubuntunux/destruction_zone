@@ -1,0 +1,13 @@
+{"_controller_data_name":"default",
+"_controller_data_type":"ShipController",
+"_max_ground_speed":50.0,
+"_forward_acceleration":50.0,
+"_side_acceleration":50.0,
+"_floating_acceleration":30.0,
+"_damping":30.0,
+"_side_step_roll":0.3,
+"_side_step_roll_speed":2.0,
+"_boost_acceleration":1.5,
+"_max_rotation_speed":10.0,
+"_rotation_acceleration":0.5,
+"_rotation_damping":0.1}

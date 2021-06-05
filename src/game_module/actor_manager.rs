@@ -9,8 +9,7 @@ use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
 use crate::game_module::ship::ship::{ShipDataType, ShipData, ShipDataCreateInfo};
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
-use crate::game_module::ship::ship_controller::{create_controller_data, ControllerDataType};
-use nalgebra::Vector3;
+use crate::game_module::ship::ship_controller::{create_controller_data, ShipControllerDataType};
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -48,9 +47,9 @@ impl ActorManager {
                 _shield_armor: 0.0,
                 _max_hull: 100.0,
                 _max_shields: 10.0,
-                _contoller_data_name: "ship_controller/light_ship_controller".to_string(),
+                _controller_data_name: "light_ship_controller".to_string(),
             };
-            let ship_controller_data = create_controller_data(ControllerDataType::ShipController);
+            let ship_controller_data = create_controller_data(ShipControllerDataType::ShipController);
             let render_object_create_info = RenderObjectCreateInfo {
                 _model_data_name: ship_data_create_info._model_data_name.clone(),
                 ..Default::default()
@@ -74,9 +73,9 @@ impl ActorManager {
                 _shield_armor: 0.0,
                 _max_hull: 100.0,
                 _max_shields: 10.0,
-                _contoller_data_name: "ship_controller/light_ship_controller".to_string(),
+                _controller_data_name: "light_ship_controller".to_string(),
             };
-            let ship_controller_data = create_controller_data(ControllerDataType::ShipController);
+            let ship_controller_data = create_controller_data(ShipControllerDataType::ShipController);
             let render_object_create_info = RenderObjectCreateInfo {
                 _model_data_name: ship_data_create_info._model_data_name.clone(),
                 ..Default::default()

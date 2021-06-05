@@ -1,22 +1,23 @@
 use nalgebra::{ Vector2, Vector3 };
+use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::game_constants::GRAVITY;
 use crate::game_module::height_map_data::HeightMapData;
-use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 // Declare
-#[derive(Clone, Debug)]
-pub enum ControllerDataType {
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum ShipControllerDataType {
     ShipController,
     TankController,
 }
 
-#[derive(Clone, Debug)]
-pub struct ControllerData {
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct ShipControllerData {
     pub _controller_data_name: String,
-    pub _controller_data_type: ControllerDataType,
+    pub _controller_data_type: ShipControllerDataType,
     pub _max_ground_speed: f32,
     pub _forward_acceleration: f32,
     pub _side_acceleration: f32,
@@ -30,11 +31,11 @@ pub struct ControllerData {
     pub _rotation_damping: f32,
 }
 
-impl Default for ControllerData {
-    fn default() -> ControllerData {
-        ControllerData {
+impl Default for ShipControllerData {
+    fn default() -> ShipControllerData {
+        ShipControllerData {
             _controller_data_name: "".to_string(),
-            _controller_data_type: ControllerDataType::ShipController,
+            _controller_data_type: ShipControllerDataType::ShipController,
             _max_ground_speed: 50.0,
             _forward_acceleration: 50.0,
             _side_acceleration: 50.0,
@@ -52,7 +53,7 @@ impl Default for ControllerData {
 
 #[derive(Clone, Debug)]
 pub struct ShipController {
-    pub _controller_data: RcRefCell<ControllerData>,
+    pub _controller_data: RcRefCell<ShipControllerData>,
     pub _prev_ground_velocity: Vector2<f32>,
     pub _ground_velocity: Vector2<f32>,
     pub _prev_floating_velocity: f32,
@@ -68,13 +69,13 @@ pub struct ShipController {
 }
 
 // Implementation
-pub fn create_controller_data(controller_type: ControllerDataType) -> RcRefCell<ControllerData> {
+pub fn create_controller_data(controller_type: ShipControllerDataType) -> RcRefCell<ShipControllerData> {
     let controller_data = match controller_type {
-        ControllerDataType::ShipController => ControllerData {
+        ShipControllerDataType::ShipController => ShipControllerData {
             _controller_data_name: "LightShipController".to_string(),
             ..Default::default()
         },
-        ControllerDataType::TankController => ControllerData {
+        ShipControllerDataType::TankController => ShipControllerData {
             _controller_data_name: "LightTankController".to_string(),
             ..Default::default()
         },
@@ -83,7 +84,7 @@ pub fn create_controller_data(controller_type: ControllerDataType) -> RcRefCell<
 }
 
 impl ShipController {
-    pub fn create_ship_controller(controller_data: &RcRefCell<ControllerData>, floating_height: f32) -> ShipController {
+    pub fn create_ship_controller(controller_data: &RcRefCell<ShipControllerData>, floating_height: f32) -> ShipController {
         ShipController {
             _controller_data: controller_data.clone(),
             _prev_ground_velocity: Vector2::zeros(),
