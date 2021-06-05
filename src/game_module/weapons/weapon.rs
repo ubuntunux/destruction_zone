@@ -5,7 +5,7 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -45,6 +45,7 @@ impl Default for WeaponDataCreateInfo {
 
 #[derive(Clone)]
 pub struct WeaponData {
+    pub _weapon_data_name: String,
     pub _weapon_type: WeaponType,
     pub _rate_of_fire: f32,
     pub _bullet_amount: i32,
@@ -71,6 +72,18 @@ pub struct BeamEmitter {
 }
 
 // Implementation
+impl WeaponData {
+    pub fn create_weapon_data(weapon_data_name: &str, weapon_data_create_info: &WeaponDataCreateInfo, bullet_data: &RcRefCell<BulletData>) -> RcRefCell<WeaponData> {
+        newRcRefCell(WeaponData {
+            _weapon_data_name: weapon_data_name.to_string(),
+            _weapon_type: weapon_data_create_info._weapon_type,
+            _rate_of_fire: weapon_data_create_info._rate_of_fire,
+            _bullet_amount: weapon_data_create_info._bullet_amount,
+            _bullet_data: bullet_data.clone(),
+        })
+    }
+}
+
 impl BeamEmitter {
     pub fn create_beam_emitter(
         owner_actor: *const dyn ActorTrait,
