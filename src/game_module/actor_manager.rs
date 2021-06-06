@@ -39,7 +39,7 @@ impl ActorManager {
         self._player_actor = (player_actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;
 
         // AI Actor
-        self.create_actor(project_application, "scout", false);
+        self.create_actor(project_application, "tank", false);
     }
 
     pub fn destroy_actor_manager(&mut self) {
@@ -59,7 +59,12 @@ impl ActorManager {
             _model_data_name: ship_data.borrow()._model_data_name.clone(),
             ..Default::default()
         };
-        let actor_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object("Player", &render_object_create_info);
+
+        let actor_render_object = project_application.get_project_scene_manager_mut().add_skeletal_render_object(
+            if is_player_actor { "Player" } else { "Enemy" },
+            &render_object_create_info
+        );
+
         let mut actor: Box<dyn ActorTrait> = if is_player_actor {
             PlayerActor::create_player_actor(id, &ship_data, &actor_render_object)
         } else {

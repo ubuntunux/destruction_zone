@@ -1,5 +1,4 @@
-{"_controller_data_name":"light_ship_controller",
-"_controller_data_type":"ShipController",
+{"_controller_data_type":"ShipController",
 "_max_ground_speed":50.0,
 "_forward_acceleration":50.0,
 "_side_acceleration":50.0,

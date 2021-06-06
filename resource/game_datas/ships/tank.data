@@ -1,0 +1,7 @@
+{"_ship_type":"Tank",
+"_model_data_name":"ship/tank",
+"_hull_armor":0.0,
+"_shield_armor":0.0,
+"_max_hull":100.0,
+"_max_shields":10.0,
+"_controller_data_name":"light_tank_controller"}

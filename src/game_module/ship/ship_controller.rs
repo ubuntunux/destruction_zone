@@ -16,7 +16,6 @@ pub enum ShipControllerDataType {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ShipControllerData {
-    pub _controller_data_name: String,
     pub _controller_data_type: ShipControllerDataType,
     pub _max_ground_speed: f32,
     pub _forward_acceleration: f32,
@@ -34,7 +33,6 @@ pub struct ShipControllerData {
 impl Default for ShipControllerData {
     fn default() -> ShipControllerData {
         ShipControllerData {
-            _controller_data_name: "".to_string(),
             _controller_data_type: ShipControllerDataType::ShipController,
             _max_ground_speed: 50.0,
             _forward_acceleration: 50.0,

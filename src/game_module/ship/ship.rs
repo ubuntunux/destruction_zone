@@ -13,6 +13,7 @@ use crate::game_module::weapons::weapon::BeamEmitter;
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
     Scout,
+    Tank,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
