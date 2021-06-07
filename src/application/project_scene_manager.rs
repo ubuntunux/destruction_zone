@@ -29,6 +29,7 @@ use crate::renderer::project_effect::ProjectEffectManager;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::resource::project_resource::ProjectResources;
 use crate::game_module::height_map_data::HeightMapData;
+use crate::game_module::level_datas::level_data::LevelData;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
@@ -43,6 +44,7 @@ pub struct SceneDataCreateInfo {
     pub _effects: HashMap<String, EffectCreateInfo>,
     pub _static_objects: HashMap<String, RenderObjectCreateInfo>,
     pub _skeletal_objects: HashMap<String, RenderObjectCreateInfo>,
+    pub _level_data: LevelData,
 }
 
 impl Default for SceneDataCreateInfo {
@@ -54,6 +56,7 @@ impl Default for SceneDataCreateInfo {
             _effects: HashMap::new(),
             _static_objects: HashMap::new(),
             _skeletal_objects: HashMap::new(),
+            _level_data: LevelData::default(),
         }
     }
 }
@@ -81,6 +84,7 @@ pub struct ProjectSceneManager {
     pub _static_shadow_render_elements: Vec<RenderElementData>,
     pub _skeletal_render_elements: Vec<RenderElementData>,
     pub _skeletal_shadow_render_elements: Vec<RenderElementData>,
+    pub _level_data: LevelData,
 }
 
 
@@ -127,6 +131,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             _effects: HashMap::new(),
             _static_objects: HashMap::new(),
             _skeletal_objects: HashMap::new(),
+            _level_data: LevelData::default(),
         };
 
         scene_data_create_info._cameras.insert(
@@ -152,62 +157,73 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             }
         );
 
-        scene_data_create_info._effects.insert(
-            String::from("effect0"),
-            EffectCreateInfo {
-                _effect_data_name: String::from("default"),
-                _effect_position: Vector3::new(0.0, 4.0, 0.0),
-                ..Default::default()
-            }
-        );
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect0"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("default"),
+        //         _effect_position: Vector3::new(0.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect1"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("test"),
+        //         _effect_position: Vector3::new(4.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect2"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("test2"),
+        //         _effect_position: Vector3::new(8.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        // scene_data_create_info._static_objects.insert(
+        //     String::from("sponza"),
+        //     RenderObjectCreateInfo {
+        //         _model_data_name: String::from("sponza/sponza"),
+        //         _position: Vector3::new(0.0, 0.0, 0.0),
+        //         _scale: Vector3::new(0.1, 0.1, 0.1),
+        //         ..Default::default()
+        //     }
+        // );
+        // scene_data_create_info._static_objects.insert(
+        //     String::from("sphere"),
+        //     RenderObjectCreateInfo {
+        //         _model_data_name: String::from("sphere"),
+        //         _position: Vector3::new(-2.0, 1.0, 0.0),
+        //         _scale: Vector3::new(1.0, 1.0, 1.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // for i in 0..3 {
+        //     scene_data_create_info._skeletal_objects.insert(
+        //         format!("skeletal_{}", i),
+        //         RenderObjectCreateInfo {
+        //             _model_data_name: String::from("skeletal"),
+        //             _position: Vector3::new(i as f32, 1.0, 0.0),
+        //             _scale: Vector3::new(0.01, 0.01, 0.01),
+        //             ..Default::default()
+        //         }
+        //     );
+        // }
 
-        scene_data_create_info._effects.insert(
-            String::from("effect1"),
-            EffectCreateInfo {
-                _effect_data_name: String::from("test"),
-                _effect_position: Vector3::new(4.0, 4.0, 0.0),
-                ..Default::default()
-            }
-        );
-
-        scene_data_create_info._effects.insert(
-            String::from("effect2"),
-            EffectCreateInfo {
-                _effect_data_name: String::from("test2"),
-                _effect_position: Vector3::new(8.0, 4.0, 0.0),
-                ..Default::default()
-            }
-        );
         scene_data_create_info._static_objects.insert(
-            String::from("sponza"),
+            String::from("stage"),
             RenderObjectCreateInfo {
-                _model_data_name: String::from("sponza/sponza"),
-                _position: Vector3::new(0.0, 0.0, 0.0),
-                _scale: Vector3::new(0.1, 0.1, 0.1),
+                _model_data_name: String::from("stages/default_stage"),
+                _position: Vector3::new(0.0, -20.0, 0.0),
+                _scale: Vector3::new(2000.0, 1000.0, 2000.0),
                 ..Default::default()
             }
         );
-        scene_data_create_info._static_objects.insert(
-            String::from("sphere"),
-            RenderObjectCreateInfo {
-                _model_data_name: String::from("sphere"),
-                _position: Vector3::new(-2.0, 1.0, 0.0),
-                _scale: Vector3::new(1.0, 1.0, 1.0),
-                ..Default::default()
-            }
-        );
-
-        for i in 0..3 {
-            scene_data_create_info._skeletal_objects.insert(
-                format!("skeletal_{}", i),
-                RenderObjectCreateInfo {
-                    _model_data_name: String::from("skeletal"),
-                    _position: Vector3::new(i as f32, 1.0, 0.0),
-                    _scale: Vector3::new(0.01, 0.01, 0.01),
-                    ..Default::default()
-                }
-            );
-        }
+        scene_data_create_info._level_data = LevelData::get_test_level_data();
 
         self.get_project_resources_mut().save_scene_data(scene_data_name, &scene_data_create_info);
     }
@@ -276,14 +292,16 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
 
         // height map
         let maybe_stage_model = self._static_render_object_map.get("stage");
-        if maybe_stage_model.is_some() {
+        {
             let mut stage_model = maybe_stage_model.unwrap().borrow_mut();
-            let mut height_map_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
-            height_map_directory.push("heightmap");
+            let stage_height_map_name: String = stage_model._model_data.borrow()._model_data_name.clone() + "_heightmap";
+            let texture_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
+            let mut height_map_directory: PathBuf = texture_directory.clone();
+            height_map_directory.push("stages");
             let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
             for height_map_file in height_map_files.iter() {
-                let resource_name = get_resource_name_from_file_path(&height_map_directory, &height_map_file);
-                if resource_name == stage_model._model_data.borrow()._model_data_name {
+                let resource_name = get_resource_name_from_file_path(&texture_directory, &height_map_file);
+                if resource_name == stage_height_map_name {
                     let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
                     stage_model._transform_object.update_transform_object();
                     stage_model.update_bound_box();
@@ -292,6 +310,9 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
                 }
             }
         }
+
+        // level data
+        self._level_data = scene_data_create_info._level_data.clone();
     }
 
     fn close_scene_data(&mut self, _device: &Device) {
@@ -314,7 +335,9 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             _effects: HashMap::new(),
             _static_objects: HashMap::new(),
             _skeletal_objects: HashMap::new(),
+            _level_data: LevelData::default(),
         };
+
         // cameras
         for camera_object in self._camera_object_map.values() {
             let camera = camera_object.borrow();
@@ -480,6 +503,7 @@ impl ProjectSceneManager {
             _static_shadow_render_elements: Vec::new(),
             _skeletal_render_elements: Vec::new(),
             _skeletal_shadow_render_elements: Vec::new(),
+            _level_data: LevelData::default(),
         })
     }
     pub fn get_scene_manager_data(&self) -> &SceneManagerData { unsafe { &*self._scene_manager_data } }
@@ -493,6 +517,7 @@ impl ProjectSceneManager {
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
+    pub fn get_level_data(&self) -> &LevelData { &self._level_data }
     pub fn get_sea_height(&self) -> f32 { self._sea_height }
     pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
     pub fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }

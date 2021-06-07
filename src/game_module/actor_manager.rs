@@ -8,6 +8,7 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
+use crate::game_module::level_datas::spawn_point::{SpawnPointType, ShipSpawnPointData};
 
 pub struct ActorManager {
     pub _id_generator: u64,
@@ -34,12 +35,14 @@ impl ActorManager {
     }
 
     pub fn initialize_actor_manager(&mut self, project_application: &ProjectApplication) {
-        // Player Actor
-        let player_actor = self.create_actor(project_application, "scout", true);
-        self._player_actor = (player_actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;
-
-        // AI Actor
-        self.create_actor(project_application, "tank", false);
+        let level_data = project_application.get_project_scene_manager().get_level_data();
+        for spawn_point_type in level_data._spawn_point_datas.iter() {
+            match spawn_point_type {
+                SpawnPointType::Player(spawn_point_data) => self.create_actor(project_application, spawn_point_data, true),
+                SpawnPointType::NonPlayer(spawn_point_data) => self.create_actor(project_application, spawn_point_data, false),
+                _ => (),
+            }
+        }
     }
 
     pub fn destroy_actor_manager(&mut self) {
@@ -52,11 +55,13 @@ impl ActorManager {
         id
     }
 
-    pub fn create_actor(&mut self, project_application: &ProjectApplication, ship_data_name: &str, is_player_actor: bool) -> &Box<dyn ActorTrait> {
+    pub fn create_actor(&mut self, project_application: &ProjectApplication, spawn_point_data: &ShipSpawnPointData, is_player_actor: bool) {
         let id = self.generate_id();
-        let ship_data = project_application.get_project_resources().get_ship_data(ship_data_name);
+        let ship_data = project_application.get_project_resources().get_ship_data(&spawn_point_data._ship_data_name);
         let render_object_create_info = RenderObjectCreateInfo {
             _model_data_name: ship_data.borrow()._model_data_name.clone(),
+            _position: spawn_point_data._position.clone_owned(),
+            _rotation: spawn_point_data._rotation.clone_owned(),
             ..Default::default()
         };
 
@@ -73,8 +78,10 @@ impl ActorManager {
 
         actor.as_mut().initialize_actor();
 
+        if is_player_actor {
+            self._player_actor = (actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;
+        }
         self._actors.insert(id, actor);
-        self._actors.get(&id).unwrap()
     }
 
     pub fn get_player_actor(&self) -> &PlayerActor {

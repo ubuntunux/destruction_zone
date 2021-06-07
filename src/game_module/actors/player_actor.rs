@@ -58,6 +58,10 @@ impl ActorTrait for PlayerActor {
         self._ship.get_transform_mut()
     }
 
+    fn fire(&mut self) {
+        unimplemented!()
+    }
+
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
         unimplemented!()
     }

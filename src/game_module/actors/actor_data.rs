@@ -24,5 +24,6 @@ pub trait ActorTrait {
     fn get_controller_mut(&mut self) -> &mut ShipController;
     fn get_transform(&self) -> &TransformObjectData;
     fn get_transform_mut(&self) -> &mut TransformObjectData;
+    fn fire(&mut self);
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData);
 }

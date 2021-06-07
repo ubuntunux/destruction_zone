@@ -57,6 +57,10 @@ impl ActorTrait for NonPlayerActor {
         self._ship.get_transform_mut()
     }
 
+    fn fire(&mut self) {
+        unimplemented!()
+    }
+
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
         let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 
