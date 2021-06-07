@@ -1,0 +1,2 @@
+{"material_name": "render_skeletal_object",
+ "material_parameters": {"textureBase": "ships/trident_d", "textureMaterial": "ships/trident_m", "textureNormal": "ships/trident_n"}}

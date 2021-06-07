@@ -1,5 +1,5 @@
 {"_ship_type":"Tank",
-"_model_data_name":"ship/tank",
+"_model_data_name":"ships/tank",
 "_hull_armor":0.0,
 "_shield_armor":0.0,
 "_max_hull":100.0,

@@ -1,5 +1,5 @@
 {"_ship_type":"Scout",
-"_model_data_name":"ship/trident",
+"_model_data_name":"ships/trident",
 "_hull_armor":0.0,
 "_shield_armor":0.0,
 "_max_hull":100.0,
