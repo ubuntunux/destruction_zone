@@ -1,5 +1,5 @@
 use rust_engine_3d::renderer::camera::CameraObjectData;
-use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
+use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
@@ -9,7 +9,6 @@ use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
-use crate::game_module::weapons::weapon::{WeaponTrait};
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -63,16 +62,7 @@ impl ActorTrait for PlayerActor {
     }
 
     fn fire(&mut self, project_application: &ProjectApplication) {
-        let weapon: Option<*const dyn WeaponTrait> = self.get_ship().get_current_weapon();
-        if weapon.is_some() {
-            let weapon: &mut dyn WeaponTrait = unsafe { &mut *(weapon.unwrap() as *mut dyn WeaponTrait) };
-            let render_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: weapon.get_bullet_data()._model_data_name.clone(),
-                _position: self.get_transform().get_position().clone_owned(),
-                ..Default::default()
-            };
-            project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
-        }
+        self._ship.fire(project_application);
     }
 
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {

@@ -10,6 +10,8 @@ use crate::game_module::ship::ship_controller::{ShipController, ShipControllerDa
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::application::project_application::ProjectApplication;
+use crate::application::project_audio_manager::AudioLoop;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -109,6 +111,7 @@ impl ShipInstance {
         let weapon_data: RcRefCell<WeaponData> = project_scene_manager.get_project_resources().get_weapon_data("beam_emitter").clone();
         let render_object_create_info = RenderObjectCreateInfo {
             _model_data_name: weapon_data.borrow()._model_data_name.clone(),
+            _position: self.get_transform().get_position().clone_owned(),
             ..Default::default()
         };
         let weapon_render_object = project_scene_manager.add_skeletal_render_object("weapon", &render_object_create_info);
@@ -166,5 +169,22 @@ impl ShipInstance {
 
     pub fn get_max_shield_point(&self) -> f32 {
         self.get_ship_data()._max_shields
+    }
+
+    pub fn fire(&mut self, project_application: &ProjectApplication) {
+        let weapon: Option<*const dyn WeaponTrait> = self.get_current_weapon();
+        if weapon.is_some() {
+            let weapon: &mut dyn WeaponTrait = unsafe { &mut *(weapon.unwrap() as *mut dyn WeaponTrait) };
+            let render_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: weapon.get_bullet_data()._model_data_name.clone(),
+                _position: self.get_transform().get_position().clone_owned(),
+                ..Default::default()
+            };
+            project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
+            project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+        }
+    }
+
+    pub fn update_ship(&mut self, delta_time: f32) {
     }
 }
