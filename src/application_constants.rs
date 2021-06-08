@@ -10,4 +10,4 @@ pub const SSAO_RADIUS: f32 = 2.0;
 pub const LIGHT_PROBE_SIZE: u32 = 256;
 pub const RENDER_OBJECT_FOR_LIGHT_PROBE: bool = false;
 pub const MAX_BONES: usize = 128 * 128; // must match with scene_constants.glsl
-pub const DEFAULT_AUDIO_VOLUME: i32 = 50;
+pub const DEFAULT_AUDIO_VOLUME: i32 = 10;

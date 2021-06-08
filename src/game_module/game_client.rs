@@ -8,6 +8,7 @@ use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::game_constants::SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED;
+use nalgebra::Vector2;
 
 pub struct GameClient {
     pub _actor_manager: Box<ActorManager>,
@@ -46,9 +47,10 @@ impl GameClient {
         let mouse_input_data = &engine_application._mouse_input_data;
         let keyboard_input_data = &engine_application._keyboard_input_data;
 
+        let mouse_speed_ratio = engine_application._window_size.y as f32 / 1080.0;
         let _delta_time = time_data._delta_time;
         let _mouse_pos = &mouse_move_data._mouse_pos;
-        let mouse_delta = &mouse_move_data._mouse_pos_delta;
+        let mouse_delta: Vector2<f32> = Vector2::new(mouse_move_data._mouse_pos_delta.x as f32 / mouse_speed_ratio, mouse_move_data._mouse_pos_delta.y as f32 / mouse_speed_ratio);
         let scroll_delta = &mouse_move_data._scroll_delta;
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let _btn_right_hold: bool = mouse_input_data._btn_r_hold;
@@ -80,12 +82,12 @@ impl GameClient {
             self._actor_manager.get_player_actor_mut().fire();
         }
 
-        if 0 != mouse_delta.x {
-            player_ship_controller.acceleration_yaw(-mouse_delta.x as f32);
+        if 0.0 != mouse_delta.x {
+            player_ship_controller.acceleration_yaw(-mouse_delta.x);
         }
 
-        if 0 != mouse_delta.y {
-            player_ship_controller.acceleration_pitch(-mouse_delta.y as f32);
+        if 0.0 != mouse_delta.y {
+            player_ship_controller.acceleration_pitch(-mouse_delta.y);
         }
 
         if modifier_keys_shift {

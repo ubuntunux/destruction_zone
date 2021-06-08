@@ -28,4 +28,10 @@
 "_position":[0.0,0.0,0.0],
 "_rotation":[0.0,0.0,0.0]}},{"NonPlayer":{"_ship_data_name":"tank",
 "_position":[0.0,0.0,0.0],
+"_rotation":[0.0,0.0,0.0]}},
+{"NonPlayer":{"_ship_data_name":"tank",
+"_position":[2.0,0.0,0.0],
+"_rotation":[0.0,0.0,0.0]}},
+{"NonPlayer":{"_ship_data_name":"tank",
+"_position":[0.0,0.0,3.0],
 "_rotation":[0.0,0.0,0.0]}}]}}
