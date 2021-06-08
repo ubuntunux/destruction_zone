@@ -76,7 +76,7 @@ impl ActorManager {
             NonPlayerActor::create_actor(id, &ship_data, &actor_render_object)
         };
 
-        actor.as_mut().initialize_actor();
+        actor.as_mut().initialize_actor(project_application.get_project_scene_manager_mut());
 
         if is_player_actor {
             self._player_actor = (actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;

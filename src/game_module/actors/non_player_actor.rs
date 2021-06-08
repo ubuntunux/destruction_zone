@@ -6,6 +6,8 @@ use crate::game_module::ship::ship_controller::{ ShipController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
+use crate::application::project_application::ProjectApplication;
+use crate::application::project_scene_manager::ProjectSceneManager;
 
 pub struct NonPlayerActor {
     pub _id: u64,
@@ -14,7 +16,7 @@ pub struct NonPlayerActor {
 }
 
 impl ActorTrait for NonPlayerActor {
-    fn initialize_actor(&mut self) {
+    fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
     }
 
     fn get_actor_id(&self) -> u64 {
@@ -57,7 +59,7 @@ impl ActorTrait for NonPlayerActor {
         self._ship.get_transform_mut()
     }
 
-    fn fire(&mut self) {
+    fn fire(&mut self, project_application: &ProjectApplication) {
         unimplemented!()
     }
 

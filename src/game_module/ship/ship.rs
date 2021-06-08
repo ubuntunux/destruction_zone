@@ -1,6 +1,6 @@
 use serde::{ Serialize, Deserialize };
 
-use rust_engine_3d::renderer::render_object::RenderObjectData;
+use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
@@ -9,6 +9,7 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
+use crate::application::project_scene_manager::ProjectSceneManager;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -61,6 +62,7 @@ pub struct ShipInstance {
     pub _transform_object: *mut TransformObjectData,
     pub _controller: ShipController,
     pub _weapons: Vec<Box<dyn WeaponTrait>>,
+    pub _current_weapon_index: usize,
 }
 
 // Implementation
@@ -94,18 +96,30 @@ impl ShipInstance {
             _transform_object: transform_object,
             _controller: ShipController::create_ship_controller(&ship_data.borrow()._contoller_data, floating_height),
             _weapons: Vec::new(),
+            _current_weapon_index: 0,
         }
     }
 
-    pub fn initialize_ship_instance(&mut self, owner_actor: *const dyn ActorTrait, weapon_data: *const WeaponData) {
+    pub fn initialize_ship_instance(&mut self, owner_actor: *const dyn ActorTrait, project_scene_manager: &mut ProjectSceneManager) {
         let ship_data = unsafe { &*self._ship_data.as_ptr() };
         self._hull = ship_data._max_hull;
         self._shields = ship_data._max_shields;
 
+        // add weapons
+        let weapon_data: RcRefCell<WeaponData> = project_scene_manager.get_project_resources().get_weapon_data("beam_emitter").clone();
+        let render_object_create_info = RenderObjectCreateInfo {
+            _model_data_name: weapon_data.borrow()._model_data_name.clone(),
+            ..Default::default()
+        };
+        let weapon_render_object = project_scene_manager.add_skeletal_render_object("weapon", &render_object_create_info);
+        let mut weapon_offset_transform = TransformObjectData::new_transform_object_data();
+        weapon_offset_transform.set_position_x(2.0);
+        weapon_offset_transform.set_position_y(2.0);
         let weapon = BeamEmitter::create_beam_emitter(
             owner_actor,
-            weapon_data,
-            &TransformObjectData::new_transform_object_data()
+            weapon_data.as_ptr().clone(),
+            &weapon_offset_transform,
+            &weapon_render_object,
         );
         self._weapons.push(weapon);
     }
@@ -128,6 +142,14 @@ impl ShipInstance {
 
     pub fn get_transform_mut(&self) -> &mut TransformObjectData {
         unsafe { &mut *(self._transform_object as *mut TransformObjectData) }
+    }
+
+    pub fn get_current_weapon(&self) -> Option<*const dyn WeaponTrait> {
+        if self._current_weapon_index < self._weapons.len() {
+            Some(self._weapons[self._current_weapon_index].as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn get_hull_point(&self) -> f32 {

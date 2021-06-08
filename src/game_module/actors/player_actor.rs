@@ -1,12 +1,15 @@
 use rust_engine_3d::renderer::camera::CameraObjectData;
-use rust_engine_3d::renderer::render_object::RenderObjectData;
+use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 
-use crate::game_module::ship::ship_controller::{ ShipController };
+use crate::application::project_application::ProjectApplication;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
+use crate::game_module::ship::ship_controller::{ ShipController };
+use crate::game_module::weapons::weapon::{WeaponTrait};
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -15,7 +18,8 @@ pub struct PlayerActor {
 }
 
 impl ActorTrait for PlayerActor {
-    fn initialize_actor(&mut self) {
+    fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        self._ship.initialize_ship_instance(self, project_scene_manager);
     }
 
     fn get_actor_id(&self) -> u64 {
@@ -58,8 +62,17 @@ impl ActorTrait for PlayerActor {
         self._ship.get_transform_mut()
     }
 
-    fn fire(&mut self) {
-        unimplemented!()
+    fn fire(&mut self, project_application: &ProjectApplication) {
+        let weapon: Option<*const dyn WeaponTrait> = self.get_ship().get_current_weapon();
+        if weapon.is_some() {
+            let weapon: &mut dyn WeaponTrait = unsafe { &mut *(weapon.unwrap() as *mut dyn WeaponTrait) };
+            let render_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: weapon.get_bullet_data()._model_data_name.clone(),
+                _position: self.get_transform().get_position().clone_owned(),
+                ..Default::default()
+            };
+            project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
+        }
     }
 
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {

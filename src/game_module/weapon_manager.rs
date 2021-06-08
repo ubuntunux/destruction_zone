@@ -41,7 +41,6 @@ impl WeaponManager {
         self._bullets_array.remove(&id);
     }
 
-    // 이 함수는 사용 안할거임
     pub fn add_bullet(&self, project_application: &ProjectApplication) {
         project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
         // bullet_model = self.resource_manager.get_model("Cube")

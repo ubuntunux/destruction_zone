@@ -77,9 +77,10 @@ impl GameClient {
 
         let player_ship_controller = self._actor_manager.get_player_actor_mut().get_ship_mut().get_controller_mut();
 
-        if btn_left {
-            // self._weapon_manager.add_bullet(project_application);
-            self._actor_manager.get_player_actor_mut().fire();
+        if mouse_input_data._btn_l_hold {
+            self._actor_manager.get_player_actor_mut().fire(project_application);
+            //self._weapon_manager.add_bullet(project_application);
+            //self._weapon_manager.regist_bullets(bullet);
         }
 
         if 0.0 != mouse_delta.x {

@@ -32,6 +32,7 @@ pub struct BulletData {
     pub _bullet_speed: f32,
     pub _bullet_range: f32,
     pub _bullet_life_time: f32,
+    pub _model_data_name: String
 }
 
 impl Default for BulletData {
@@ -43,6 +44,7 @@ impl Default for BulletData {
             _bullet_speed: 1.0,
             _bullet_range: 10.0,
             _bullet_life_time: 10.0,
+            _model_data_name: "".to_string(),
         }
     }
 }

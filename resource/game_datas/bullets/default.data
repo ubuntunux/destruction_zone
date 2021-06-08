@@ -3,4 +3,5 @@
 "_hull_damage":1.0,
 "_bullet_speed":1.0,
 "_bullet_range":10.0,
-"_bullet_life_time":10.0}
+"_bullet_life_time":10.0,
+"_model_data_name":"bullets/beam_bullet"}
