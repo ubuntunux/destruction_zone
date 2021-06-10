@@ -97,12 +97,14 @@ impl PlayerActor {
 
         // set camera offset
         let mut cockpit_offset = main_camera._transform_object.get_front().clone();
-        cockpit_offset.y = 0.0;
-        cockpit_offset.normalize_mut();
-        let bound_box = &self._ship._render_object.borrow()._bound_box;
-        const BOUND_BOX_MIN: f32 = 2.0;
-        cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
-        cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
+        {
+            cockpit_offset.y = 0.0;
+            cockpit_offset.normalize_mut();
+            let bound_box = &self._ship._render_object.borrow()._bound_box;
+            const BOUND_BOX_MIN: f32 = 2.0;
+            cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
+            cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
+        }
 
         let mut camera_pos = ship_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + cockpit_offset;
         let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
@@ -117,5 +119,8 @@ impl PlayerActor {
         transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
         transform.set_roll(roll);
         transform.set_position(ship_controller.get_position());
+
+        // update weapon
+        self.get_ship_mut().update_ship(delta_time, height_map_data);
     }
 }

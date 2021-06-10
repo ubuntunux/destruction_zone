@@ -209,9 +209,9 @@ impl ViewConstants {
         self._view_origin_projection_jitter = camera_data._view_origin_projection_jitter.into();
         self._inv_view_origin_projection_jitter = camera_data._inv_view_origin_projection_jitter.into();
         self._view_origin_projection_prev_jitter = camera_data._view_origin_projection_prev_jitter.into();
-        self._camera_position = camera_data._transform_object._position.clone() as Vector3<f32>;
+        self._camera_position = camera_data._transform_object.get_position().clone() as Vector3<f32>;
         self._jitter_frame = camera_data._jitter_frame;
-        self._camera_position_prev = camera_data._transform_object._prev_position.clone() as Vector3<f32>;
+        self._camera_position_prev = camera_data._transform_object.get_prev_position().clone() as Vector3<f32>;
         self._viewconstants_dummy0 = 0.0;
         self._near_far = Vector2::new(camera_data._near, camera_data._far);
         self._jitter_delta = camera_data._jitter_delta.into();

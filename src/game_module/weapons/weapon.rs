@@ -6,7 +6,9 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
-use rust_engine_3d::renderer::render_object::RenderObjectData;
+use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
+use crate::application::project_application::ProjectApplication;
+use crate::application::project_audio_manager::AudioLoop;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -63,7 +65,8 @@ pub trait WeaponTrait {
     fn get_bullet_data(&self) -> &BulletData;
     fn get_weapon_type(&self) -> WeaponType;
     fn get_weapon_data(&self) -> &WeaponData;
-    fn update_weapon(&mut self, delta_time: f32, height_map_data: &HeightMapData);
+    fn fire(&mut self, project_application: &ProjectApplication);
+    fn update_weapon(&mut self, parent_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData);
 }
 
 pub struct BeamEmitter {
@@ -110,7 +113,6 @@ impl BeamEmitter {
 impl WeaponTrait for BeamEmitter {
     fn initialize_weapon(&mut self) {
     }
-
     fn get_owner_actor(&self) -> &dyn ActorTrait { unsafe { &*self._owner_actor } }
     fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
     fn get_bullet_data(&self) -> &BulletData { unsafe { &*self.get_weapon_data()._bullet_data.as_ptr() } }
@@ -118,6 +120,20 @@ impl WeaponTrait for BeamEmitter {
     fn get_weapon_data(&self) -> &WeaponData {
         unsafe { &*self._weapon_data }
     }
-    fn update_weapon(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
+
+    fn fire(&mut self, project_application: &ProjectApplication) {
+        let render_object_create_info = RenderObjectCreateInfo {
+            _model_data_name: self.get_bullet_data()._model_data_name.clone(),
+            _position: self._transform_object.get_position().clone_owned(),
+            _rotation: self._transform_object.get_rotation().clone_owned(),
+            ..Default::default()
+        };
+        project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
+        project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+    }
+
+    fn update_weapon(&mut self, parent_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData) {
+        self._transform_object._matrix = parent_transform_object._matrix.clone_owned();
+        self._weapon_render_object.borrow_mut()._transform_object._matrix = parent_transform_object._matrix.clone_owned();
     }
 }

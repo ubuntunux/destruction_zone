@@ -4,14 +4,14 @@ use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCrea
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
+use crate::application::project_application::ProjectApplication;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
 use crate::game_module::weapons::weapon::BeamEmitter;
-use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::application::project_application::ProjectApplication;
-use crate::application::project_audio_manager::AudioLoop;
+use crate::game_module::height_map_data::HeightMapData;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -175,16 +175,15 @@ impl ShipInstance {
         let weapon: Option<*const dyn WeaponTrait> = self.get_current_weapon();
         if weapon.is_some() {
             let weapon: &mut dyn WeaponTrait = unsafe { &mut *(weapon.unwrap() as *mut dyn WeaponTrait) };
-            let render_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: weapon.get_bullet_data()._model_data_name.clone(),
-                _position: self.get_transform().get_position().clone_owned(),
-                ..Default::default()
-            };
-            project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
-            project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+            weapon.fire(project_application);
         }
     }
 
-    pub fn update_ship(&mut self, delta_time: f32) {
+    pub fn update_ship(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
+        let ship_transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
+
+        for weapon in self._weapons.iter_mut() {
+            weapon.update_weapon(ship_transform, delta_time, height_map_data);
+        }
     }
 }
