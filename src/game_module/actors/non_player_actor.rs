@@ -75,6 +75,7 @@ impl ActorTrait for NonPlayerActor {
         transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
         transform.set_roll(ship_controller.get_roll());
         transform.set_position(ship_controller.get_position());
+        transform.update_matrix();
     }
 }
 
