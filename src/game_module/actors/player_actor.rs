@@ -121,9 +121,6 @@ impl PlayerActor {
         transform.set_position(ship_controller.get_position());
         transform.update_matrix();
 
-        let matrix = transform._matrix.clone_owned();
-        transform.update_transform_by_matrix(&matrix);
-
         // update weapon
         self.get_ship_mut().update_ship(delta_time, height_map_data);
     }
