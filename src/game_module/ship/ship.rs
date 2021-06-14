@@ -9,8 +9,7 @@ use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
-use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData};
-use crate::game_module::weapons::weapon::BeamEmitter;
+use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
 use crate::game_module::height_map_data::HeightMapData;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
@@ -27,6 +26,7 @@ pub struct ShipDataCreateInfo {
     pub _shield_armor: f32,
     pub _max_hull: f32,
     pub _max_shields: f32,
+    pub _weapon_solts: Vec<WeaponSlotData>,
     pub _controller_data_name: String,
 }
 
@@ -39,6 +39,7 @@ impl Default for ShipDataCreateInfo {
             _shield_armor: 0.0,
             _max_hull: 100.0,
             _max_shields: 10.0,
+            _weapon_solts: vec![WeaponSlotData::default()],
             _controller_data_name: "".to_string(),
         }
     }
@@ -53,6 +54,7 @@ pub struct ShipData {
     pub _shield_armor: f32,
     pub _max_hull: f32,
     pub _max_shields: f32,
+    pub _weapon_solts: Vec<WeaponSlotData>,
     pub _contoller_data: RcRefCell<ShipControllerData>,
 }
 
@@ -78,6 +80,7 @@ impl ShipData {
             _shield_armor: ship_data_create_info._shield_armor,
             _max_hull: ship_data_create_info._max_hull,
             _max_shields: ship_data_create_info._max_shields,
+            _weapon_solts: ship_data_create_info._weapon_solts.clone(),
             _contoller_data: controller_data.clone(),
         })
     }
@@ -108,23 +111,29 @@ impl ShipInstance {
         self._shields = ship_data._max_shields;
 
         // add weapons
-        let weapon_data: RcRefCell<WeaponData> = project_scene_manager.get_project_resources().get_weapon_data("beam_emitter").clone();
-        let render_object_create_info = RenderObjectCreateInfo {
-            _model_data_name: weapon_data.borrow()._model_data_name.clone(),
-            _position: self.get_transform().get_position().clone_owned(),
-            ..Default::default()
-        };
-        let weapon_render_object = project_scene_manager.add_skeletal_render_object("weapon", &render_object_create_info);
-        let mut weapon_offset_transform = TransformObjectData::new_transform_object_data();
-        weapon_offset_transform.set_position_x(2.0);
-        weapon_offset_transform.set_position_y(2.0);
-        let weapon = BeamEmitter::create_beam_emitter(
-            owner_actor,
-            weapon_data.as_ptr().clone(),
-            &weapon_offset_transform,
-            &weapon_render_object,
-        );
-        self._weapons.push(weapon);
+        for weapon_slot in self._ship_data.borrow()._weapon_solts.iter() {
+            let weapon_data: RcRefCell<WeaponData> = project_scene_manager.get_project_resources().get_weapon_data("beam_emitter").clone();
+            let mut weapon_slot_transform = TransformObjectData::new_transform_object_data();
+            weapon_slot_transform.set_position(&weapon_slot._position);
+            weapon_slot_transform.set_rotation(&weapon_slot._rotation);
+            weapon_slot_transform.set_scale(&weapon_slot._scale);
+            weapon_slot_transform.update_transform_object();
+
+            let render_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: weapon_data.borrow()._model_data_name.clone(),
+                _position: self.get_transform().get_position() + &weapon_slot._position,
+                ..Default::default()
+            };
+            let weapon_render_object = project_scene_manager.add_skeletal_render_object("weapon", &render_object_create_info);
+
+            let weapon = BeamEmitter::create_beam_emitter(
+                owner_actor,
+                &weapon_data,
+                &weapon_slot_transform,
+                &weapon_render_object,
+            );
+            self._weapons.push(weapon);
+        }
     }
 
     pub fn get_ship_data(&self) -> &ShipData {

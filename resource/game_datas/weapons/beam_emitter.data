@@ -2,4 +2,5 @@
 "_rate_of_fire":1.0,
 "_bullet_amount":1,
 "_bullet_data_name":"default",
-"_model_data_name":"weapons/beam_emitter"}
+"_model_data_name":"weapons/beam_emitter",
+"_muzzle_position":[0.0,0.5,3.0]}

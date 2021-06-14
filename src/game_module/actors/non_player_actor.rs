@@ -16,7 +16,7 @@ pub struct NonPlayerActor {
 }
 
 impl ActorTrait for NonPlayerActor {
-    fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+    fn initialize_actor(&mut self, _project_scene_manager: &mut ProjectSceneManager) {
     }
 
     fn get_actor_id(&self) -> u64 {
@@ -59,7 +59,7 @@ impl ActorTrait for NonPlayerActor {
         self._ship.get_transform_mut()
     }
 
-    fn fire(&mut self, project_application: &ProjectApplication) {
+    fn fire(&mut self, _project_application: &ProjectApplication) {
         unimplemented!()
     }
 
