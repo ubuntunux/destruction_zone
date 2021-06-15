@@ -1,12 +1,16 @@
 use std::collections::HashMap;
 
+use rust_engine_3d::renderer::effect::EffectCreateInfo;
+use rust_engine_3d::utilities::system::RcRefCell;
+
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_audio_manager::AudioLoop;
 use crate::game_module::weapons::bullet::Bullet;
 
+
 pub struct WeaponManager {
     pub _id_generator: u64,
-    pub _bullets_array: HashMap<u64, *const Vec<Box<Bullet>>>,
+    pub _bullets_array: HashMap<u64, RcRefCell<Bullet>>,
 }
 
 impl WeaponManager {
@@ -17,8 +21,7 @@ impl WeaponManager {
         })
     }
 
-    pub fn initialize_weapon_manager(&mut self, project_application: &ProjectApplication) {
-        let _project_resources = project_application.get_project_resources();
+    pub fn initialize_weapon_manager(&mut self, _project_application: &ProjectApplication) {
     }
 
     pub fn destroy_weapon_manager(&mut self) {
@@ -31,9 +34,9 @@ impl WeaponManager {
         id
     }
 
-    pub fn regist_bullets(&mut self, bullets: *const Vec<Box<Bullet>>) -> u64 {
+    pub fn regist_bullets(&mut self, bullet: &RcRefCell<Bullet>) -> u64 {
         let id = self.generate_id();
-        self._bullets_array.insert(id, bullets);
+        self._bullets_array.insert(id, bullet.clone());
         id
     }
 
@@ -41,13 +44,33 @@ impl WeaponManager {
         self._bullets_array.remove(&id);
     }
 
-    pub fn add_bullet(&self, project_application: &ProjectApplication) {
-        project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
-        // bullet_model = self.resource_manager.get_model("Cube")
-        // bullet_object = self.scene_manager.add_object(model=bullet_model, instance_count=BulletActor.max_bullet_count, instance_render_count=0)
-        // bullet = BulletActor(self, bullet_object)
-        // self.bullets.append(bullet)
-        // return bullet
+    pub fn update_weapon_manager(&mut self, project_application: &ProjectApplication, delta_time: f32) {
+        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
+
+        let mut dead_bullets: Vec<u64> = Vec::new();
+        for (id, bullet) in self._bullets_array.iter() {
+            let bullet = &mut bullet.borrow_mut();
+            bullet.update_bullet(delta_time, height_map_data);
+            if false == bullet._is_alive {
+                let transform = bullet.get_transform_object();
+                let effect_create_info = EffectCreateInfo {
+                    _effect_position: transform.get_position().clone_owned(),
+                    _effect_rotation: transform.get_rotation().clone_owned(),
+                    _effect_data_name: "effects/bullet_destroy".to_string(),
+                    ..Default::default()
+                };
+                project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);
+                static BULLET_AUDIOS: [&str; 3] = ["Bullet_Metal_01", "Bullet_Metal_02", "Bullet_Metal_03"];
+                let index: usize = rand::random::<usize>() % BULLET_AUDIOS.len();
+                project_application.get_project_audio_manager_mut().create_audio(BULLET_AUDIOS[index], AudioLoop::ONCE);
+                project_application.get_project_scene_manager_mut().remove_static_render_object(&bullet._bullet_render_object.borrow()._render_object_name);
+                dead_bullets.push(*id);
+            }
+        }
+
+        for id in dead_bullets.iter() {
+            self._bullets_array.remove(&id);
+        }
     }
 
 

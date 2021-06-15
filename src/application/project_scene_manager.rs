@@ -569,8 +569,16 @@ impl ProjectSceneManager {
         self._static_render_object_map.get(object_name)
     }
 
+    pub fn remove_static_render_object(&mut self, object_name: &str) {
+        self._static_render_object_map.remove(object_name);
+    }
+
     pub fn get_skeletal_render_object(&self, object_name: &str) -> Option<&RcRefCell<RenderObjectData>> {
         self._skeletal_render_object_map.get(object_name)
+    }
+
+    pub fn remove_skeletal_render_object(&mut self, object_name: &str) {
+        self._skeletal_render_object_map.remove(object_name);
     }
 
     pub fn get_static_render_elements(&self) -> &Vec<RenderElementData> {

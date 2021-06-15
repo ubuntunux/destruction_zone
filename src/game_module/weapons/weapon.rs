@@ -97,7 +97,6 @@ pub struct BeamEmitter {
     pub _transform_object: TransformObjectData,
     pub _muzzle_position: Vector3<f32>,
     pub _weapon_render_object: RcRefCell<RenderObjectData>,
-    pub _bullets: Vec<Box<Bullet>>,
 }
 
 // Implementation
@@ -129,7 +128,6 @@ impl BeamEmitter {
             _transform_object: TransformObjectData::new_transform_object_data(),
             _weapon_render_object: weapon_render_object.clone(),
             _muzzle_position: Vector3::zeros(),
-            _bullets: vec![],
         })
     }
 }
@@ -150,8 +148,13 @@ impl WeaponTrait for BeamEmitter {
             _rotation: self._transform_object.get_rotation().clone_owned(),
             ..Default::default()
         };
-        project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
+
+        let bullet_render_object = project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
         project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+
+        // create bullet
+        let bullet = Bullet::create_bullet(self.get_bullet_data(), self._owner_actor.clone(), &bullet_render_object);
+        project_application.get_game_client_mut()._weapon_manager.regist_bullets(&bullet);
     }
 
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32, _height_map_data: &HeightMapData) {

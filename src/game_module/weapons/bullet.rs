@@ -1,11 +1,12 @@
 use nalgebra::Vector3;
 use serde::{ Serialize, Deserialize };
 
+use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
-
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum BulletType {
@@ -41,8 +42,8 @@ impl Default for BulletData {
             _bullet_type: BulletType::Beam,
             _shield_damage: 1.0,
             _hull_damage: 1.0,
-            _bullet_speed: 1.0,
-            _bullet_range: 10.0,
+            _bullet_speed: 100.0,
+            _bullet_range: 100.0,
             _bullet_life_time: 10.0,
             _model_data_name: "".to_string(),
         }
@@ -55,57 +56,58 @@ pub struct Bullet {
     pub _is_alive: bool,
     pub _is_collided: bool,
     pub _elapsed_time: f32,
-    pub _transform: TransformObjectData,
+    pub _transform: *const TransformObjectData,
     pub _initial_position: Vector3<f32>,
+    pub _bullet_render_object: RcRefCell<RenderObjectData>,
 }
 
 
 // Implementation
 impl Bullet {
-    fn create_bullet(bullet_data: *const BulletData, owner_actor: *const dyn ActorTrait, transform: &TransformObjectData) -> Bullet {
-        Bullet {
+    pub fn create_bullet(bullet_data: *const BulletData, owner_actor: *const dyn ActorTrait, bullet_render_object: &RcRefCell<RenderObjectData>) -> RcRefCell<Bullet> {
+        newRcRefCell(Bullet {
             _owner_actor: owner_actor,
-            _transform: transform.clone(),
-            _initial_position: transform.get_position().clone() as Vector3<f32>,
+            _transform: &bullet_render_object.borrow()._transform_object,
+            _initial_position: bullet_render_object.borrow()._transform_object.get_position().clone_owned(),
             _bullet_data: bullet_data,
             _elapsed_time: 0.0,
             _is_alive: true,
             _is_collided: false,
-        }
+            _bullet_render_object: bullet_render_object.clone(),
+        })
     }
-
-    fn get_owner_actor(&self) -> &dyn ActorTrait {
+    pub fn get_owner_actor(&self) -> &dyn ActorTrait {
         unsafe { &*self._owner_actor }
     }
+    pub fn get_owner_actor_mut(&self) -> &mut dyn ActorTrait { unsafe { &mut *(self._owner_actor as *mut dyn ActorTrait) } }
+    pub fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
+    pub fn get_bullet_data(&self) -> &BulletData { unsafe { &*self._bullet_data } }
+    pub fn get_transform_object(&self) -> &TransformObjectData { unsafe { &*self._transform } }
+    pub fn get_transform_object_mut(&self) -> &mut TransformObjectData { unsafe { &mut *(self._transform as *mut TransformObjectData) } }
+    pub fn update_bullet(&mut self, delta_time: f32, height_map_data: &HeightMapData) -> bool {
+        if self._is_alive {
+            let bullet_data = unsafe { &*self._bullet_data };
 
-    fn get_owner_actor_mut(&self) -> &mut dyn ActorTrait {
-        unsafe { &mut *(self._owner_actor as *mut dyn ActorTrait) }
-    }
+            let transform = unsafe { &mut *(self._transform as *mut TransformObjectData) };
+            transform.move_front(bullet_data._bullet_speed * delta_time);
 
-    fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
+            self._elapsed_time += delta_time;
 
-    fn get_bullet_data(&self) -> &BulletData {
-        unsafe { &*self._bullet_data }
-    }
+            let current_position = transform.get_position();
+            let move_distance = (current_position - &self._initial_position).norm();
+            if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
+                self._is_alive = false;
+                return false;
+            }
 
-    fn update_bullet(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
-        let bullet_data = unsafe { &*self._bullet_data };
-
-        self._transform.update_transform_object();
-        self._elapsed_time += delta_time;
-
-        let move_distance = (self._transform.get_position() - &self._initial_position).norm();
-        if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
-            self._is_alive = false;
-            return;
+            let floating_height = height_map_data.get_height(current_position, 0);
+            if current_position.y < floating_height {
+                self._is_alive = false;
+                self._is_collided = true;
+                return false;
+            }
         }
-
-        let floating_height = height_map_data.get_height(&self._transform.get_position(), 0);
-        if floating_height < 0.0 {
-            self._is_alive = false;
-            self._is_collided = true;
-            return;
-        }
+        self._is_alive
     }
 }
 

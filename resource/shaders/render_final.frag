@@ -63,13 +63,14 @@ void main() {
     vec3 bloom = vec3(0.0);
     bool is_render_bloom = true;
     float bloom_intensity = 0.1;
+    const float bloom_weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
     if(is_render_bloom)
     {
-        bloom += textureLod(textureBloom0, texCoord, 0.0).xyz;
-        bloom += textureLod(textureBloom0, texCoord, 1.0).xyz;
-        bloom += textureLod(textureBloom0, texCoord, 2.0).xyz;
-        bloom += textureLod(textureBloom0, texCoord, 3.0).xyz;
-        bloom += textureLod(textureBloom0, texCoord, 4.0).xyz;
+        bloom += textureLod(textureBloom0, texCoord, 0.0).xyz * bloom_weight[0];
+        bloom += textureLod(textureBloom0, texCoord, 1.0).xyz * bloom_weight[1];
+        bloom += textureLod(textureBloom0, texCoord, 2.0).xyz * bloom_weight[2];
+        bloom += textureLod(textureBloom0, texCoord, 3.0).xyz * bloom_weight[3];
+        bloom += textureLod(textureBloom0, texCoord, 4.0).xyz * bloom_weight[4];
         bloom *= bloom_intensity;
     }
     color.xyz += bloom;

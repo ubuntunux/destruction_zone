@@ -66,7 +66,7 @@ pub struct ShipInstance {
     pub _transform_object: *mut TransformObjectData,
     pub _controller: ShipController,
     pub _weapons: Vec<Box<dyn WeaponTrait>>,
-    pub _current_weapon_index: usize,
+    pub _current_weapons: Vec<*const dyn WeaponTrait>,
 }
 
 // Implementation
@@ -101,7 +101,7 @@ impl ShipInstance {
             _transform_object: transform_object,
             _controller: ShipController::create_ship_controller(&ship_data.borrow()._contoller_data, floating_height),
             _weapons: Vec::new(),
-            _current_weapon_index: 0,
+            _current_weapons: Vec::new(),
         }
     }
 
@@ -132,6 +132,9 @@ impl ShipInstance {
                 &weapon_slot_transform,
                 &weapon_render_object,
             );
+
+            self._current_weapons.push(weapon.as_ref());
+
             self._weapons.push(weapon);
         }
     }
@@ -156,12 +159,8 @@ impl ShipInstance {
         unsafe { &mut *(self._transform_object as *mut TransformObjectData) }
     }
 
-    pub fn get_current_weapon(&self) -> Option<*const dyn WeaponTrait> {
-        if self._current_weapon_index < self._weapons.len() {
-            Some(self._weapons[self._current_weapon_index].as_ref())
-        } else {
-            None
-        }
+    pub fn get_current_weapons(&self) -> &Vec<*const dyn WeaponTrait> {
+        &self._current_weapons
     }
 
     pub fn get_hull_point(&self) -> f32 {
@@ -181,9 +180,8 @@ impl ShipInstance {
     }
 
     pub fn fire(&mut self, project_application: &ProjectApplication) {
-        let weapon: Option<*const dyn WeaponTrait> = self.get_current_weapon();
-        if weapon.is_some() {
-            let weapon: &mut dyn WeaponTrait = unsafe { &mut *(weapon.unwrap() as *mut dyn WeaponTrait) };
+        for weapon in self._current_weapons.iter() {
+            let weapon: &mut dyn WeaponTrait = unsafe { &mut *(*weapon as *mut dyn WeaponTrait) };
             weapon.fire(project_application);
         }
     }
