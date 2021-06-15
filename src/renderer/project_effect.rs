@@ -290,12 +290,12 @@ impl ProjectEffectManager {
         let mut process_emitter_count: i32 = 0;
         let mut process_gpu_particle_count: i32 = 0;
         for emitter_index in 0..allocated_emitter_count {
-            let emitter_ptr: *const EmitterInstance = unsafe { *effect_manager_data._allocated_emitters.as_ptr().offset(emitter_index) };
-            if emitter_ptr.is_null() {
+            let emitter: *const EmitterInstance = unsafe { *effect_manager_data._allocated_emitters.as_ptr().offset(emitter_index) };
+            if emitter.is_null() {
                 continue;
             }
 
-            let emitter: &mut EmitterInstance = unsafe { &mut *(emitter_ptr as *mut EmitterInstance) };
+            let emitter: &mut EmitterInstance = unsafe { &mut *(emitter as *mut EmitterInstance) };
             let emitter_data: &EmitterData = emitter.get_emitter_data();
             let available_particle_count = unsafe { max(0, min(MAX_PARTICLE_COUNT - process_gpu_particle_count, emitter_data._max_particle_count)) };
             if 0 == available_particle_count {
