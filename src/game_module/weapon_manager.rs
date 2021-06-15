@@ -56,7 +56,7 @@ impl WeaponManager {
                 let effect_create_info = EffectCreateInfo {
                     _effect_position: transform.get_position().clone_owned(),
                     _effect_rotation: transform.get_rotation().clone_owned(),
-                    _effect_data_name: "effects/bullet_destroy".to_string(),
+                    _effect_data_name: "bullet_destroy".to_string(),
                     ..Default::default()
                 };
                 project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);

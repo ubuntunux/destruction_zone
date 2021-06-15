@@ -13,8 +13,8 @@
 "_spawn_count":10,
 "_spawn_term":0.0,
 "_delay":0.0,
-"_particle_lifetime_min":2.0,
-"_particle_lifetime_max":2.0,
+"_particle_lifetime_min":5.0,
+"_particle_lifetime_max":5.0,
 "_align_mode":"Billboard",
 "_blend_mode":"AlphaBlend",
 "_geometry_type":"Quad",
@@ -24,7 +24,7 @@
 "_rotation_max":[0.0,0.0,0.0],
 "_scale_min":[0.5,0.5,0.5],
 "_scale_max":[1.0,1.0,1.0],
-"_velocity_min":[0.0,0.0,0.0],
-"_velocity_max":[0.0,0.0,0.0],
-"_force_min":[0.0,0.0,0.0],
-"_force_max":[0.0,0.0,0.0]}]}
+"_velocity_min":[-1.0,2.0,-1.0],
+"_velocity_max":[1.0,3.0,1.0],
+"_force_min":[0.0,-5.0,0.0],
+"_force_max":[0.0,-5.0,0.0]}]}
