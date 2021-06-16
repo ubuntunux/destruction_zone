@@ -345,7 +345,7 @@ impl ProjectEffectManager {
 
             if need_to_change_allocate_emitter_index {
                 effect_manager_data._allocated_emitters[emitter._allocated_emitter_index as usize] = std::ptr::null();
-                effect_manager_data._allocated_emitters[process_emitter_count as usize] = emitter_ptr;
+                effect_manager_data._allocated_emitters[process_emitter_count as usize] = emitter;
                 emitter._allocated_emitter_index = process_emitter_count;
             }
 
