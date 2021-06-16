@@ -297,7 +297,7 @@ impl ProjectEffectManager {
 
             let emitter: &mut EmitterInstance = unsafe { &mut *(emitter as *mut EmitterInstance) };
             let emitter_data: &EmitterData = emitter.get_emitter_data();
-            let available_particle_count = unsafe { max(0, min(MAX_PARTICLE_COUNT - process_gpu_particle_count, emitter_data._max_particle_count)) };
+            let available_particle_count: i32 = unsafe { max(0, min(MAX_PARTICLE_COUNT - process_gpu_particle_count, emitter_data._max_particle_count)) };
             if 0 == available_particle_count {
                 effect_manager_data.deallocate_emitter(emitter);
                 continue;
