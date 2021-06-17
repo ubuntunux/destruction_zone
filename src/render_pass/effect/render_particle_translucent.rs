@@ -34,7 +34,7 @@ pub fn get_framebuffer_data_create_info(project_renderer: &ProjectRenderer) -> F
             _texture_data: project_renderer.get_render_target(RenderTargetType::SceneDepth),
             _target_layer: 0,
             _target_mip_level: 0,
-            _clear_value: Some(vulkan_context::get_depth_stencil_clear_value(1.0, 0)),
+            _clear_value: None,
         }],
         &[]
     )
@@ -66,7 +66,7 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, part
                 _attachment_image_format: *format,
                 _attachment_image_samples: sample_count,
                 _attachment_load_operation: vk::AttachmentLoadOp::LOAD,
-                _attachment_store_operation: vk::AttachmentStoreOp::STORE,
+                _attachment_store_operation: vk::AttachmentStoreOp::DONT_CARE,
                 _attachment_initial_layout: vk::ImageLayout::GENERAL,
                 _attachment_final_layout: vk::ImageLayout::GENERAL,
                 _attachment_reference_layout: vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
@@ -108,7 +108,10 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, part
             _pipeline_cull_mode: vk::CullModeFlags::NONE,
             _pipeline_front_face: vk::FrontFace::COUNTER_CLOCKWISE,
             _pipeline_color_blend_modes: vec![vulkan_context::get_color_blend_mode(blend_mode); color_attachment_descriptions.len()],
-            _depth_stencil_state_create_info: DepthStencilStateCreateInfo::default(),
+            _depth_stencil_state_create_info: DepthStencilStateCreateInfo {
+                _depth_write_enable: false,
+                ..Default::default()
+            },
             _vertex_input_bind_descriptions: StaticVertexData::get_vertex_input_binding_descriptions(),
             _vertex_input_attribute_descriptions: StaticVertexData::create_vertex_input_attribute_descriptions(),
             _push_constant_ranges: vec![vk::PushConstantRange {

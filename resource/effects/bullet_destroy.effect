@@ -13,7 +13,7 @@
 "_spawn_count":10,
 "_spawn_term":0.0,
 "_delay":0.0,
-"_particle_lifetime_min":3.0,
+"_particle_lifetime_min":1.0,
 "_particle_lifetime_max":3.0,
 "_align_mode":"Billboard",
 "_blend_mode":"AlphaBlend",

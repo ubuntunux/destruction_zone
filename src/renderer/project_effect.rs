@@ -1,7 +1,9 @@
 #[allow(dead_code)]
 
 use std::collections::HashMap;
+use std::cmp::Ordering::{Greater, Less};
 use std::cmp::{max, min};
+
 use ash::{
     vk
 };
@@ -287,24 +289,41 @@ impl ProjectEffectManager {
             return;
         }
 
+        effect_manager_data._allocated_emitters.sort_by(|lhs: &*const EmitterInstance, rhs: &*const EmitterInstance| {
+            if lhs.is_null() || rhs.is_null() {
+                return if lhs.is_null() { Greater } else { Less }
+            }
+
+            let lhs: &EmitterInstance = unsafe { &**lhs };
+            let rhs: &EmitterInstance = unsafe { &**rhs };
+
+            if lhs._parent_effect != rhs._parent_effect {
+                return if lhs._parent_effect < rhs._parent_effect { Less } else { Greater }
+            }
+
+            return if lhs._allocated_emitter_index < rhs._allocated_emitter_index { Less } else { Greater }
+        });
+
         let mut process_emitter_count: i32 = 0;
         let mut process_gpu_particle_count: i32 = 0;
         for emitter_index in 0..allocated_emitter_count {
-            let emitter: *const EmitterInstance = unsafe { *effect_manager_data._allocated_emitters.as_ptr().offset(emitter_index) };
+            let emitter = effect_manager_data._allocated_emitters[emitter_index as usize];
+
             if emitter.is_null() {
-                continue;
+                break;
             }
 
             let emitter: &mut EmitterInstance = unsafe { &mut *(emitter as *mut EmitterInstance) };
             let emitter_data: &EmitterData = emitter.get_emitter_data();
             let available_particle_count: i32 = unsafe { max(0, min(MAX_PARTICLE_COUNT - process_gpu_particle_count, emitter_data._max_particle_count)) };
             if 0 == available_particle_count {
-                effect_manager_data.deallocate_emitter(emitter);
+                emitter._allocated_particle_count = 0;
+                emitter._allocated_particle_offset = INVALID_ALLOCATED_PARTICLE_OFFSET;
                 continue;
             }
 
-            let need_to_change_allocate_emitter_index = process_emitter_count != emitter._allocated_emitter_index;
-            let need_to_upload_static_constant_buffer = emitter._need_to_upload_static_constant_buffer || need_to_change_allocate_emitter_index;
+            let is_first_update = emitter._need_to_upload_static_constant_buffer;
+            let need_to_upload_static_constant_buffer = is_first_update || process_emitter_count != emitter._allocated_emitter_index;
 
             // update static constants
             if need_to_upload_static_constant_buffer {
@@ -332,7 +351,7 @@ impl ProjectEffectManager {
             let gpu_particle_dynamic_constant = &mut self._gpu_particle_dynamic_constants[process_emitter_count as usize];
             {
                 gpu_particle_dynamic_constant._gpu_particle_constant_flags = 0;
-                if need_to_upload_static_constant_buffer {
+                if is_first_update {
                     gpu_particle_dynamic_constant._gpu_particle_constant_flags |= GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE;
                 }
                 gpu_particle_dynamic_constant._emitter_transform.clone_from(&emitter._emitter_world_transform);
@@ -341,21 +360,14 @@ impl ProjectEffectManager {
                 gpu_particle_dynamic_constant._prev_allocated_particle_offset = emitter._allocated_particle_offset;
                 gpu_particle_dynamic_constant._allocated_emitter_index = process_emitter_count;
                 gpu_particle_dynamic_constant._allocated_particle_offset = process_gpu_particle_count;
-            }
-
-            if need_to_change_allocate_emitter_index {
-                effect_manager_data._allocated_emitters[emitter._allocated_emitter_index as usize] = std::ptr::null();
-                effect_manager_data._allocated_emitters[process_emitter_count as usize] = emitter;
                 emitter._allocated_emitter_index = process_emitter_count;
+                emitter._allocated_particle_offset = process_gpu_particle_count;
+                emitter._allocated_particle_count = available_particle_count;
             }
 
             // fill gpu particle allocated emitter index
-            if need_to_upload_static_constant_buffer || process_gpu_particle_count != emitter._allocated_particle_offset || available_particle_count != emitter._allocated_particle_count {
-                for gpu_particle_offset in process_gpu_particle_count..(process_gpu_particle_count + available_particle_count) {
-                    self._gpu_particle_emitter_indices[gpu_particle_offset as usize] = process_emitter_count;
-                }
-                emitter._allocated_particle_offset = process_gpu_particle_count;
-                emitter._allocated_particle_count = available_particle_count;
+            for gpu_particle_offset in process_gpu_particle_count..(process_gpu_particle_count + available_particle_count) {
+                self._gpu_particle_emitter_indices[gpu_particle_offset as usize] = process_emitter_count;
             }
 
             //
