@@ -14,6 +14,8 @@ const int FilterTypes_Mitchell = 7;
 const int FilterTypes_GeneralizedCubic = 8;
 const int FilterTypes_Sinc = 9;
 
+const mat4 Mat4Identity = mat4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+
 float FilterBox(in float x)
 {
     return x <= 1.0 ? 1.0 : 0.0;

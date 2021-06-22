@@ -125,6 +125,7 @@ void spawn_particle_func(inout GpuParticleUpdateBufferData particle_buffer, uint
     spawn_position = (gpu_particle_static_constants[emitter_index]._spawn_volume_transform * vec4(spawn_position, 1.0)).xyz;
 
     particle_buffer._particle_emitter_transform = gpu_particle_dynamic_constants[emitter_index]._emitter_transform;
+    particle_buffer._particle_transform = Mat4Identity;
     particle_buffer._particle_relative_position;
     particle_buffer._particle_elapsed_time = 0.0;
     particle_buffer._particle_local_position = spawn_position;

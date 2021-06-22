@@ -47,7 +47,7 @@ void main() {
 
     const float play_time_ratio = saturate(gpu_particle_update_buffer[update_buffer_index]._particle_elapsed_time / gpu_particle_update_buffer[update_buffer_index]._particle_initial_life_time);
 
-    vs_output.color = inColor * vec4(1.0, 1.0, 1.0, 1.0 - abs(play_time_ratio * 2.0 - 1.0));
+    vs_output.color = inColor;// * vec4(1.0, 1.0, 1.0, 1.0 - abs(play_time_ratio * 2.0 - 1.0));
     // Note : Normalization is very important because tangent_to_world may have been scaled..
     vec3 bitangent = cross(vertex_tangent, vertex_normal);
     vs_output.tangent_to_world = mat3(localMatrix) * mat3(vertex_tangent, bitangent, vertex_normal);

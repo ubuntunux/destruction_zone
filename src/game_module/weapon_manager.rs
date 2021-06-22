@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
-use rust_engine_3d::renderer::effect::EffectCreateInfo;
 use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_audio_manager::AudioLoop;
+use crate::effect::effect_data::EffectCreateInfo;
 use crate::game_module::weapons::bullet::Bullet;
-
 
 pub struct WeaponManager {
     pub _id_generator: u64,

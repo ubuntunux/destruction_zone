@@ -14,13 +14,13 @@ use rust_engine_3d::constants::{
     MAX_PARTICLE_COUNT,
     PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE,
 };
-use rust_engine_3d::renderer::effect::*;
 use rust_engine_3d::renderer::material_instance::{ PipelineBindingData, MaterialInstanceData };
 use rust_engine_3d::renderer::renderer::RendererData;
 use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::render_pass::{ RenderPassData, PipelineData };
 use rust_engine_3d::utilities::system::RcRefCell;
 
+use crate::effect::effect_data::*;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 
@@ -130,7 +130,12 @@ impl Default for PushConstant_RenderParticle {
 
 // interfaces
 pub struct ProjectEffectManager {
-    pub _effect_manager_data: *const EffectManagerData,
+    pub _effect_id_generator: i64,
+    pub _effects: HashMap<i64, RcRefCell<EffectInstance>>,
+    pub _dead_effect_ids: Vec<i64>,
+    pub _allocated_emitters: Vec<*const EmitterInstance>,
+    pub _allocated_emitter_count: i32,
+    pub _allocated_particle_count: i32,
     pub _effect_render_group: Vec<*const EmitterInstance>,
     pub _gpu_particle_static_constants: Vec<GpuParticleStaticConstants>,
     pub _gpu_particle_dynamic_constants: Vec<GpuParticleDynamicConstants>,
@@ -140,61 +145,15 @@ pub struct ProjectEffectManager {
     pub _need_to_clear_gpu_particle_buffer: bool,
 }
 
-impl ProjectEffectManagerBase for ProjectEffectManager {
-    fn initialize_project_effect_manager(&mut self, effect_manager_data: *const EffectManagerData) {
-        self._effect_manager_data = effect_manager_data;
-    }
-
-    fn prepare_framebuffer_and_descriptors(&mut self, _renderer_data: &RendererData, _resources: &Resources) {
-    }
-
-    fn destroy_framebuffer_and_descriptors(&mut self, _renderer_data: &RendererData) {
-    }
-
-    fn get_effect_manager_data(&self) -> &EffectManagerData {
-        unsafe { &*self._effect_manager_data }
-    }
-
-    fn get_effect_manager_data_mut(&self) -> &mut EffectManagerData {
-        unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) }
-    }
-
-    fn create_effect(&mut self, effect_create_info: &EffectCreateInfo) -> i64 {
-        self.get_effect_manager_data_mut().create_effect(effect_create_info)
-    }
-
-    fn get_effect(&self, effect_id: i64) -> Option<&RcRefCell<EffectInstance>> {
-        self.get_effect_manager_data().get_effect(effect_id)
-    }
-
-    fn get_effects(&self) -> &HashMap<i64, RcRefCell<EffectInstance>> {
-        self.get_effect_manager_data().get_effects()
-    }
-
-    fn update_effects(&mut self, delta_time: f32) {
-        self.get_effect_manager_data_mut().update_effects(delta_time);
-    }
-
-    fn gather_render_effects(&mut self) {
-        let effects = unsafe { &(*self._effect_manager_data)._effects };
-        self._effect_render_group.clear();
-        for (_effect_id, effect) in effects.iter() {
-            let mut effect = effect.borrow_mut();
-            if effect._is_alive {
-                for emitter in effect._emitters.iter_mut() {
-                    if emitter._is_alive {
-                        self._effect_render_group.push(emitter);
-                    }
-                }
-            }
-        }
-    }
-}
-
 impl ProjectEffectManager {
     pub fn create_project_effect_manager() -> Box<ProjectEffectManager> {
         Box::new(ProjectEffectManager {
-            _effect_manager_data: std::ptr::null(),
+            _effect_id_generator: 0,
+            _effects: HashMap::new(),
+            _dead_effect_ids: Vec::new(),
+            _allocated_emitters: unsafe { vec![std::ptr::null(); MAX_EMITTER_COUNT as usize] },
+            _allocated_emitter_count: 0,
+            _allocated_particle_count: 0,
             _effect_render_group: Vec::new(),
             _gpu_particle_static_constants: unsafe { vec![GpuParticleStaticConstants::default(); MAX_EMITTER_COUNT as usize] },
             _gpu_particle_dynamic_constants: unsafe { vec![GpuParticleDynamicConstants::default(); MAX_EMITTER_COUNT as usize] },
@@ -205,19 +164,32 @@ impl ProjectEffectManager {
         })
     }
 
+    pub fn initialize_project_effect_manager(&mut self) {
+    }
+
+    pub fn destroy_effect_manager(&mut self) {
+        self._effects.clear();
+    }
+
+    pub fn generate_effect_id(&mut self) -> i64 {
+        let effect_id_generator = self._effect_id_generator;
+        self._effect_id_generator += 1;
+        effect_id_generator
+    }
+
+    pub fn get_effect(&self, effect_id: i64) -> Option<&RcRefCell<EffectInstance>> {
+        self._effects.get(&effect_id)
+    }
+
+    pub fn get_effects(&self) -> &HashMap<i64, RcRefCell<EffectInstance>> {
+        &self._effects
+    }
+
     pub fn get_gpu_particle_count_buffer_offset(&self) -> i32 {
         self._gpu_particle_count_buffer_offset
     }
     pub fn get_gpu_particle_update_buffer_offset(&self) -> i32 {
         self._gpu_particle_update_buffer_offset
-    }
-
-    pub fn get_effect_manager_data(&self) -> &EffectManagerData {
-        unsafe { &*self._effect_manager_data }
-    }
-
-    pub fn get_effect_manager_data_mut(&self) -> &mut EffectManagerData {
-        unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) }
     }
 
     pub fn get_need_to_clear_gpu_particle_buffer(&self) -> bool {
@@ -226,6 +198,76 @@ impl ProjectEffectManager {
 
     pub fn set_need_to_clear_gpu_particle_buffer(&mut self, need_to_clear_gpu_particle_buffer: bool) {
         self._need_to_clear_gpu_particle_buffer = need_to_clear_gpu_particle_buffer;
+    }
+
+    pub fn create_effect(&mut self, effect_create_info: &EffectCreateInfo, effect_data: &RcRefCell<EffectData>) -> i64 {
+        let effect_id = self.generate_effect_id();
+        let effect_instance = EffectInstance::create_effect_instance(self, effect_id, effect_create_info, effect_data);
+        self._effects.insert(effect_id, effect_instance);
+        effect_id
+    }
+
+    pub fn allocate_emitter(&mut self, emitter: &mut EmitterInstance) {
+        if false == emitter.is_valid_allocated() {
+            let available_emitter_count: i32 = unsafe { MAX_EMITTER_COUNT - self._allocated_emitter_count };
+            let available_particle_count: i32 = unsafe { MAX_PARTICLE_COUNT - self._allocated_particle_count };
+            if 0 < available_emitter_count && 0 < available_particle_count {
+                emitter._allocated_particle_count = available_particle_count.min(emitter.get_emitter_data()._max_particle_count);
+                emitter._allocated_particle_offset = self._allocated_particle_count;
+                emitter._allocated_emitter_index = self._allocated_emitter_count;
+                emitter._need_to_upload_static_constant_buffer = true;
+                self._allocated_particle_count += emitter._allocated_particle_count;
+                self._allocated_emitters[emitter._allocated_emitter_index as usize] = emitter;
+                self._allocated_emitter_count += 1;
+            }
+        }
+    }
+
+    pub fn deallocate_emitter(&mut self, emitter: &mut EmitterInstance) {
+        if emitter.is_valid_allocated() {
+            self._allocated_emitters[emitter._allocated_emitter_index as usize] = std::ptr::null();
+            emitter._allocated_particle_count = 0;
+            emitter._allocated_particle_offset = INVALID_ALLOCATED_PARTICLE_OFFSET;
+            emitter._allocated_emitter_index = INVALID_ALLOCATED_EMITTER_INDEX;
+        }
+    }
+
+    pub fn update_effects(&mut self, delta_time: f32) {
+        // update effects
+        for (effect_id, effect) in self._effects.iter() {
+            let mut effect = effect.borrow_mut();
+            if effect._is_alive || effect._update_first_time {
+                effect.update_effect(delta_time);
+            }
+
+            if false == effect._is_alive {
+                self._dead_effect_ids.push(*effect_id);
+            }
+        }
+
+        // unregist effect
+        if false == self._dead_effect_ids.is_empty() {
+            for dead_effect_id in self._dead_effect_ids.iter() {
+                self._effects.remove(dead_effect_id);
+            }
+            self._dead_effect_ids.clear();
+        }
+
+        self.gather_render_effects();
+    }
+
+    pub fn gather_render_effects(&mut self) {
+        self._effect_render_group.clear();
+        for (_effect_id, effect) in self._effects.iter() {
+            let mut effect = effect.borrow_mut();
+            if effect._is_alive {
+                for emitter in effect._emitters.iter_mut() {
+                    if emitter._is_alive {
+                        self._effect_render_group.push(emitter);
+                    }
+                }
+            }
+        }
     }
 
     pub fn clear_gpu_particles(
@@ -283,13 +325,12 @@ impl ProjectEffectManager {
         project_renderer: &ProjectRenderer,
         resources: &Resources,
     ) {
-        let effect_manager_data: &mut EffectManagerData = unsafe { &mut *(self._effect_manager_data as *mut EffectManagerData) };
-        let allocated_emitter_count = effect_manager_data._allocated_emitter_count as isize;
+        let allocated_emitter_count = self._allocated_emitter_count as isize;
         if 0 == allocated_emitter_count {
             return;
         }
 
-        effect_manager_data._allocated_emitters.sort_by(|lhs: &*const EmitterInstance, rhs: &*const EmitterInstance| {
+        self._allocated_emitters.sort_by(|lhs: &*const EmitterInstance, rhs: &*const EmitterInstance| {
             if lhs.is_null() || rhs.is_null() {
                 return if lhs.is_null() { Greater } else { Less }
             }
@@ -307,7 +348,7 @@ impl ProjectEffectManager {
         let mut process_emitter_count: i32 = 0;
         let mut process_gpu_particle_count: i32 = 0;
         for emitter_index in 0..allocated_emitter_count {
-            let emitter = effect_manager_data._allocated_emitters[emitter_index as usize];
+            let emitter = self._allocated_emitters[emitter_index as usize];
 
             if emitter.is_null() {
                 break;
@@ -375,8 +416,8 @@ impl ProjectEffectManager {
             process_emitter_count += 1;
         }
 
-        effect_manager_data._allocated_emitter_count = process_emitter_count;
-        effect_manager_data._allocated_particle_count = process_gpu_particle_count;
+        self._allocated_emitter_count = process_emitter_count;
+        self._allocated_particle_count = process_gpu_particle_count;
 
         if 0 < process_emitter_count {
             let prev_gpu_particle_count_buffer_offset = self._gpu_particle_count_buffer_offset;

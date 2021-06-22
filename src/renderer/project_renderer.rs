@@ -8,7 +8,6 @@ use nalgebra::{ Vector2, Matrix4 };
 use rust_engine_3d::constants;
 use rust_engine_3d::application::scene_manager::SceneManagerData;
 use rust_engine_3d::renderer::camera::CameraObjectData;
-use rust_engine_3d::renderer::effect::ProjectEffectManagerBase;
 use rust_engine_3d::renderer::font::{ FontManager, RenderTextInfo };
 use rust_engine_3d::renderer::material_instance::{ PipelineBindingData, MaterialInstanceData };
 use rust_engine_3d::renderer::render_element::RenderElementData;
@@ -24,7 +23,7 @@ use rust_engine_3d::vulkan_context::vulkan_context::{ self, SwapchainArray, MipL
 
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::renderer::project_effect::ProjectEffectManager;
+use crate::effect::effect_manager::ProjectEffectManager;
 use crate::renderer::fft_ocean::FFTOcean;
 use crate::renderer::precomputed_atmosphere::{ Atmosphere, PushConstant_Atmosphere };
 use crate::renderer::push_constants::{
@@ -102,10 +101,9 @@ pub struct ProjectRenderer {
 }
 
 impl ProjectRendererBase for ProjectRenderer {
-    fn initialize_project_renderer(&mut self, renderer_data: &RendererData, project_effect_manager: *const dyn ProjectEffectManagerBase) {
+    fn initialize_project_renderer(&mut self, renderer_data: &RendererData) {
         self._renderer_data = renderer_data;
         self._resources = renderer_data._resources.as_ptr();
-        self._project_effect_manager = project_effect_manager as *const ProjectEffectManager;
         shader_buffer_datas::regist_shader_buffer_datas(renderer_data.get_device(), renderer_data.get_device_memory_properties(), &mut self._shader_buffer_data_map);
         self.create_render_targets(renderer_data);
         self.get_fft_ocean_mut().regist_fft_ocean_textures(renderer_data, self.get_resources_mut());
@@ -516,6 +514,7 @@ impl ProjectRenderer {
         })
     }
 
+    pub fn set_project_effect_manager(&mut self, project_effect_manager: *const ProjectEffectManager) { self._project_effect_manager = project_effect_manager; }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
     pub fn get_renderer_data(&self) -> &RendererData { unsafe { &*self._renderer_data } }

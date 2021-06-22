@@ -22,7 +22,7 @@ use rust_engine_3d::renderer::ui::UIRenderData;
 use rust_engine_3d::vulkan_context::buffer::{ self, ShaderBufferData };
 
 use crate::application_constants;
-use crate::renderer::project_effect::{
+use crate::effect::effect_manager::{
     GpuParticleStaticConstants,
     GpuParticleDynamicConstants,
     GpuParticleCountBufferData,

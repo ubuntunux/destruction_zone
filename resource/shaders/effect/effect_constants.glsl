@@ -78,6 +78,7 @@ struct GpuParticleCountBufferData
 struct GpuParticleUpdateBufferData
 {
     mat4 _particle_emitter_transform;
+    mat4 _particle_transform;
     vec3 _particle_relative_position;
     float _particle_elapsed_time;
     vec3 _particle_local_position;

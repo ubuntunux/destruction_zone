@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use ash::vk;
-use rust_engine_3d::renderer::effect::{ ParticleBlendMode, ParticleGeometryType };
 use rust_engine_3d::utilities::system::enum_to_string;
 use rust_engine_3d::vulkan_context::framebuffer::{ self, FramebufferDataCreateInfo, RenderTargetInfo };
 use rust_engine_3d::vulkan_context::geometry_buffer::{ VertexData, StaticVertexData };
@@ -17,7 +16,8 @@ use rust_engine_3d::vulkan_context::descriptor::{
 };
 use rust_engine_3d::vulkan_context::vulkan_context::{ self, BlendMode, };
 
-use crate::renderer::project_effect::PushConstant_RenderParticle;
+use crate::effect::effect_data::{ ParticleBlendMode, ParticleGeometryType };
+use crate::effect::effect_manager::PushConstant_RenderParticle;
 use crate::renderer::render_target::RenderTargetType;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::shader_buffer_datas::ShaderBufferDataType;

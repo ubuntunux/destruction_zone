@@ -1,8 +1,8 @@
 use ash::vk;
 
-use rust_engine_3d::renderer::effect::{ ParticleBlendMode, ParticleGeometryType };
 use rust_engine_3d::vulkan_context::render_pass::RenderPassDataCreateInfo;
 
+use crate::effect::effect_data::{ ParticleBlendMode, ParticleGeometryType };
 use crate::renderer::project_renderer::RenderObjectType;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::render_pass::{

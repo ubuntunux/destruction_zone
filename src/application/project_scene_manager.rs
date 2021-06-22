@@ -12,7 +12,6 @@ use serde::{ Serialize, Deserialize };
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
 use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManagerData };
-use rust_engine_3d::renderer::effect::{ EffectCreateInfo, EffectInstance, EffectManagerData, ProjectEffectManagerBase };
 use rust_engine_3d::renderer::font::FontManager;
 use rust_engine_3d::renderer::renderer::RendererData;
 use rust_engine_3d::renderer::camera::{ CameraCreateInfo, CameraObjectData};
@@ -25,11 +24,12 @@ use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 use crate::application_constants;
-use crate::renderer::project_effect::ProjectEffectManager;
-use crate::renderer::project_renderer::ProjectRenderer;
-use crate::resource::project_resource::ProjectResources;
+use crate::effect::effect_manager::ProjectEffectManager;
+use crate::effect::effect_data::{ EffectCreateInfo, EffectInstance };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::level_datas::level_data::LevelData;
+use crate::renderer::project_renderer::ProjectRenderer;
+use crate::resource::project_resource::ProjectResources;
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
@@ -94,13 +94,11 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         scene_manager_data: &SceneManagerData,
         renderer_data: &RendererData,
         resources: &Resources,
-        effect_manager_data: *const EffectManagerData,
         window_size: &Vector2<i32>,
     ) {
         self._project_renderer = renderer_data._project_renderer as *const ProjectRenderer;
         self._scene_manager_data = scene_manager_data;
         self._project_resources = resources._project_resources as *const ProjectResources;
-        self._project_effect_manager = unsafe { (*effect_manager_data)._project_effect_manager as *const ProjectEffectManager };
 
         self.resized_window(window_size.x, window_size.y);
     }
@@ -516,6 +514,7 @@ impl ProjectSceneManager {
     pub fn get_engine_resources_mut(&self) -> &mut Resources { self.get_project_resources().get_engine_resources_mut() }
     pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
     pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
+    pub fn set_project_effect_manager(&mut self, project_effect_manager: *const ProjectEffectManager) { self._project_effect_manager = project_effect_manager; }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
     pub fn get_level_data(&self) -> &LevelData { &self._level_data }
     pub fn get_sea_height(&self) -> f32 { self._sea_height }
@@ -560,7 +559,8 @@ impl ProjectSceneManager {
 
     pub fn add_effect(&mut self, object_name: &str, effect_create_info: &EffectCreateInfo) -> i64 {
         let new_object_name = system::generate_unique_name(&self._effect_id_map, &object_name);
-        let effect_id = self.get_project_effect_manager_mut().create_effect(effect_create_info);
+        let effect_data = self.get_project_resources().get_effect_data(&effect_create_info._effect_data_name);
+        let effect_id = self.get_project_effect_manager_mut().create_effect(effect_create_info, &effect_data);
         self._effect_id_map.insert(new_object_name, effect_id);
         effect_id
     }

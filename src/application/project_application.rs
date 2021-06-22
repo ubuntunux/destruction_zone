@@ -9,9 +9,9 @@ use rust_engine_3d::application::application::{self, ApplicationBase, EngineAppl
 use crate::application_constants;
 use crate::application::project_audio_manager::ProjectAudioManager;
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::effect::effect_manager::ProjectEffectManager;
 use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::project_ui::ProjectUIManager;
-use crate::renderer::project_effect::ProjectEffectManager;
 use crate::resource::project_resource::ProjectResources;
 use crate::game_module::game_client::GameClient;
 
@@ -33,12 +33,14 @@ impl ApplicationBase for ProjectApplication {
     fn initialize_application(&mut self, engine_application: &EngineApplication) {
         self._engine_application = engine_application;
         self._project_audio_manager.initialize_audio_manager(self, self._project_resources.as_ref());
+        self._project_effect_manager.initialize_project_effect_manager();
         self.get_game_client_mut().initialize_game_client(self);
     }
 
     fn terminate_application(&mut self) {
         self._game_client.destroy_game_client();
         self._project_audio_manager.destroy_audio_manager();
+        self._project_effect_manager.destroy_effect_manager();
     }
 
     fn update_event(&mut self) {
@@ -272,12 +274,16 @@ pub fn run_application() {
     // create
     let sdl = sdl2::init().expect("failed to sdl2::init");
     let project_resources = ProjectResources::create_project_resources();
-    let project_renderer = ProjectRenderer::create_project_renderer();
-    let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
+    let mut project_renderer = ProjectRenderer::create_project_renderer();
+    let mut project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
     let project_audio_manager = ProjectAudioManager::create_audio_manager(&sdl);
     let game_client = GameClient::create_game_client();
+
+    // set manager
+    project_renderer.set_project_effect_manager(project_effect_manager.as_ref());
+    project_scene_manager.set_project_effect_manager(project_effect_manager.as_ref());
 
     // initialize
     let application = ProjectApplication {
@@ -298,7 +304,6 @@ pub fn run_application() {
         &application,
         application.get_project_resources(),
         application.get_project_scene_manager(),
-        application.get_project_effect_manager(),
         application.get_project_renderer(),
         application.get_project_ui_manager(),
     );
