@@ -38,11 +38,12 @@ void main()
     if(emitter_index < pushConstant._dispatch_count)
     {
         const int count_buffer_index = pushConstant._gpu_particle_count_buffer_offset + emitter_index;
-        if(emitter_index < pushConstant._process_emitter_count)
+        const uint gpu_particle_constant_flags = gpu_particle_dynamic_constants[emitter_index]._gpu_particle_constant_flags;
+        if(emitter_index < pushConstant._process_emitter_count && false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_CLEAR, gpu_particle_constant_flags))
         {
             int particle_alive_count = 0;
             int particle_dead_count = 0;
-            if(false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE, gpu_particle_dynamic_constants[emitter_index]._gpu_particle_constant_flags))
+            if(false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE, gpu_particle_constant_flags))
             {
                 const int prev_count_buffer_index = pushConstant._prev_gpu_particle_count_buffer_offset + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_emitter_index;
                 particle_dead_count = gpu_particle_count_buffer[prev_count_buffer_index]._particle_dead_count;

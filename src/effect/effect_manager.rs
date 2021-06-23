@@ -27,6 +27,7 @@ use crate::renderer::shader_buffer_datas::ShaderBufferDataType;
 // code coupling with effect_constats.glsl
 const GPU_PARTICLE_CONSTANT_FLAG_NONE: u32 = 0;
 const GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE: u32 = 1 << 0;
+const GPU_PARTICLE_CONSTANT_FLAG_CLEAR: u32 = 1 << 1;
 
 // shader storage buffer
 #[derive(Debug, Clone, Copy, Default)]
@@ -346,9 +347,9 @@ impl ProjectEffectManager {
             let lhs: &EmitterInstance = unsafe { &**lhs };
             let rhs: &EmitterInstance = unsafe { &**rhs };
 
-            if lhs._parent_effect != rhs._parent_effect {
-                return if lhs._parent_effect < rhs._parent_effect { Less } else { Greater }
-            }
+            // if lhs._parent_effect != rhs._parent_effect {
+            //     return if lhs._parent_effect < rhs._parent_effect { Less } else { Greater }
+            // }
 
             return if lhs._allocated_emitter_index < rhs._allocated_emitter_index { Less } else { Greater }
         });
@@ -403,6 +404,9 @@ impl ProjectEffectManager {
                 if is_first_update {
                     gpu_particle_dynamic_constant._gpu_particle_constant_flags |= GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE;
                 }
+                if emitter._ready_to_destroy {
+                    gpu_particle_dynamic_constant._gpu_particle_constant_flags |= GPU_PARTICLE_CONSTANT_FLAG_CLEAR;
+                }
                 gpu_particle_dynamic_constant._emitter_transform.clone_from(&emitter._emitter_world_transform);
                 gpu_particle_dynamic_constant._spawn_count = emitter._particle_spawn_count;
                 gpu_particle_dynamic_constant._prev_allocated_emitter_index = emitter._allocated_emitter_index;
@@ -427,7 +431,7 @@ impl ProjectEffectManager {
         self._allocated_emitter_count = process_emitter_count;
         self._allocated_particle_count = process_gpu_particle_count;
 
-        if 0 < process_emitter_count {
+        {
             let prev_gpu_particle_count_buffer_offset = self._gpu_particle_count_buffer_offset;
             let prev_gpu_particle_update_buffer_offset = self._gpu_particle_update_buffer_offset;
             self._gpu_particle_count_buffer_offset = unsafe { if 0 == self._gpu_particle_count_buffer_offset { MAX_EMITTER_COUNT } else { 0 } };
@@ -498,7 +502,7 @@ impl ProjectEffectManager {
 
             // compute gpu particle count
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
-            let dispatch_count = unsafe { MAX_EMITTER_COUNT };
+            let dispatch_count = process_emitter_count;
             let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
             project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,
@@ -542,7 +546,7 @@ impl ProjectEffectManager {
 
             // update gpu particles
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/update_gpu_particle");
-            let dispatch_count = unsafe { MAX_PARTICLE_COUNT };
+            let dispatch_count = process_gpu_particle_count;
             let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
             project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,

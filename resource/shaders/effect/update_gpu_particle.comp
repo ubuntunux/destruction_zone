@@ -144,7 +144,7 @@ void spawn_particle_func(inout GpuParticleUpdateBufferData particle_buffer, uint
 
 void update_particle_func(inout GpuParticleUpdateBufferData particle_buffer)
 {
-    if(particle_buffer._particle_initial_life_time <= particle_buffer._particle_elapsed_time)
+    if(particle_buffer._particle_initial_life_time < particle_buffer._particle_elapsed_time)
     {
         particle_buffer._particle_state &= ~PARTICLE_STATE_ALIVE;
         particle_buffer._particle_state |= PARTICLE_STATE_DEAD;
@@ -184,7 +184,8 @@ void main()
 
             GpuParticleUpdateBufferData particle_buffer = gpu_particle_update_buffer[prev_update_buffer_index];
 
-            if (local_particle_index < particle_alive_count)
+            const uint gpu_particle_constant_flags = gpu_particle_dynamic_constants[emitter_index]._gpu_particle_constant_flags;
+            if (local_particle_index < particle_alive_count && false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_CLEAR, gpu_particle_constant_flags))
             {
                 if (0 < spawned_count && prev_particle_alive_count <= local_particle_index)
                 {
@@ -196,15 +197,22 @@ void main()
                     update_particle_func(particle_buffer);
                 }
 
+                bool is_destroy = false;
                 if (check_flags_all(PARTICLE_STATE_DEAD, particle_buffer._particle_state))
                 {
-                    if (max_particle_lifetime <= particle_buffer._particle_elapsed_time)
+                    if (max_particle_lifetime < particle_buffer._particle_elapsed_time)
                     {
                         atomicAdd(gpu_particle_count_buffer[count_buffer_index]._particle_dead_count, 1);
+                        particle_buffer._particle_elapsed_time = 0.0;
+                        particle_buffer._particle_state = PARTICLE_STATE_NONE;
+                        is_destroy = true;
                     }
                 }
 
-                particle_buffer._particle_elapsed_time += scene_constants.DELTA_TIME;
+                if(false == is_destroy)
+                {
+                    particle_buffer._particle_elapsed_time += scene_constants.DELTA_TIME;
+                }
             }
             else
             {

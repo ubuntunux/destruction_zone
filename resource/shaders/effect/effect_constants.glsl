@@ -1,6 +1,7 @@
 // code coupling with project_effect.rs
 const uint GPU_PARTICLE_CONSTANT_FLAG_NONE = 0;
 const uint GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE = 1 << 0;
+const uint GPU_PARTICLE_CONSTANT_FLAG_CLEAR = 1 << 1;
 
 const uint PARTICLE_STATE_NONE = 0;
 const uint PARTICLE_STATE_DELAY = 1 << 0;
