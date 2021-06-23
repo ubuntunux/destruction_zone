@@ -43,6 +43,11 @@ layout( push_constant ) uniform PushConstant_UpdateGpuParticle
     int _prev_gpu_particle_update_buffer_offset;
     int _gpu_particle_update_buffer_offset;
     int _process_particle_count;
+
+    int _dispatch_count;
+    int _reserved0;
+    int _reserved1;
+    int _reserved2;
 } pushConstant;
 
 layout(local_size_x=PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE, local_size_y=1, local_size_z=1) in;
@@ -160,7 +165,7 @@ void update_particle_func(inout GpuParticleUpdateBufferData particle_buffer)
 void main()
 {
     const int particle_offset = int(gl_GlobalInvocationID.x);
-    if(particle_offset < scene_constants.MAX_PARTICLE_COUNT)
+    if(particle_offset < pushConstant._dispatch_count)
     {
         const int update_buffer_index = pushConstant._gpu_particle_update_buffer_offset + particle_offset;
         if(particle_offset < pushConstant._process_particle_count)

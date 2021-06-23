@@ -96,7 +96,7 @@ pub struct PushConstant_ComputeGpuParticleCount {
     pub _prev_gpu_particle_count_buffer_offset: i32,
     pub _gpu_particle_count_buffer_offset: i32,
     pub _process_emitter_count: i32,
-    pub _reserved0: i32,
+    pub _dispatch_count: i32,
 }
 
 #[allow(non_camel_case_types)]
@@ -106,6 +106,10 @@ pub struct PushConstant_UpdateGpuParticle {
     pub _prev_gpu_particle_update_buffer_offset: i32,
     pub _gpu_particle_update_buffer_offset: i32,
     pub _process_particle_count: i32,
+    pub _dispatch_count: i32,
+    pub _reserved0: i32,
+    pub _reserved1: i32,
+    pub _reserved2: i32,
 }
 
 #[allow(non_camel_case_types)]
@@ -280,7 +284,7 @@ impl ProjectEffectManager {
         let material_instance_data = &resources.get_material_instance_data("system/process_gpu_particle").borrow();
 
         let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
-        let dispatch_count = unsafe { MAX_PARTICLE_COUNT * 2 };
+        let dispatch_count = unsafe { MAX_EMITTER_COUNT * 2 };
         let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
         project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
             command_buffer,
@@ -294,7 +298,7 @@ impl ProjectEffectManager {
                 _prev_gpu_particle_count_buffer_offset: 0,
                 _gpu_particle_count_buffer_offset: 0,
                 _process_emitter_count: 0,
-                _reserved0: 0,
+                _dispatch_count: dispatch_count,
             }),
         );
 
@@ -314,6 +318,10 @@ impl ProjectEffectManager {
                 _prev_gpu_particle_update_buffer_offset: 0,
                 _gpu_particle_update_buffer_offset: 0,
                 _process_particle_count: 0,
+                _dispatch_count: dispatch_count,
+                _reserved0: 0,
+                _reserved1: 0,
+                _reserved2: 0,
             }),
         );
     }
@@ -490,7 +498,8 @@ impl ProjectEffectManager {
 
             // compute gpu particle count
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
-            let thread_group_count = (process_emitter_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+            let dispatch_count = unsafe { MAX_EMITTER_COUNT };
+            let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
             project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,
                 swapchain_index,
@@ -503,7 +512,7 @@ impl ProjectEffectManager {
                     _prev_gpu_particle_count_buffer_offset: prev_gpu_particle_count_buffer_offset,
                     _gpu_particle_count_buffer_offset: self._gpu_particle_count_buffer_offset,
                     _process_emitter_count: process_emitter_count,
-                    _reserved0: 0,
+                    _dispatch_count: dispatch_count,
                 }),
             );
 
@@ -533,7 +542,8 @@ impl ProjectEffectManager {
 
             // update gpu particles
             let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/update_gpu_particle");
-            let thread_group_count = (process_gpu_particle_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
+            let dispatch_count = unsafe { MAX_PARTICLE_COUNT };
+            let thread_group_count = (dispatch_count + PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE - 1) / PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE;
             project_renderer.get_renderer_data().dispatch_render_pass_pipeline(
                 command_buffer,
                 swapchain_index,
@@ -547,6 +557,10 @@ impl ProjectEffectManager {
                     _prev_gpu_particle_update_buffer_offset: prev_gpu_particle_update_buffer_offset,
                     _gpu_particle_update_buffer_offset: self._gpu_particle_update_buffer_offset,
                     _process_particle_count: process_gpu_particle_count,
+                    _dispatch_count: dispatch_count,
+                    _reserved0: 0,
+                    _reserved1: 0,
+                    _reserved2: 0,
                 }),
             );
 
