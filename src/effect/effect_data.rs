@@ -248,6 +248,7 @@ pub struct EffectInstance {
 pub struct EmitterInstance {
     pub _parent_effect: *const EffectInstance,
     pub _is_alive: bool,
+    pub _ready_to_destroy: bool,
     pub _elapsed_time: f32,
     pub _remained_spawn_term: f32,
     pub _particle_spawn_count: i32,
@@ -416,6 +417,7 @@ impl EmitterInstance {
         EmitterInstance {
             _parent_effect: std::ptr::null(),
             _is_alive: false,
+            _ready_to_destroy: false,
             _elapsed_time: 0.0,
             _remained_spawn_term: 0.0,
             _particle_spawn_count: 0,
@@ -455,6 +457,7 @@ impl EmitterInstance {
 
     pub fn play_emitter(&mut self) {
         self._is_alive = true;
+        self._ready_to_destroy = false;
         self._elapsed_time = 0.0;
         self._remained_spawn_term = 0.0;
         self._particle_spawn_count = 0;
@@ -462,27 +465,33 @@ impl EmitterInstance {
 
     pub fn update_emitter(&mut self, delta_time: f32, updated_effect_transform: bool) {
         if self._is_alive {
-            self._particle_spawn_count = 0;
-
             let emitter_data = unsafe { &*self._emitter_data };
 
-            let is_alive = self.is_infinite_emitter() || self._elapsed_time <= (emitter_data._particle_lifetime_max + emitter_data._emitter_lifetime);
-            if is_alive {
-                let updated_emitter_transform = self._emitter_transform.update_transform_object();
-                if updated_effect_transform || updated_emitter_transform {
-                    self._emitter_world_transform = self.get_parent_effect().get_effect_world_transform() * &self._emitter_transform._matrix;
-                }
+            self._particle_spawn_count = 0;
 
-                if self._elapsed_time <= emitter_data._emitter_lifetime {
-                    if self._remained_spawn_term <= 0.0 {
-                        // particle spawn
-                        self._particle_spawn_count = self.get_emitter_data()._spawn_count;
-                        self._remained_spawn_term = self.get_emitter_data()._spawn_term;
-                    }
+            if self._ready_to_destroy {
+                self._is_alive = false;
+            } else {
+                let ready_to_destroy = false == self.is_infinite_emitter() && (emitter_data._particle_lifetime_max + emitter_data._emitter_lifetime) < self._elapsed_time;
+                if ready_to_destroy {
+                    self._ready_to_destroy = true;
                 }
-                self._remained_spawn_term -= delta_time;
+                else {
+                    let updated_emitter_transform = self._emitter_transform.update_transform_object();
+                    if updated_effect_transform || updated_emitter_transform {
+                        self._emitter_world_transform = self.get_parent_effect().get_effect_world_transform() * &self._emitter_transform._matrix;
+                    }
+
+                    if self._elapsed_time <= emitter_data._emitter_lifetime {
+                        if self._remained_spawn_term <= 0.0 {
+                            // particle spawn
+                            self._particle_spawn_count = self.get_emitter_data()._spawn_count;
+                            self._remained_spawn_term = self.get_emitter_data()._spawn_term;
+                        }
+                    }
+                    self._remained_spawn_term -= delta_time;
+                }
             }
-            self._is_alive = is_alive;
         }
         self._elapsed_time += delta_time;
     }
