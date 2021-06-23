@@ -347,9 +347,9 @@ impl ProjectEffectManager {
             let lhs: &EmitterInstance = unsafe { &**lhs };
             let rhs: &EmitterInstance = unsafe { &**rhs };
 
-            // if lhs._parent_effect != rhs._parent_effect {
-            //     return if lhs._parent_effect < rhs._parent_effect { Less } else { Greater }
-            // }
+            if lhs._parent_effect != rhs._parent_effect {
+                return if lhs._parent_effect < rhs._parent_effect { Less } else { Greater }
+            }
 
             return if lhs._allocated_emitter_index < rhs._allocated_emitter_index { Less } else { Greater }
         });
