@@ -281,7 +281,7 @@ impl ProjectResources {
         self.load_ship_controller_datas();
         self.load_ship_datas();
     }
-:
+
     fn unload_game_datas(&mut self) {
         self.unload_bullet_datas();
         self.unload_weapon_datas();
