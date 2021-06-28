@@ -388,7 +388,6 @@ impl ProjectEffectManager {
                 gpu_particle_static_constant._scale_max.clone_from(&emitter_data._scale_max);
                 gpu_particle_static_constant._max_particle_count = emitter_data._max_particle_count;
                 gpu_particle_static_constant._align_mode = emitter_data._align_mode as i32;
-                println!("{}", gpu_particle_static_constant._align_mode);
                 gpu_particle_static_constant._geometry_type = emitter_data._geometry_type as i32;
                 gpu_particle_static_constant._velocity_min.clone_from(&emitter_data._velocity_min);
                 gpu_particle_static_constant._velocity_max.clone_from(&emitter_data._velocity_max);

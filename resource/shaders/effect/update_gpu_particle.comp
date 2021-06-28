@@ -53,49 +53,61 @@ layout( push_constant ) uniform PushConstant_UpdateGpuParticle
 layout(local_size_x=PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE, local_size_y=1, local_size_z=1) in;
 
 
-void update_particle_transform(inout GpuParticleUpdateBufferData particle_buffer, const in mat4 emitter_relative_transform, int align_mode)
+void update_particle_transform(
+    inout GpuParticleUpdateBufferData particle_buffer,
+    const in mat4 emitter_relative_transform,
+    const in vec3 particle_local_position,
+    const in vec3 normalized_world_velocity,
+    const float world_velocity_length,
+    const int align_mode
+)
 {
-    vec3 euler = particle_buffer._particle_initial_rotation;
+    vec3 particle_relative_position = (emitter_relative_transform * vec4(particle_local_position, 1.0)).xyz;
     vec3 particle_scale = particle_buffer._particle_initial_scale;
     vec3 emitter_scale = vec3(
         length(emitter_relative_transform[0].xyz),
         length(emitter_relative_transform[1].xyz),
         length(emitter_relative_transform[2].xyz)
     );
-
+    vec3 euler = particle_buffer._particle_initial_rotation;
     mat3 rotation_matrix = mat3(make_rotation_matrix(euler.x, euler.y, euler.z));
+    mat3 alignment_matrix;
+    if(ParticleAlignMode_Billboard == align_mode)
+    {
+        alignment_matrix = mat3(view_constants.INV_VIEW_ORIGIN);
+    }
+    else if(ParticleAlignMode_VelocityAlign == align_mode)
+    {
+        if(0.0 < world_velocity_length)
+        {
+            const float velocity_stretch = 0.1;
+            alignment_matrix[0] = cross(normalized_world_velocity.xyz, normalize(particle_relative_position));
+            alignment_matrix[1] = normalized_world_velocity.xyz * (1.0 + world_velocity_length * velocity_stretch);
+            alignment_matrix[2] = cross(alignment_matrix[0], normalized_world_velocity.xyz);
+        }
+    }
+    else
+    {
+        alignment_matrix = mat3(emitter_relative_transform);
+    }
 
+    // apply particle scale
     rotation_matrix[0] *= particle_scale.x;
     rotation_matrix[1] *= particle_scale.y;
     rotation_matrix[2] *= particle_scale.z;
 
     // apply alignment
-    if(ParticleAlignMode_Billboard == align_mode)
-    {
-        rotation_matrix = mat3(view_constants.INV_VIEW_ORIGIN) * rotation_matrix;
-    }
-//    else if(ParticleAlignMode_VelocityAlign == align_mode)
-//    {
-//        if(0.0 < world_velocity_length)
-//        {
-//            mat4 world_matrix;
-//            world_matrix[0].xyz = cross(normalized_world_velocity.xyz, normalize(particle_data.relative_position));
-//            world_matrix[1].xyz = normalized_world_velocity.xyz * (1.0 + world_velocity_length * PARTICLE_VELOCITY_STRETCH * 0.1);
-//            world_matrix[2].xyz = cross(world_matrix[0].xyz, normalized_world_velocity.xyz);
-//            world_matrix[3] = vec4(0.0, 0.0, 0.0, 1.0);
-//
-//            particle_data.local_matrix = world_matrix * particle_data.local_matrix;
-//        }
-//    }
-    else
-    {
-        rotation_matrix = mat3(emitter_relative_transform) * rotation_matrix;
-    }
+    rotation_matrix = alignment_matrix * rotation_matrix;
+
+    // apply emitter scale
+    rotation_matrix[0] *= emitter_scale.x;
+    rotation_matrix[1] *= emitter_scale.y;
+    rotation_matrix[2] *= emitter_scale.z;
 
     particle_buffer._particle_relative_transform[0].xyz = rotation_matrix[0];
     particle_buffer._particle_relative_transform[1].xyz = rotation_matrix[1];
     particle_buffer._particle_relative_transform[2].xyz = rotation_matrix[2];
-    particle_buffer._particle_relative_transform[3].xyz = (emitter_relative_transform * vec4(particle_buffer._particle_local_position, 1.0)).xyz;
+    particle_buffer._particle_relative_transform[3].xyz = (emitter_relative_transform * vec4(particle_local_position, 1.0)).xyz;
     particle_buffer._particle_relative_transform[3].w = 1.0;
 }
 
@@ -169,7 +181,18 @@ void update_particle_func(
     particle_buffer._particle_velocity += particle_buffer._particle_initial_force * delta_time;
     particle_buffer._particle_local_position += particle_buffer._particle_velocity * delta_time;
 
-    update_particle_transform(particle_buffer, emitter_relative_transform, gpu_particle_static_constant._align_mode);
+    vec3 normalized_world_velocity = mat3(emitter_relative_transform) * particle_buffer._particle_velocity;
+    float world_velocity_length = length(normalized_world_velocity);
+    normalized_world_velocity = (0.0 != world_velocity_length) ? (normalized_world_velocity / world_velocity_length) : normalized_world_velocity;
+
+    update_particle_transform(
+        particle_buffer,
+        emitter_relative_transform,
+        particle_buffer._particle_local_position,
+        normalized_world_velocity,
+        world_velocity_length,
+        gpu_particle_static_constant._align_mode
+    );
 }
 
 void main()
@@ -190,7 +213,7 @@ void main()
             const int spawned_count = particle_alive_count - prev_particle_alive_count;
             const int local_particle_index = particle_offset - gpu_particle_dynamic_constants[emitter_index]._allocated_particle_offset;
             int prev_update_buffer_index = pushConstant._prev_gpu_particle_update_buffer_offset + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_particle_offset;
-            prev_update_buffer_index = prev_update_buffer_index + (local_particle_index + particle_buffer_offset) % gpu_particle_static_constant._max_particle_count;
+            prev_update_buffer_index += (local_particle_index + particle_buffer_offset) % gpu_particle_static_constant._max_particle_count;
 
             GpuParticleUpdateBufferData particle_buffer = gpu_particle_update_buffer[prev_update_buffer_index];
 
