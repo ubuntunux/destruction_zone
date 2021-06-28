@@ -76,18 +76,17 @@ pub struct GpuParticleCountBufferData {
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GpuParticleUpdateBufferData {
     pub _particle_emitter_transform: Matrix4<f32>,
-    pub _particle_relative_position: Vector3<f32>,
-    pub _particle_elapsed_time: f32,
+    pub _particle_relative_transform: Vector3<f32>,
     pub _particle_local_position: Vector3<f32>,
-    pub _particle_initial_life_time: f32,
+    pub _particle_elapsed_time: f32,
     pub _particle_initial_rotation: Vector3<f32>,
-    pub _particle_state: u32,
+    pub _particle_initial_life_time: f32,
     pub _particle_initial_scale: Vector3<f32>,
-    pub _reserved0: i32,
+    pub _particle_state: u32,
     pub _particle_velocity: Vector3<f32>,
-    pub _reserved1: i32,
+    pub _reserved0: i32,
     pub _particle_initial_force: Vector3<f32>,
-    pub _reserved2: i32,
+    pub _reserved1: i32
 }
 
 // push constants
@@ -389,6 +388,7 @@ impl ProjectEffectManager {
                 gpu_particle_static_constant._scale_max.clone_from(&emitter_data._scale_max);
                 gpu_particle_static_constant._max_particle_count = emitter_data._max_particle_count;
                 gpu_particle_static_constant._align_mode = emitter_data._align_mode as i32;
+                println!("{}", gpu_particle_static_constant._align_mode);
                 gpu_particle_static_constant._geometry_type = emitter_data._geometry_type as i32;
                 gpu_particle_static_constant._velocity_min.clone_from(&emitter_data._velocity_min);
                 gpu_particle_static_constant._velocity_max.clone_from(&emitter_data._velocity_max);
@@ -443,24 +443,26 @@ impl ProjectEffectManager {
             let gpu_particle_count_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleCountBuffer);
             let gpu_particle_update_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleUpdateBuffer);
 
-            project_renderer.get_renderer_data().upload_shader_buffer_datas(
-                command_buffer,
-                swapchain_index,
-                gpu_particle_static_constants_buffer,
-                &self._gpu_particle_static_constants[0..process_emitter_count as usize]
-            );
-            project_renderer.get_renderer_data().upload_shader_buffer_datas(
-                command_buffer,
-                swapchain_index,
-                gpu_particle_dynamic_constants_buffer,
-                &self._gpu_particle_dynamic_constants[0..process_emitter_count as usize]
-            );
-            project_renderer.get_renderer_data().upload_shader_buffer_datas(
-                command_buffer,
-                swapchain_index,
-                gpu_particle_emitter_index_buffer,
-                &self._gpu_particle_emitter_indices[0..process_gpu_particle_count as usize]
-            );
+            if 0 < process_emitter_count && 0 < process_gpu_particle_count {
+                project_renderer.get_renderer_data().upload_shader_buffer_datas(
+                    command_buffer,
+                    swapchain_index,
+                    gpu_particle_static_constants_buffer,
+                    &self._gpu_particle_static_constants[0..process_emitter_count as usize]
+                );
+                project_renderer.get_renderer_data().upload_shader_buffer_datas(
+                    command_buffer,
+                    swapchain_index,
+                    gpu_particle_dynamic_constants_buffer,
+                    &self._gpu_particle_dynamic_constants[0..process_emitter_count as usize]
+                );
+                project_renderer.get_renderer_data().upload_shader_buffer_datas(
+                    command_buffer,
+                    swapchain_index,
+                    gpu_particle_emitter_index_buffer,
+                    &self._gpu_particle_emitter_indices[0..process_gpu_particle_count as usize]
+                );
+            }
 
             //
             let material_instance_data = &resources.get_material_instance_data("system/process_gpu_particle").borrow();

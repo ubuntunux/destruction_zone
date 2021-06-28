@@ -395,6 +395,11 @@ impl EffectInstance {
 
         let updated_effect_transform = self._effect_transform.update_transform_object();
 
+        println!("================");
+        println!("{:?}", self._effect_transform._rotation);
+        println!("{:?}", self._effect_transform._rotation_matrix);
+        println!("{:?}", self._effect_transform._matrix);
+
         let effect_manager = unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) };
         let mut is_alive = false;
         for emitter in self._emitters.iter_mut() {

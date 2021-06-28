@@ -256,4 +256,20 @@ float decode_emissive_intensity(float emissive_intensity)
 {
     return emissive_intensity * 10.0;
 }
+
+mat4 make_rotation_matrix(float pitch, float yaw, float roll)
+{
+    float ch = cos(yaw);
+    float sh = sin(yaw);
+    float ca = cos(roll);
+    float sa = sin(roll);
+    float cb = cos(pitch);
+    float sb = sin(pitch);
+    return mat4(
+        ch*ca, sa, -sh*ca, 0.0,
+        sh*sb - ch*sa*cb, ca*cb, sh*sa*cb + ch*sb, 0.0,
+        ch*sa*sb + sh*cb, -ca*sb, -sh*sa*sb + ch*cb, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+}
 #endif // _UTILITY_

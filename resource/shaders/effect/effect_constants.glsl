@@ -79,17 +79,20 @@ struct GpuParticleCountBufferData
 struct GpuParticleUpdateBufferData
 {
     mat4 _particle_emitter_transform;
-    mat4 _particle_transform;
-    vec3 _particle_relative_position;
-    float _particle_elapsed_time;
+    mat4 _particle_relative_transform;
+
     vec3 _particle_local_position;
-    float _particle_initial_life_time;
+    float _particle_elapsed_time;
+
     vec3 _particle_initial_rotation;
-    uint _particle_state;
+    float _particle_initial_life_time;
+
     vec3 _particle_initial_scale;
-    int _reserved0;
+    uint _particle_state;
+
     vec3 _particle_velocity;
-    int _reserved1;
+    int _reserved0;
+
     vec3 _particle_initial_force;
-    int _reserved2;
+    int _reserved1;
 };
