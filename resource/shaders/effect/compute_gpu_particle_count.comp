@@ -25,10 +25,10 @@ layout(binding = 3) buffer GpuParticleCountBuffer
 
 layout( push_constant ) uniform PushConstant_ComputeGpuParticleCount
 {
-    int _prev_gpu_particle_count_buffer_offset;
-    int _gpu_particle_count_buffer_offset;
     int _process_emitter_count;
     int _dispatch_count;
+    int _reserved0;
+    int _reserved1;
 } pushConstant;
 
 layout(local_size_x=PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE, local_size_y=1, local_size_z=1) in;
@@ -37,7 +37,7 @@ void main()
     const int emitter_index = int(gl_GlobalInvocationID.x);
     if(emitter_index < pushConstant._dispatch_count)
     {
-        const int count_buffer_index = pushConstant._gpu_particle_count_buffer_offset + emitter_index;
+        const int count_buffer_index = scene_constants.GPU_PARTICLE_COUNT_BUFFER_OFFSET + emitter_index;
         const uint gpu_particle_constant_flags = gpu_particle_dynamic_constants[emitter_index]._gpu_particle_constant_flags;
         if(emitter_index < pushConstant._process_emitter_count && false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_CLEAR, gpu_particle_constant_flags))
         {
@@ -45,7 +45,7 @@ void main()
             int particle_dead_count = 0;
             if(false == check_flags_all(GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE, gpu_particle_constant_flags))
             {
-                const int prev_count_buffer_index = pushConstant._prev_gpu_particle_count_buffer_offset + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_emitter_index;
+                const int prev_count_buffer_index = scene_constants.PREV_GPU_PARTICLE_COUNT_BUFFER_OFFSET + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_emitter_index;
                 particle_dead_count = gpu_particle_count_buffer[prev_count_buffer_index]._particle_dead_count;
                 particle_alive_count = max(0, gpu_particle_count_buffer[prev_count_buffer_index]._particle_alive_count - particle_dead_count);
             }

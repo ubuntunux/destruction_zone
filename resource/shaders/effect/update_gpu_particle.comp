@@ -39,15 +39,10 @@ layout(binding = 8) buffer GpuParticleUpdateBuffer
 
 layout( push_constant ) uniform PushConstant_UpdateGpuParticle
 {
-    int _gpu_particle_count_buffer_offset;
-    int _prev_gpu_particle_update_buffer_offset;
-    int _gpu_particle_update_buffer_offset;
     int _process_particle_count;
-
     int _dispatch_count;
     int _reserved0;
     int _reserved1;
-    int _reserved2;
 } pushConstant;
 
 layout(local_size_x=PROCESS_GPU_PARTICLE_WORK_GROUP_SIZE, local_size_y=1, local_size_z=1) in;
@@ -200,19 +195,19 @@ void main()
     const int particle_offset = int(gl_GlobalInvocationID.x);
     if(particle_offset < pushConstant._dispatch_count)
     {
-        const int update_buffer_index = pushConstant._gpu_particle_update_buffer_offset + particle_offset;
+        const int update_buffer_index = scene_constants.GPU_PARTICLE_UPDATE_BUFFER_OFFSET + particle_offset;
         if(particle_offset < pushConstant._process_particle_count)
         {
             const int emitter_index = gpu_particle_emitter_index_buffer[particle_offset];
             const GpuParticleStaticConstants gpu_particle_static_constant = gpu_particle_static_constants[emitter_index];
             const GpuParticleDynamicConstants gpu_particle_dynamic_constant = gpu_particle_dynamic_constants[emitter_index];
-            const uint count_buffer_index = pushConstant._gpu_particle_count_buffer_offset + emitter_index;
+            const uint count_buffer_index = scene_constants.GPU_PARTICLE_COUNT_BUFFER_OFFSET + emitter_index;
             const int particle_buffer_offset = gpu_particle_count_buffer[count_buffer_index]._particle_buffer_offset;
             const int particle_alive_count = gpu_particle_count_buffer[count_buffer_index]._particle_alive_count;
             const int prev_particle_alive_count = gpu_particle_count_buffer[count_buffer_index]._prev_particle_alive_count;
             const int spawned_count = particle_alive_count - prev_particle_alive_count;
             const int local_particle_index = particle_offset - gpu_particle_dynamic_constants[emitter_index]._allocated_particle_offset;
-            int prev_update_buffer_index = pushConstant._prev_gpu_particle_update_buffer_offset + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_particle_offset;
+            int prev_update_buffer_index = scene_constants.PREV_GPU_PARTICLE_UPDATE_BUFFER_OFFSET + gpu_particle_dynamic_constants[emitter_index]._prev_allocated_particle_offset;
             prev_update_buffer_index += (local_particle_index + particle_buffer_offset) % gpu_particle_static_constant._max_particle_count;
 
             GpuParticleUpdateBufferData particle_buffer = gpu_particle_update_buffer[prev_update_buffer_index];

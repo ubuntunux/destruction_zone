@@ -93,23 +93,19 @@ pub struct GpuParticleUpdateBufferData {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub struct PushConstant_ComputeGpuParticleCount {
-    pub _prev_gpu_particle_count_buffer_offset: i32,
-    pub _gpu_particle_count_buffer_offset: i32,
     pub _process_emitter_count: i32,
     pub _dispatch_count: i32,
+    pub _reserved0: i32,
+    pub _reserved1: i32,
 }
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub struct PushConstant_UpdateGpuParticle {
-    pub _gpu_particle_count_buffer_offset: i32,
-    pub _prev_gpu_particle_update_buffer_offset: i32,
-    pub _gpu_particle_update_buffer_offset: i32,
     pub _process_particle_count: i32,
     pub _dispatch_count: i32,
     pub _reserved0: i32,
     pub _reserved1: i32,
-    pub _reserved2: i32,
 }
 
 #[allow(non_camel_case_types)]
@@ -291,10 +287,10 @@ impl ProjectEffectManager {
             1,
             None,
             Some(&PushConstant_ComputeGpuParticleCount {
-                _prev_gpu_particle_count_buffer_offset: 0,
-                _gpu_particle_count_buffer_offset: 0,
                 _process_emitter_count: 0,
                 _dispatch_count: dispatch_count,
+                _reserved0: 0,
+                _reserved1: 0,
             }),
         );
 
@@ -310,14 +306,10 @@ impl ProjectEffectManager {
             1,
             None,
             Some(&PushConstant_UpdateGpuParticle {
-                _gpu_particle_count_buffer_offset: 0,
-                _prev_gpu_particle_update_buffer_offset: 0,
-                _gpu_particle_update_buffer_offset: 0,
                 _process_particle_count: 0,
                 _dispatch_count: dispatch_count,
                 _reserved0: 0,
                 _reserved1: 0,
-                _reserved2: 0,
             }),
         );
     }
@@ -428,11 +420,6 @@ impl ProjectEffectManager {
         self._allocated_particle_count = process_gpu_particle_count;
 
         {
-            let gpu_particle_count_buffer_offset = self.get_gpu_particle_count_buffer_offset(frame_index);
-            let gpu_particle_update_buffer_offset = self.get_gpu_particle_update_buffer_offset(frame_index);
-            let prev_gpu_particle_count_buffer_offset = unsafe { gpu_particle_count_buffer_offset ^ MAX_EMITTER_COUNT };
-            let prev_gpu_particle_update_buffer_offset = unsafe { gpu_particle_update_buffer_offset ^ MAX_PARTICLE_COUNT };
-
             let gpu_particle_static_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleStaticConstants);
             let gpu_particle_dynamic_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleDynamicConstants);
             let gpu_particle_emitter_index_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleEmitterIndexBuffer);
@@ -511,10 +498,10 @@ impl ProjectEffectManager {
                 1,
                 None,
                 Some(&PushConstant_ComputeGpuParticleCount {
-                    _prev_gpu_particle_count_buffer_offset: prev_gpu_particle_count_buffer_offset,
-                    _gpu_particle_count_buffer_offset: gpu_particle_count_buffer_offset,
                     _process_emitter_count: process_emitter_count,
                     _dispatch_count: dispatch_count,
+                    _reserved0: 0,
+                    _reserved1: 0,
                 }),
             );
 
@@ -555,14 +542,10 @@ impl ProjectEffectManager {
                 1,
                 None,
                 Some(&PushConstant_UpdateGpuParticle {
-                    _gpu_particle_count_buffer_offset: gpu_particle_count_buffer_offset,
-                    _prev_gpu_particle_update_buffer_offset: prev_gpu_particle_update_buffer_offset,
-                    _gpu_particle_update_buffer_offset: gpu_particle_update_buffer_offset,
                     _process_particle_count: process_gpu_particle_count,
                     _dispatch_count: dispatch_count,
                     _reserved0: 0,
                     _reserved1: 0,
-                    _reserved2: 0,
                 }),
             );
 

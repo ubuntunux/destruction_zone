@@ -53,7 +53,11 @@ struct SCENE_CONSTANTS
     int MAX_EMITTER_COUNT;
     int GPU_PARTICLE_COUNT_BUFFER_OFFSET;
     int GPU_PARTICLE_UPDATE_BUFFER_OFFSET;
+    int PREV_GPU_PARTICLE_COUNT_BUFFER_OFFSET;
+    int PREV_GPU_PARTICLE_UPDATE_BUFFER_OFFSET;
     int reserved0;
+    int reserved1;
+    int reserved2;
 };
 
 // uniform_buffer_datas.rs - struct ViewConstants

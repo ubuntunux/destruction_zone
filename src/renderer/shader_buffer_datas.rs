@@ -67,7 +67,12 @@ pub struct SceneConstants {
     pub _max_emitter_count: i32,
     pub _gpu_particle_count_buffer_offset: i32,
     pub _gpu_particle_update_buffer_offset: i32,
+    pub _prev_gpu_particle_count_buffer_offset: i32,
+    pub _prev_gpu_particle_update_buffer_offset: i32,
     pub _reserved0: i32,
+    pub _reserved1: i32,
+    pub _reserved2: i32,
+
 }
 
 // scene_constants.glsl - struct VIEW_CONSTANTS
@@ -181,11 +186,15 @@ impl SceneConstants {
         self._time = elapsed_time as f32;
         self._delta_time = delta_time as f32;
         self._sea_height = sea_height;
-        unsafe { self._max_particle_count = constants::MAX_PARTICLE_COUNT };
-        unsafe { self._max_emitter_count = constants::MAX_EMITTER_COUNT };
+        self._max_particle_count = unsafe { constants::MAX_PARTICLE_COUNT };
+        self._max_emitter_count = unsafe { constants::MAX_EMITTER_COUNT };
         self._gpu_particle_count_buffer_offset = gpu_particle_count_buffer_offset;
         self._gpu_particle_update_buffer_offset = gpu_particle_update_buffer_offset;
+        self._prev_gpu_particle_count_buffer_offset = unsafe { gpu_particle_count_buffer_offset ^ constants::MAX_EMITTER_COUNT };
+        self._prev_gpu_particle_update_buffer_offset = unsafe { gpu_particle_update_buffer_offset ^ constants::MAX_PARTICLE_COUNT };
         self._reserved0 = 0;
+        self._reserved1 = 0;
+        self._reserved2 = 0;
     }
 }
 
