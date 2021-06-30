@@ -144,8 +144,6 @@ pub struct ProjectEffectManager {
     pub _gpu_particle_static_constants: Vec<GpuParticleStaticConstants>,
     pub _gpu_particle_dynamic_constants: Vec<GpuParticleDynamicConstants>,
     pub _gpu_particle_emitter_indices: Vec<i32>,
-    pub _gpu_particle_count_buffer_offset: i32,
-    pub _gpu_particle_update_buffer_offset: i32,
     pub _need_to_clear_gpu_particle_buffer: bool,
 }
 
@@ -162,8 +160,6 @@ impl ProjectEffectManager {
             _gpu_particle_static_constants: unsafe { vec![GpuParticleStaticConstants::default(); MAX_EMITTER_COUNT as usize] },
             _gpu_particle_dynamic_constants: unsafe { vec![GpuParticleDynamicConstants::default(); MAX_EMITTER_COUNT as usize] },
             _gpu_particle_emitter_indices: unsafe { vec![INVALID_ALLOCATED_EMITTER_INDEX; MAX_PARTICLE_COUNT as usize] },
-            _gpu_particle_count_buffer_offset: 0,
-            _gpu_particle_update_buffer_offset: 0,
             _need_to_clear_gpu_particle_buffer: true,
         })
     }
@@ -189,11 +185,11 @@ impl ProjectEffectManager {
         &self._effects
     }
 
-    pub fn get_gpu_particle_count_buffer_offset(&self) -> i32 {
-        self._gpu_particle_count_buffer_offset
+    pub fn get_gpu_particle_count_buffer_offset(&self, frame_index: usize) -> i32 {
+        unsafe { if 0 == (frame_index & 1) { 0 } else { MAX_EMITTER_COUNT } }
     }
-    pub fn get_gpu_particle_update_buffer_offset(&self) -> i32 {
-        self._gpu_particle_update_buffer_offset
+    pub fn get_gpu_particle_update_buffer_offset(&self, frame_index: usize) -> i32 {
+        unsafe { if 0 == (frame_index & 1) { 0 } else { MAX_PARTICLE_COUNT } }
     }
 
     pub fn get_need_to_clear_gpu_particle_buffer(&self) -> bool {
@@ -329,6 +325,7 @@ impl ProjectEffectManager {
     pub fn process_gpu_particles(
         &mut self,
         command_buffer: vk::CommandBuffer,
+        frame_index: usize,
         swapchain_index: u32,
         project_renderer: &ProjectRenderer,
         resources: &Resources,
@@ -431,10 +428,10 @@ impl ProjectEffectManager {
         self._allocated_particle_count = process_gpu_particle_count;
 
         {
-            let prev_gpu_particle_count_buffer_offset = self._gpu_particle_count_buffer_offset;
-            let prev_gpu_particle_update_buffer_offset = self._gpu_particle_update_buffer_offset;
-            self._gpu_particle_count_buffer_offset = unsafe { if 0 == self._gpu_particle_count_buffer_offset { MAX_EMITTER_COUNT } else { 0 } };
-            self._gpu_particle_update_buffer_offset = unsafe { if 0 == self._gpu_particle_update_buffer_offset { MAX_PARTICLE_COUNT } else { 0 } };
+            let gpu_particle_count_buffer_offset = self.get_gpu_particle_count_buffer_offset(frame_index);
+            let gpu_particle_update_buffer_offset = self.get_gpu_particle_update_buffer_offset(frame_index);
+            let prev_gpu_particle_count_buffer_offset = unsafe { gpu_particle_count_buffer_offset ^ MAX_EMITTER_COUNT };
+            let prev_gpu_particle_update_buffer_offset = unsafe { gpu_particle_update_buffer_offset ^ MAX_PARTICLE_COUNT };
 
             let gpu_particle_static_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleStaticConstants);
             let gpu_particle_dynamic_constants_buffer = project_renderer.get_shader_buffer_data(&ShaderBufferDataType::GpuParticleDynamicConstants);
@@ -515,7 +512,7 @@ impl ProjectEffectManager {
                 None,
                 Some(&PushConstant_ComputeGpuParticleCount {
                     _prev_gpu_particle_count_buffer_offset: prev_gpu_particle_count_buffer_offset,
-                    _gpu_particle_count_buffer_offset: self._gpu_particle_count_buffer_offset,
+                    _gpu_particle_count_buffer_offset: gpu_particle_count_buffer_offset,
                     _process_emitter_count: process_emitter_count,
                     _dispatch_count: dispatch_count,
                 }),
@@ -558,9 +555,9 @@ impl ProjectEffectManager {
                 1,
                 None,
                 Some(&PushConstant_UpdateGpuParticle {
-                    _gpu_particle_count_buffer_offset: self._gpu_particle_count_buffer_offset,
+                    _gpu_particle_count_buffer_offset: gpu_particle_count_buffer_offset,
                     _prev_gpu_particle_update_buffer_offset: prev_gpu_particle_update_buffer_offset,
-                    _gpu_particle_update_buffer_offset: self._gpu_particle_update_buffer_offset,
+                    _gpu_particle_update_buffer_offset: gpu_particle_update_buffer_offset,
                     _process_particle_count: process_gpu_particle_count,
                     _dispatch_count: dispatch_count,
                     _reserved0: 0,
@@ -605,26 +602,26 @@ impl ProjectEffectManager {
 
             // Read Back
             // println!("================================");
-            // println!("prev_gpu_particle_count_buffer_offset: {}, gpu_particle_count_buffer_offset: {}", prev_gpu_particle_count_buffer_offset, self._gpu_particle_count_buffer_offset);
+            // println!("prev_gpu_particle_count_buffer_offset: {}, gpu_particle_count_buffer_offset: {}", prev_gpu_particle_count_buffer_offset, gpu_particle_count_buffer_offset);
             // let mut prev_gpu_particle_count_buffer_data: Vec<GpuParticleCountBufferData> = unsafe { vec![GpuParticleCountBufferData::default(); process_emitter_count as usize] };
             // let mut gpu_particle_count_buffer_data: Vec<GpuParticleCountBufferData> = unsafe { vec![GpuParticleCountBufferData::default(); process_emitter_count as usize] };
             // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, prev_gpu_particle_count_buffer_offset as u32, &mut prev_gpu_particle_count_buffer_data);
-            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, self._gpu_particle_count_buffer_offset as u32, &mut gpu_particle_count_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_count_buffer, gpu_particle_count_buffer_offset as u32, &mut gpu_particle_count_buffer_data);
             // for i in 0..process_emitter_count {
             //     println!("prev_buffer[{}]: {:?}", i + prev_gpu_particle_count_buffer_offset, prev_gpu_particle_count_buffer_data[i as usize]);
-            //     println!("curr_buffer[{}]: {:?}", i + self._gpu_particle_count_buffer_offset, gpu_particle_count_buffer_data[i as usize]);
+            //     println!("curr_buffer[{}]: {:?}", i + gpu_particle_count_buffer_offset, gpu_particle_count_buffer_data[i as usize]);
             // }
             //
-            // println!("prev_gpu_particle_update_buffer_offset: {}, gpu_particle_update_buffer_offset: {}", prev_gpu_particle_update_buffer_offset, self._gpu_particle_update_buffer_offset);
+            // println!("prev_gpu_particle_update_buffer_offset: {}, gpu_particle_update_buffer_offset: {}", prev_gpu_particle_update_buffer_offset, gpu_particle_update_buffer_offset);
             // let mut prev_gpu_particle_update_buffer_data: Vec<GpuParticleUpdateBufferData> = unsafe { vec![GpuParticleUpdateBufferData::default(); process_gpu_particle_count as usize] };
             // let mut gpu_particle_update_buffer_data: Vec<GpuParticleUpdateBufferData> = unsafe { vec![GpuParticleUpdateBufferData::default(); process_gpu_particle_count as usize] };
             // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, prev_gpu_particle_update_buffer_offset as u32, &mut prev_gpu_particle_update_buffer_data);
-            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, self._gpu_particle_update_buffer_offset as u32, &mut gpu_particle_update_buffer_data);
+            // project_renderer.get_renderer_data().read_shader_buffer_datas(swapchain_index, gpu_particle_update_buffer, gpu_particle_update_buffer_offset as u32, &mut gpu_particle_update_buffer_data);
             // for i in 0..process_gpu_particle_count {
             //     let prev_update_data = &prev_gpu_particle_update_buffer_data[i as usize];
             //     let update_data = &gpu_particle_update_buffer_data[i as usize];
             //     println!("prev_buffer[{}]: state {:?}, elapsed_time: {:?} {:?} -> {:?}, {}", i + prev_gpu_particle_update_buffer_offset, prev_update_data._particle_state, prev_update_data._particle_elapsed_time, prev_update_data._reserved0, prev_update_data._reserved1, prev_update_data._reserved2);
-            //     println!("curr_buffer[{}]: state {:?}, elapsed_time: {:?} {:?} -> {:?}, {}", i + self._gpu_particle_update_buffer_offset, update_data._particle_state, update_data._particle_elapsed_time, update_data._reserved0, update_data._reserved1, update_data._reserved2);
+            //     println!("curr_buffer[{}]: state {:?}, elapsed_time: {:?} {:?} -> {:?}, {}", i + gpu_particle_update_buffer_offset, update_data._particle_state, update_data._particle_elapsed_time, update_data._reserved0, update_data._reserved1, update_data._reserved2);
             // }
         }
     }

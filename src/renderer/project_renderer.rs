@@ -270,7 +270,7 @@ impl ProjectRendererBase for ProjectRenderer {
     fn render_scene(
         &mut self,
         command_buffer: vk::CommandBuffer,
-        _frame_index: usize,
+        frame_index: usize,
         swapchain_index: u32,
         renderer_data: &RendererData,
         scene_manager_data: &SceneManagerData,
@@ -297,28 +297,30 @@ impl ProjectRendererBase for ProjectRenderer {
         self._fft_ocean.update(delta_time);
 
         // Upload Uniform Buffers
-        self._scene_constants.update_scene_constants(
-            renderer_data._swapchain_data._swapchain_extent.width,
-            renderer_data._swapchain_data._swapchain_extent.height,
-            elapsed_time,
-            delta_time,
-            self._fft_ocean.get_height(),
-            self.get_project_effect_manager().get_gpu_particle_count_buffer_offset(),
-            self.get_project_effect_manager().get_gpu_particle_update_buffer_offset(),
-        );
-        self._view_constants.update_view_constants(&main_camera);
-        if render_capture_height_map {
-            self._view_constants._capture_height_map_view_projection = (*capture_height_map.get_shadow_view_projection()).into();
+        {
+            self._scene_constants.update_scene_constants(
+                renderer_data._swapchain_data._swapchain_extent.width,
+                renderer_data._swapchain_data._swapchain_extent.height,
+                elapsed_time,
+                delta_time,
+                self._fft_ocean.get_height(),
+                self.get_project_effect_manager().get_gpu_particle_count_buffer_offset(frame_index),
+                self.get_project_effect_manager().get_gpu_particle_update_buffer_offset(frame_index),
+            );
+            self._view_constants.update_view_constants(&main_camera);
+            if render_capture_height_map {
+                self._view_constants._capture_height_map_view_projection = (*capture_height_map.get_shadow_view_projection()).into();
+            }
+
+            self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::SceneConstants, &self._scene_constants);
+            self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::ViewConstants, &self._view_constants);
+            self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::LightConstants, main_light.get_light_constants());
+            self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::SSAOConstants, &self._renderer_data_ssao._ssao_constants);
+            self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::AtmosphereConstants, &self._atmosphere._atmosphere_constants);
         }
 
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::SceneConstants, &self._scene_constants);
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::ViewConstants, &self._view_constants);
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::LightConstants, main_light.get_light_constants());
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::SSAOConstants, &self._renderer_data_ssao._ssao_constants);
-        self.upload_shader_buffer_data(command_buffer, swapchain_index, &ShaderBufferDataType::AtmosphereConstants, &self._atmosphere._atmosphere_constants);
-
         if self._is_first_rendering {
-            self.rendering_at_first(command_buffer, swapchain_index, renderer_data, &resources, &quad_geometry_data);
+            self.clear_render_targets(command_buffer, swapchain_index, renderer_data, &resources, &quad_geometry_data);
             self._fft_ocean.compute_slope_variance_texture(command_buffer, swapchain_index, &quad_geometry_data, renderer_data, &resources);
             self._atmosphere.precompute(command_buffer, swapchain_index, &quad_geometry_data, renderer_data);
         }
@@ -326,7 +328,7 @@ impl ProjectRendererBase for ProjectRenderer {
         // clear gbuffer
         renderer_data.render_material_instance(command_buffer, swapchain_index, "system/clear_framebuffer", "clear_gbuffer/clear", &quad_geometry_data, None, None, NONE_PUSH_CONSTANT);
 
-        // shadow
+        // render shadow
         renderer_data.render_material_instance(command_buffer, swapchain_index, "system/clear_framebuffer", "clear_shadow/clear", &quad_geometry_data, None, None, NONE_PUSH_CONSTANT);
         self.render_solid_object(renderer_data, command_buffer, swapchain_index, RenderMode::Shadow, RenderObjectType::Static, &static_shadow_render_elements, None);
         self.render_solid_object(renderer_data, command_buffer, swapchain_index, RenderMode::Shadow, RenderObjectType::Skeletal, &skeletal_shadow_render_elements, None);
@@ -387,6 +389,16 @@ impl ProjectRendererBase for ProjectRenderer {
         self.render_solid_object(renderer_data, command_buffer, swapchain_index, RenderMode::GBuffer, RenderObjectType::Static, &static_render_elements, None);
         self.render_solid_object(renderer_data, command_buffer, swapchain_index, RenderMode::GBuffer, RenderObjectType::Skeletal, &skeletal_render_elements, None);
 
+        // process gpu particles
+        {
+            let effect_manager = self.get_project_effect_manager_mut();
+            if effect_manager.get_need_to_clear_gpu_particle_buffer() {
+                effect_manager.clear_gpu_particles(command_buffer, swapchain_index, self, &resources);
+                effect_manager.set_need_to_clear_gpu_particle_buffer(false);
+            }
+            effect_manager.process_gpu_particles(command_buffer, frame_index, swapchain_index, self, &resources);
+        }
+
         // pre-process: min-z, ssr, ssao, gbuffer, downsampling scnee color
         self.render_pre_process(renderer_data, command_buffer, swapchain_index, &quad_geometry_data);
 
@@ -398,15 +410,7 @@ impl ProjectRendererBase for ProjectRenderer {
         self._atmosphere.render_precomputed_atmosphere(command_buffer, swapchain_index, &quad_geometry_data, &renderer_data, render_light_probe_mode);
 
         // render translucent
-        {
-            let effect_manager = self.get_project_effect_manager_mut();
-            if effect_manager.get_need_to_clear_gpu_particle_buffer() {
-                effect_manager.clear_gpu_particles(command_buffer, swapchain_index, self, &resources);
-                effect_manager.set_need_to_clear_gpu_particle_buffer(false);
-            }
-            effect_manager.process_gpu_particles(command_buffer, swapchain_index, self, &resources);
-            effect_manager.render_effects(command_buffer, swapchain_index, self, &resources);
-        }
+        self.render_translucent(renderer_data, command_buffer, swapchain_index, &resources);
 
         // post-process: taa, bloom, motion blur
         self.render_post_process(renderer_data, command_buffer, swapchain_index, &quad_geometry_data, &resources);
@@ -587,7 +591,7 @@ impl ProjectRenderer {
         self.get_renderer_data().upload_shader_buffer_datas_offset(command_buffer, swapchain_index, shader_buffer_data, upload_data, offset);
     }
 
-    pub fn rendering_at_first(
+    pub fn clear_render_targets(
         &self,
         command_buffer: vk::CommandBuffer,
         swapchain_index: u32,
@@ -595,7 +599,6 @@ impl ProjectRenderer {
         resources: &Resources,
         _quad_geometry_data: &GeometryData,
     ) {
-        // Clear render targets
         let material_instance_data: Ref<MaterialInstanceData> = resources.get_material_instance_data("system/clear_render_target").borrow();
         for (_, framebuffers) in self._clear_render_targets._color_framebuffer_datas.iter() {
             let default_frame_buffer = &framebuffers[0][0];
@@ -928,6 +931,16 @@ impl ProjectRenderer {
             }
             renderer_data.end_render_pass(command_buffer);
         }
+    }
+
+    pub fn render_translucent(
+        &self,
+        _renderer_data: &RendererData,
+        command_buffer: vk::CommandBuffer,
+        swapchain_index: u32,
+        resources: &Resources
+    ) {
+        self.get_project_effect_manager().render_effects(command_buffer, swapchain_index, self, &resources);
     }
 
     pub fn render_taa(
