@@ -51,27 +51,28 @@ impl WeaponManager {
             let bullet = &mut bullet.borrow_mut();
             bullet.update_bullet(delta_time, height_map_data);
             if false == bullet._is_alive {
-                let transform = bullet.get_transform_object();
+                if bullet._is_collided {
+                    let transform = bullet.get_transform_object();
 
-                let bullet_destroy_effect_count = bullet.get_bullet_data()._bullet_destroy_effects.len();
-                if 0 < bullet_destroy_effect_count {
-                    let effect_index: usize = if 1 < bullet_destroy_effect_count { rand::random::<usize>() % bullet_destroy_effect_count } else { 0 };
-                    let effect_create_info = EffectCreateInfo {
-                        _effect_position: transform.get_position().clone_owned(),
-                        _effect_rotation: transform.get_rotation().clone_owned(),
-                        _effect_data_name: bullet.get_bullet_data()._bullet_destroy_effects[effect_index].clone(),
-                        ..Default::default()
-                    };
-                    project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);
+                    let bullet_destroy_effect_count = bullet.get_bullet_data()._bullet_destroy_effects.len();
+                    if 0 < bullet_destroy_effect_count {
+                        let effect_index: usize = if 1 < bullet_destroy_effect_count { rand::random::<usize>() % bullet_destroy_effect_count } else { 0 };
+                        let effect_create_info = EffectCreateInfo {
+                            _effect_position: transform.get_position().clone_owned(),
+                            _effect_rotation: transform.get_rotation().clone_owned(),
+                            _effect_data_name: bullet.get_bullet_data()._bullet_destroy_effects[effect_index].clone(),
+                            ..Default::default()
+                        };
+                        project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);
+                    }
+
+                    let bullet_destroy_sounds_count = bullet.get_bullet_data()._bullet_destroy_sounds.len();
+                    if 0 < bullet_destroy_sounds_count {
+                        let sound_index: usize = if 1 < bullet_destroy_sounds_count { rand::random::<usize>() % bullet_destroy_sounds_count } else { 0 };
+                        let audio_name: &str = &bullet.get_bullet_data()._bullet_destroy_sounds[sound_index];
+                        project_application.get_project_audio_manager_mut().create_audio(audio_name, AudioLoop::ONCE);
+                    }
                 }
-
-                let bullet_destroy_sounds_count = bullet.get_bullet_data()._bullet_destroy_sounds.len();
-                if 0 < bullet_destroy_sounds_count {
-                    let sound_index: usize = if 1 < bullet_destroy_sounds_count { rand::random::<usize>() % bullet_destroy_sounds_count } else { 0 };
-                    let audio_name: &str = &bullet.get_bullet_data()._bullet_destroy_sounds[sound_index];
-                    project_application.get_project_audio_manager_mut().create_audio(audio_name, AudioLoop::ONCE);
-                }
-
                 project_application.get_project_scene_manager_mut().remove_static_render_object(&bullet._bullet_render_object.borrow()._render_object_name);
                 dead_bullets.push(*id);
             }
