@@ -317,7 +317,6 @@ impl ProjectEffectManager {
     pub fn process_gpu_particles(
         &mut self,
         command_buffer: vk::CommandBuffer,
-        frame_index: usize,
         swapchain_index: u32,
         project_renderer: &ProjectRenderer,
         resources: &Resources,

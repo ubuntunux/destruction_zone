@@ -34,7 +34,7 @@ pub struct BulletData {
     pub _bullet_range: f32,
     pub _bullet_life_time: f32,
     pub _bullet_destroy_effects: Vec<String>,
-    pub _bullet_destroy_sounds: Vec<String>,
+    pub _bullet_destroy_sound_bank: String,
     pub _model_data_name: String
 }
 
@@ -48,7 +48,7 @@ impl Default for BulletData {
             _bullet_range: 100.0,
             _bullet_life_time: 10.0,
             _bullet_destroy_effects: Vec::new(),
-            _bullet_destroy_sounds: Vec::new(),
+            _bullet_destroy_sound_bank: "".to_string(),
             _model_data_name: "".to_string(),
         }
     }

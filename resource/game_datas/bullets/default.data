@@ -5,5 +5,5 @@
 "_bullet_range":100.0,
 "_bullet_life_time":10.0,
 "_bullet_destroy_effects":[],
-"_bullet_destroy_sounds":[],
+"_bullet_destroy_sound_bank":"",
 "_model_data_name":""}

@@ -14,7 +14,7 @@ use rust_engine_3d::vulkan_context::texture::TextureData;
 use rust_engine_3d::renderer::material::MaterialData;
 use rust_engine_3d::renderer::material_instance::MaterialInstanceData;
 use crate::application::project_scene_manager::SceneDataCreateInfo;
-use crate::application::project_audio_manager::AudioData;
+use crate::application::project_audio_manager::{AudioData, AudioBankData, AudioBankCreateInfo};
 use crate::effect::effect_data::{EffectData, EffectDataCreateInfo, EmitterDataCreateInfo, EmitterData};
 use crate::game_module::ship::ship::{ShipDataCreateInfo, ShipData};
 use crate::game_module::ship::ship_controller::ShipControllerData;
@@ -23,6 +23,7 @@ use crate::game_module::weapons::weapon::{WeaponDataCreateInfo, WeaponData};
 
 pub const SCENE_FILE_PATH: &str = "resource/scenes";
 pub const AUDIO_FILE_PATH: &str = "resource/sounds";
+pub const AUDIO_BANK_FILE_PATH: &str = "resource/sound_banks";
 pub const EFFECT_FILE_PATH: &str = "resource/effects";
 pub const BUILDING_DATA_FILE_PATH: &str = "resource/game_datas/buildings";
 pub const BULLET_DATA_FILE_PATH: &str = "resource/game_datas/bullets";
@@ -32,15 +33,19 @@ pub const WEAPON_DATA_FILE_PATH: &str = "resource/game_datas/weapons";
 
 pub const EXT_SCENE: &str = "scene";
 pub const AUDIO_SOURCE_EXTS: [&str; 2] = ["wav", "mp3"];
+pub const EXT_AUDIO_BANK: &str = "bank";
 pub const EXT_EFFECT: &str = "effect";
 pub const EXT_GAME_DATA: &str = "data";
 
 pub const DEFAULT_EFFECT_NAME: &str = "default";
 pub const DEFAULT_EFFECT_MATERIAL_INSTANCE_NAME: &str = "system/render_particle";
 pub const DEFAULT_GAME_DATA_NAME: &str = "default";
+pub const DEFAULT_AUDIO_NAME: &str = "default";
+pub const DEFAULT_AUDIO_BANK_NAME: &str = "default";
 
 pub type SceneDataCreateInfoMap = ResourceDataMap<SceneDataCreateInfo>;
 pub type AudioDataMap = ResourceDataMap<AudioData>;
+pub type AudioBankDataMap = ResourceDataMap<AudioBankData>;
 pub type BuildingDataMap = ResourceDataMap<bool>;
 pub type BulletDataMap = ResourceDataMap<BulletData>;
 pub type EffectDataMap = ResourceDataMap<EffectData>;
@@ -53,6 +58,7 @@ pub struct ProjectResources {
     _engine_resources: *const Resources,
     _scene_data_create_infos_map: SceneDataCreateInfoMap,
     _audio_data_map: AudioDataMap,
+    _audio_bank_data_map: AudioBankDataMap,
     _effect_data_map: EffectDataMap,
     _building_data_map: BuildingDataMap,
     _bullet_data_map: BulletDataMap,
@@ -127,6 +133,7 @@ impl ProjectResources {
             _engine_resources: std::ptr::null(),
             _scene_data_create_infos_map: SceneDataCreateInfoMap::new(),
             _audio_data_map: AudioDataMap::new(),
+            _audio_bank_data_map: AudioBankDataMap::new(),
             _effect_data_map: EffectDataMap::new(),
             _building_data_map: Default::default(),
             _bullet_data_map: Default::default(),
@@ -184,6 +191,9 @@ impl ProjectResources {
     // Audio Data
     pub fn load_audio_datas(&mut self) {
         let audio_directory = PathBuf::from(AUDIO_FILE_PATH);
+        let audio_bank_directory = PathBuf::from(AUDIO_BANK_FILE_PATH);
+
+        // load audio datas
         let audio_data_files: Vec<PathBuf> = self.collect_resources(&audio_directory, &AUDIO_SOURCE_EXTS);
         for audio_data_file in audio_data_files {
             let audio_data_name = get_unique_resource_name(&self._audio_data_map, &audio_directory, &audio_data_file);
@@ -195,9 +205,40 @@ impl ProjectResources {
             };
             self._audio_data_map.insert(audio_data_name.clone(), newRcRefCell(audio_data_create_info));
         }
+
+        // default audio bank data
+        let mut default_audio_bank_file_path: PathBuf = audio_bank_directory.clone();
+        default_audio_bank_file_path.push(&DEFAULT_AUDIO_BANK_NAME);
+        default_audio_bank_file_path.set_extension(EXT_AUDIO_BANK);
+        #[cfg(not(target_os = "android"))]
+        if false == default_audio_bank_file_path.is_file() {
+            let default_audio_bank_data_create_info = AudioBankCreateInfo::default();
+            let mut write_file = File::create(&default_audio_bank_file_path).expect("Failed to create file");
+            let mut write_contents: String = serde_json::to_string(&default_audio_bank_data_create_info).expect("Failed to serialize.");
+            write_contents = write_contents.replace(",\"", ",\n\"");
+            write_file.write(write_contents.as_bytes()).expect("Failed to write");
+        }
+
+        // load audio bank datas
+        let audio_bank_data_files: Vec<PathBuf> = self.collect_resources(&audio_bank_directory, &[EXT_AUDIO_BANK]);
+        for audio_bank_data_file in audio_bank_data_files {
+            let audio_bank_data_name = get_unique_resource_name(&self._audio_bank_data_map, &audio_bank_directory, &audio_bank_data_file);
+            let loaded_contents = system::load(&audio_bank_data_file);
+            let audio_bank_create_info: AudioBankCreateInfo = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
+            let audio_datas = audio_bank_create_info._audio_names.iter()
+                .filter(|audio_name| self.has_audio_data(audio_name))
+                .map(|audio_name| self.get_audio_data(audio_name).unwrap().clone())
+                .collect();
+            let audio_bank_data = AudioBankData {
+                _audio_bank_name: audio_bank_data_name.clone(),
+                _audios_datas: audio_datas,
+            };
+            self._audio_bank_data_map.insert(audio_bank_data_name.clone(), newRcRefCell(audio_bank_data));
+        }
     }
 
     pub fn unload_audio_datas(&mut self) {
+        self._audio_bank_data_map.clear();
         self._audio_data_map.clear();
     }
 
@@ -205,8 +246,16 @@ impl ProjectResources {
         self._audio_data_map.get(resource_name).is_some()
     }
 
-    pub fn get_audio_data(&self, resource_name: &str) -> &RcRefCell<AudioData> {
-        self._audio_data_map.get(resource_name).unwrap()
+    pub fn get_audio_data(&self, resource_name: &str) -> Option<&RcRefCell<AudioData>> {
+        self._audio_data_map.get(resource_name)
+    }
+
+    pub fn has_audio_bank_data(&self, resource_name: &str) -> bool {
+        self._audio_bank_data_map.get(resource_name).is_some()
+    }
+
+    pub fn get_audio_bank_data(&self, resource_name: &str) -> Option<&RcRefCell<AudioBankData>> {
+        self._audio_bank_data_map.get(resource_name)
     }
 
     // EffectData

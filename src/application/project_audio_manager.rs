@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use sdl2::{ self, Sdl, AudioSubsystem };
 use sdl2::mixer::{InitFlag, AUDIO_S16LSB, DEFAULT_CHANNELS, Sdl2MixerContext, Chunk, Channel};
+use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::utilities::system::{ newRcRefCell, RcRefCell };
 
@@ -18,6 +19,16 @@ pub enum AudioLoop {
 pub struct AudioData {
     pub _audio_name: String,
     pub _sound_chunk: Chunk,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct AudioBankCreateInfo {
+    pub _audio_names: Vec<String>,
+}
+
+pub struct AudioBankData {
+    pub _audio_bank_name: String,
+    pub _audios_datas: Vec<RcRefCell<AudioData>>,
 }
 
 #[derive(Clone)]
@@ -94,7 +105,7 @@ impl ProjectAudioManager {
     pub fn initialize_audio_manager(&mut self, project_application: *const ProjectApplication, project_resources: *const ProjectResources) {
         self._project_application = project_application;
         self._project_resources = project_resources;
-        self._bgm = Some(self.create_audio("music-for-a-game-by-kris-klavenes", AudioLoop::LOOP));
+        self._bgm = self.create_audio("music-for-a-game-by-kris-klavenes", AudioLoop::LOOP);
     }
 
     pub fn destroy_audio_manager(&mut self) {
@@ -116,8 +127,7 @@ impl ProjectAudioManager {
         unsafe { &*self._project_resources }
     }
 
-    pub fn create_audio(&mut self, audio_name: &str, audio_loop: AudioLoop) -> RcRefCell<AudioInstance> {
-        let audio_data = self.get_project_resources().get_audio_data(audio_name);
+    pub fn create_audio_instance(&mut self, audio_data: &RcRefCell<AudioData>, audio_loop: AudioLoop) -> RcRefCell<AudioInstance> {
         let audio = AudioInstance::create_audio(&audio_data, audio_loop);
         match audio.borrow()._channel {
             Ok(channel) => {
@@ -128,6 +138,27 @@ impl ProjectAudioManager {
             _ => None
         };
         audio
+    }
+
+    pub fn create_audio(&mut self, audio_name: &str, audio_loop: AudioLoop) -> Option<RcRefCell<AudioInstance>> {
+        let project_resources = unsafe { &*self._project_resources };
+        if let Some(audio_data) = project_resources.get_audio_data(audio_name) {
+            return Some(self.create_audio_instance(audio_data, audio_loop));
+        }
+        None
+    }
+
+    pub fn create_audio_bank(&mut self, audio_name_bank: &str, audio_loop: AudioLoop) -> Option<RcRefCell<AudioInstance>> {
+        let project_resources = unsafe { &*self._project_resources };
+        if let Some(audio_bank_data) = project_resources.get_audio_bank_data(audio_name_bank) {
+            let audio_data_count = audio_bank_data.borrow()._audios_datas.len();
+            if 0 < audio_data_count {
+                let audio_data_index: usize = if 1 < audio_data_count { rand::random::<usize>() % audio_data_count } else { 0 };
+                let audio_data = audio_bank_data.borrow()._audios_datas[audio_data_index].clone();
+                return Some(self.create_audio_instance(&audio_data, audio_loop))
+            }
+        }
+        None
     }
 
     pub fn update_audio_manager(&mut self) {

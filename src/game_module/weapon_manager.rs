@@ -66,11 +66,8 @@ impl WeaponManager {
                         project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);
                     }
 
-                    let bullet_destroy_sounds_count = bullet.get_bullet_data()._bullet_destroy_sounds.len();
-                    if 0 < bullet_destroy_sounds_count {
-                        let sound_index: usize = if 1 < bullet_destroy_sounds_count { rand::random::<usize>() % bullet_destroy_sounds_count } else { 0 };
-                        let audio_name: &str = &bullet.get_bullet_data()._bullet_destroy_sounds[sound_index];
-                        project_application.get_project_audio_manager_mut().create_audio(audio_name, AudioLoop::ONCE);
+                    if false == bullet.get_bullet_data()._bullet_destroy_sound_bank.is_empty() {
+                        project_application.get_project_audio_manager_mut().create_audio_bank(&bullet.get_bullet_data()._bullet_destroy_sound_bank, AudioLoop::ONCE);
                     }
                 }
                 project_application.get_project_scene_manager_mut().remove_static_render_object(&bullet._bullet_render_object.borrow()._render_object_name);

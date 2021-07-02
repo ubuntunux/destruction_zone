@@ -396,7 +396,7 @@ impl ProjectRendererBase for ProjectRenderer {
                 effect_manager.clear_gpu_particles(command_buffer, swapchain_index, self, &resources);
                 effect_manager.set_need_to_clear_gpu_particle_buffer(false);
             }
-            effect_manager.process_gpu_particles(command_buffer, frame_index, swapchain_index, self, &resources);
+            effect_manager.process_gpu_particles(command_buffer, swapchain_index, self, &resources);
         }
 
         // pre-process: min-z, ssr, ssao, gbuffer, downsampling scnee color
