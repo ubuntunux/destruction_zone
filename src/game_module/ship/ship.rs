@@ -11,6 +11,7 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
 use crate::game_module::height_map_data::HeightMapData;
+use nalgebra::Vector3;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -179,10 +180,10 @@ impl ShipInstance {
         self.get_ship_data()._max_shields
     }
 
-    pub fn fire(&mut self, project_application: &ProjectApplication) {
+    pub fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
         for weapon in self._current_weapons.iter() {
             let weapon: &mut dyn WeaponTrait = unsafe { &mut *(*weapon as *mut dyn WeaponTrait) };
-            weapon.fire(project_application);
+            weapon.fire(project_application, target_position);
         }
     }
 

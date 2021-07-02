@@ -63,7 +63,7 @@ impl WeaponManager {
                             _effect_data_name: bullet.get_bullet_data()._bullet_destroy_effects[effect_index].clone(),
                             ..Default::default()
                         };
-                        project_application.get_project_scene_manager_mut().add_effect("bullet_destroy", &effect_create_info);
+                        project_application.get_project_scene_manager_mut().add_effect(&effect_create_info._effect_data_name, &effect_create_info);
                     }
 
                     if false == bullet.get_bullet_data()._bullet_destroy_sound_bank.is_empty() {

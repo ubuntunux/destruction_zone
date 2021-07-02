@@ -10,6 +10,7 @@ use crate::application::project_audio_manager::AudioLoop;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
+use crate::game_module::game_constants::{FIRE_PITCH_MIN, FIRE_PITCH_MAX};
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -86,7 +87,7 @@ pub trait WeaponTrait {
     fn get_bullet_data(&self) -> &BulletData;
     fn get_weapon_type(&self) -> WeaponType;
     fn get_weapon_data(&self) -> &WeaponData;
-    fn fire(&mut self, project_application: &ProjectApplication);
+    fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>);
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData);
 }
 
@@ -141,11 +142,16 @@ impl WeaponTrait for BeamEmitter {
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }
     fn get_weapon_data(&self) -> &WeaponData { unsafe { &*self._weapon_data.as_ptr() } }
 
-    fn fire(&mut self, project_application: &ProjectApplication) {
+    fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
+        let to_target: Vector3<f32> = (target_position - &self._muzzle_position).normalize();
+        let muzzle_pitch: f32 = FIRE_PITCH_MIN.max(FIRE_PITCH_MAX.min(-to_target.y.asin()));
+        let muzzle_front = self._transform_object.get_front();
+        let rotation: Vector3<f32> = Vector3::new(muzzle_pitch, muzzle_front.x.atan2(muzzle_front.z), 0.0);
+
         let render_object_create_info = RenderObjectCreateInfo {
             _model_data_name: self.get_bullet_data()._model_data_name.clone(),
             _position: self._muzzle_position.clone_owned(),
-            _rotation: self._transform_object.get_rotation().clone_owned(),
+            _rotation: rotation,
             ..Default::default()
         };
 

@@ -9,11 +9,14 @@ use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
+use nalgebra::Vector3;
+use crate::game_module::game_constants::{BULLET_DISTANCE_MAX, BULLET_CHECK_STEP};
 
 pub struct PlayerActor {
     pub _id: u64,
     pub _actor_data: ActorData,
     pub _ship: ShipInstance,
+    pub _target_position: Vector3<f32>,
 }
 
 impl ActorTrait for PlayerActor {
@@ -62,7 +65,21 @@ impl ActorTrait for PlayerActor {
     }
 
     fn fire(&mut self, project_application: &ProjectApplication) {
-        self._ship.fire(project_application);
+        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
+        let main_camera = &project_application.get_project_scene_manager().get_main_camera().borrow();
+        let camera_position: &Vector3<f32> = main_camera.get_camera_position();
+        let camera_dir = main_camera._transform_object.get_front();
+        let loop_count: usize = (BULLET_DISTANCE_MAX / BULLET_CHECK_STEP).ceil() as usize;
+        for i in 0..loop_count {
+            let check_dist = BULLET_CHECK_STEP * i as f32;
+            self._target_position = camera_position - camera_dir * check_dist;
+            let floating_height = height_map_data.get_height(&self._target_position, 0);
+            if self._target_position.y < floating_height {
+                break;
+            }
+        }
+
+        self._ship.fire(project_application, &self._target_position);
     }
 
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
@@ -80,6 +97,7 @@ impl PlayerActor {
             _id: id,
             _actor_data: ActorData {},
             _ship: ShipInstance::create_ship_instance(ship_data, render_object),
+            _target_position: Vector3::zeros(),
         })
     }
 
