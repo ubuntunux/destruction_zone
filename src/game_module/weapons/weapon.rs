@@ -11,6 +11,7 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
 use crate::game_module::game_constants::{FIRE_PITCH_MIN, FIRE_PITCH_MAX};
+use crate::application::project_scene_manager::ProjectSceneManager;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -82,11 +83,13 @@ pub struct WeaponData {
 
 pub trait WeaponTrait {
     fn initialize_weapon(&mut self);
+    fn remove_weapon(&mut self, project_scene_manager: &mut ProjectSceneManager);
     fn get_owner_actor(&self) -> &dyn ActorTrait;
     fn get_bullet_type(&self) -> BulletType;
     fn get_bullet_data(&self) -> &BulletData;
     fn get_weapon_type(&self) -> WeaponType;
     fn get_weapon_data(&self) -> &WeaponData;
+    fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData>;
     fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>);
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData);
 }
@@ -136,12 +139,15 @@ impl BeamEmitter {
 impl WeaponTrait for BeamEmitter {
     fn initialize_weapon(&mut self) {
     }
+    fn remove_weapon(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        project_scene_manager.remove_skeletal_render_object(&self._weapon_render_object.borrow()._render_object_name);
+    }
     fn get_owner_actor(&self) -> &dyn ActorTrait { unsafe { &*self._owner_actor } }
     fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
     fn get_bullet_data(&self) -> &BulletData { unsafe { &*self.get_weapon_data()._bullet_data.as_ptr() } }
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }
     fn get_weapon_data(&self) -> &WeaponData { unsafe { &*self._weapon_data.as_ptr() } }
-
+    fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData> { &self._weapon_render_object }
     fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
         let to_target: Vector3<f32> = (target_position - &self._muzzle_position).normalize();
         let muzzle_pitch: f32 = FIRE_PITCH_MIN.max(FIRE_PITCH_MAX.min(-to_target.y.asin()));
@@ -162,13 +168,13 @@ impl WeaponTrait for BeamEmitter {
         let bullet = Bullet::create_bullet(self.get_bullet_data(), self._owner_actor.clone(), &bullet_render_object);
         project_application.get_game_client_mut()._weapon_manager.regist_bullets(&bullet);
     }
-
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32, _height_map_data: &HeightMapData) {
         let matrix = &ship_transform_object._matrix * &self._weapon_slot_transform._matrix;
         self._transform_object.set_position_rotation_scale(&matrix);
         if self._transform_object.update_transform_object() {
             let muzzle_position = &self.get_weapon_data()._muzzle_position;
-            self._muzzle_position = self._transform_object.get_left() * muzzle_position.x +
+            self._muzzle_position =
+                self._transform_object.get_left() * muzzle_position.x +
                 self._transform_object.get_up() * muzzle_position.y +
                 self._transform_object.get_front() * muzzle_position.z +
                 self._transform_object.get_position();

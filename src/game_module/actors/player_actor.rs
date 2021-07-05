@@ -23,47 +23,39 @@ impl ActorTrait for PlayerActor {
     fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
         self._ship.initialize_ship_instance(self, project_scene_manager);
     }
-
+    fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        self._ship.remove_ship_instance(project_scene_manager);
+    }
     fn get_actor_id(&self) -> u64 {
         self._id
     }
-
     fn is_player_actor(&self) -> bool {
         true
     }
-
     fn get_actor_data(&self) -> &ActorData {
         &self._actor_data
     }
-
     fn get_actor_data_mut(&mut self) -> &mut ActorData {
         &mut self._actor_data
     }
-
     fn get_ship(&self) -> &ShipInstance {
         &self._ship
     }
-
     fn get_ship_mut(&mut self) -> &mut ShipInstance {
         &mut self._ship
     }
-
     fn get_controller(&self) -> &ShipController {
         &self._ship._controller
     }
-
     fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
-
     fn get_transform(&self) -> &TransformObjectData {
         self._ship.get_transform()
     }
-
     fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
-
     fn fire(&mut self, project_application: &ProjectApplication) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let main_camera = &project_application.get_project_scene_manager().get_main_camera().borrow();
@@ -78,10 +70,8 @@ impl ActorTrait for PlayerActor {
                 break;
             }
         }
-
         self._ship.fire(project_application, &self._target_position);
     }
-
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
         unimplemented!()
     }

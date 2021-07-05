@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
+use nalgebra::Vector3;
+use rust_engine_3d::utilities::bounding_box::BoundingBox;
 use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_audio_manager::AudioLoop;
 use crate::effect::effect_data::EffectCreateInfo;
 use crate::game_module::weapons::bullet::Bullet;
+use crate::game_module::actor_manager::{ActorManager, ActorMap};
 
 pub struct WeaponManager {
     pub _id_generator: u64,
@@ -43,23 +46,47 @@ impl WeaponManager {
         self._bullets_array.remove(&id);
     }
 
-    pub fn update_weapon_manager(&mut self, project_application: &ProjectApplication, delta_time: f32) {
+    pub fn update_weapon_manager(&mut self, project_application: &ProjectApplication, actor_manager: &mut ActorManager, delta_time: f32) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
 
         let mut dead_bullets: Vec<u64> = Vec::new();
         for (id, bullet) in self._bullets_array.iter() {
             let bullet = &mut bullet.borrow_mut();
             bullet.update_bullet(delta_time, height_map_data);
+
+            if bullet._is_alive {
+                let is_player_actor = bullet.get_owner_actor().is_player_actor();
+                let actors_map_ptr: *const ActorMap = &actor_manager._actors;
+                let actors_map: &mut ActorMap = unsafe { &mut *(actors_map_ptr as *mut ActorMap) };
+                for actor in actors_map.values_mut() {
+                    if is_player_actor != actor.is_player_actor() {
+                        let bullet_transform = bullet.get_transform_object();
+                        let intersect = {
+                            let actor_bound_box: &BoundingBox = &actor.get_ship()._render_object.borrow()._bound_box;
+                            let to_actor: Vector3<f32> = &actor_bound_box._center - bullet_transform.get_position();
+                            to_actor.norm() <= actor_bound_box._radius
+                        };
+
+                        if intersect {
+                            actor_manager.remove_actor(project_application.get_project_scene_manager_mut(), actor.as_mut());
+                            bullet._is_alive = false;
+                            bullet._is_collided = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if false == bullet._is_alive {
                 if bullet._is_collided {
-                    let transform = bullet.get_transform_object();
+                    let bullet_transform = bullet.get_transform_object();
 
                     let bullet_destroy_effect_count = bullet.get_bullet_data()._bullet_destroy_effects.len();
                     if 0 < bullet_destroy_effect_count {
                         let effect_index: usize = if 1 < bullet_destroy_effect_count { rand::random::<usize>() % bullet_destroy_effect_count } else { 0 };
                         let effect_create_info = EffectCreateInfo {
-                            _effect_position: transform.get_position().clone_owned(),
-                            _effect_rotation: transform.get_rotation().clone_owned(),
+                            _effect_position: bullet_transform.get_position().clone_owned(),
+                            _effect_rotation: bullet_transform.get_rotation().clone_owned(),
                             _effect_data_name: bullet.get_bullet_data()._bullet_destroy_effects[effect_index].clone(),
                             ..Default::default()
                         };
@@ -76,7 +103,7 @@ impl WeaponManager {
         }
 
         for id in dead_bullets.iter() {
-            self._bullets_array.remove(&id);
+            self.unregist_bullets(*id);
         }
     }
 

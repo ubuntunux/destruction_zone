@@ -16,53 +16,45 @@ pub struct NonPlayerActor {
 }
 
 impl ActorTrait for NonPlayerActor {
-    fn initialize_actor(&mut self, _project_scene_manager: &mut ProjectSceneManager) {
+    fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        self._ship.initialize_ship_instance(self, project_scene_manager);
     }
-
+    fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        self._ship.remove_ship_instance(project_scene_manager);
+    }
     fn get_actor_id(&self) -> u64 {
         self._id
     }
-
     fn is_player_actor(&self) -> bool {
         false
     }
-
     fn get_actor_data(&self) -> &ActorData {
         &self._actor_data
     }
-
     fn get_actor_data_mut(&mut self) -> &mut ActorData {
         &mut self._actor_data
     }
-
     fn get_ship(&self) -> &ShipInstance {
         &self._ship
     }
-
     fn get_ship_mut(&mut self) -> &mut ShipInstance {
         &mut self._ship
     }
-
     fn get_controller(&self) -> &ShipController {
         &self._ship._controller
     }
-
     fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
-
     fn get_transform(&self) -> &TransformObjectData {
         self._ship.get_transform()
     }
-
     fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
-
     fn fire(&mut self, _project_application: &ProjectApplication) {
         unimplemented!()
     }
-
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
         let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 

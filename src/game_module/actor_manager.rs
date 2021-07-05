@@ -9,11 +9,14 @@ use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
 use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
 use crate::game_module::level_datas::spawn_point::{SpawnPointType, ShipSpawnPointData};
+use crate::application::project_scene_manager::ProjectSceneManager;
+
+pub type ActorMap = HashMap<u64, Box<dyn ActorTrait>>;
 
 pub struct ActorManager {
     pub _id_generator: u64,
     pub _player_actor: *const PlayerActor,
-    pub _actors: HashMap<u64, Box<dyn ActorTrait>>,
+    pub _actors: ActorMap,
     pub _camera_distance: f32,
     pub _camera_goal_distance: f32,
 }
@@ -82,6 +85,11 @@ impl ActorManager {
             self._player_actor = (actor.as_ref() as *const dyn ActorTrait) as *const PlayerActor;
         }
         self._actors.insert(id, actor);
+    }
+
+    pub fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager, actor: &mut dyn ActorTrait) {
+        actor.remove_actor(project_scene_manager);
+        self._actors.remove(&actor.get_actor_id());
     }
 
     pub fn get_player_actor(&self) -> &PlayerActor {

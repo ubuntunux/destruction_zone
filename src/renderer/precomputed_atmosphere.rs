@@ -727,7 +727,7 @@ impl Atmosphere {
             _cloud_exposure: 0.1,
             _cloud_altitude: 100.0,
             _cloud_height: 500.0,
-            _cloud_speed: 0.01,
+            _cloud_speed: 0.001,
             _cloud_absorption: 0.15,
             _cloud_contrast: 2.0,
             _cloud_coverage: 0.8,

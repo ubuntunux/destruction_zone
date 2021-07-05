@@ -1,3 +1,4 @@
+use nalgebra::Vector3;
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
@@ -11,7 +12,6 @@ use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
 use crate::game_module::height_map_data::HeightMapData;
-use nalgebra::Vector3;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -119,77 +119,67 @@ impl ShipInstance {
             weapon_slot_transform.set_rotation(&weapon_slot._rotation);
             weapon_slot_transform.set_scale(&weapon_slot._scale);
             weapon_slot_transform.update_transform_object();
-
             let render_object_create_info = RenderObjectCreateInfo {
                 _model_data_name: weapon_data.borrow()._model_data_name.clone(),
                 _position: self.get_transform().get_position() + &weapon_slot._position,
                 ..Default::default()
             };
             let weapon_render_object = project_scene_manager.add_skeletal_render_object("weapon", &render_object_create_info);
-
             let weapon = BeamEmitter::create_beam_emitter(
                 owner_actor,
                 &weapon_data,
                 &weapon_slot_transform,
                 &weapon_render_object,
             );
-
             self._current_weapons.push(weapon.as_ref());
-
             self._weapons.push(weapon);
         }
     }
-
+    pub fn remove_ship_instance(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+        project_scene_manager.remove_skeletal_render_object(&self._render_object.borrow()._render_object_name);
+        for weapon in self._weapons.iter_mut() {
+            weapon.remove_weapon(project_scene_manager);
+        }
+        self._weapons.clear();
+    }
     pub fn get_ship_data(&self) -> &ShipData {
         unsafe { &*self._ship_data.as_ptr() }
     }
-
     pub fn get_controller(&self) -> &ShipController {
         &self._controller
     }
-
     pub fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._controller
     }
-
     pub fn get_transform(&self) -> &TransformObjectData {
         unsafe { &(*self._transform_object) }
     }
-
     pub fn get_transform_mut(&self) -> &mut TransformObjectData {
         unsafe { &mut *(self._transform_object as *mut TransformObjectData) }
     }
-
     pub fn get_current_weapons(&self) -> &Vec<*const dyn WeaponTrait> {
         &self._current_weapons
     }
-
     pub fn get_hull_point(&self) -> f32 {
         self._hull
     }
-
     pub fn get_max_hull_point(&self) -> f32 {
         self.get_ship_data()._max_hull
     }
-
     pub fn get_shield_point(&self) -> f32 {
         self._shields
     }
-
     pub fn get_max_shield_point(&self) -> f32 {
         self.get_ship_data()._max_shields
     }
-
     pub fn fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
         for weapon in self._current_weapons.iter() {
             let weapon: &mut dyn WeaponTrait = unsafe { &mut *(*weapon as *mut dyn WeaponTrait) };
             weapon.fire(project_application, target_position);
         }
     }
-
     pub fn update_ship(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
         let ship_transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
-
         for weapon in self._weapons.iter_mut() {
             weapon.update_weapon(ship_transform, delta_time, height_map_data);
         }

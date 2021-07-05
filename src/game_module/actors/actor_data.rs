@@ -16,6 +16,7 @@ pub struct ActorData {
 
 pub trait ActorTrait {
     fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager);
+    fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager);
     fn get_actor_id(&self) -> u64;
     fn is_player_actor(&self) -> bool;
     fn get_actor_data(&self) -> &ActorData;

@@ -110,6 +110,7 @@ impl GameUIManager {
         ui_component.set_expandable(true);
         ui_component.set_padding(hud_layer_padding);
         ui_component.set_color(get_color32(255, 255, 255, 10));
+        ui_component.set_opacity(0.5);
         root_widget.add_widget(target_hud_layer);
         self._target_hud_layer = target_hud_layer;
 
