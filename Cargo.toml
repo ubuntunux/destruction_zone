@@ -1,12 +1,12 @@
 [package]
-name = "rust_engine_3d_demo"
-version = "0.1.0"
+name = "destruction_zone"
+version = "0.2.0"
 authors = ["ubuntunux <ubuntunux@gmail.com>"]
 license = "BSD 2-Clause"
-homepage = "https://github.com/ubuntunux/rust_engine_3d_demo"
-repository = "https://github.com/ubuntunux/rust_engine_3d_demo"
-readme = "RustEngine3D-Demo"
-edition = "2018"
+homepage = "https://github.com/ubuntunux/destruction_zone"
+repository = "https://github.com/ubuntunux/destruction_zone"
+readme = "README.md"
+edition = "2021"
 
 [dependencies]
 rust_engine_3d = { path = "RustEngine3D" }
