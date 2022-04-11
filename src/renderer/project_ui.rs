@@ -35,13 +35,13 @@ impl ProjectUIManagerBase for ProjectUIManager {
         unsafe {
             let root = self.get_root_widget_mut();
 
-            static touch_down: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+            static TOUCH_DOWN: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
                 // println!("touch_down");
             };
-            static touch_move: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+            static TOUCH_MOVE: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
                 // println!("touch_move");
             };
-            static touch_up: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+            static TOUCH_UP: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
                 // println!("touch_up");
             };
 
@@ -61,9 +61,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_expandable(true);
             ui_component.set_text("btn0\nbtn0 Child Test");
             ui_component.set_material_instance(&resources.get_material_instance_data("ui/render_ui_test"));
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             root.add_widget(btn0);
 
             let btn0_0 = UIManagerData::create_widget("btn0_0", UIWidgetTypes::Default);
@@ -80,9 +80,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0_0\nbtn0_0 Test");
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0.as_mut().unwrap().add_widget(btn0_0);
 
             let btn0_0_0 = UIManagerData::create_widget("btn0_0_0", UIWidgetTypes::Default);
@@ -99,9 +99,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0_0_0\nbtn0_0_0 Test");
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0_0.as_mut().unwrap().add_widget(btn0_0_0);
 
             //
@@ -123,9 +123,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0_1\nbtn0_1 Test");
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0.as_mut().unwrap().add_widget(btn0_1);
 
             let btn0_1_0 = UIManagerData::create_widget("btn0_1_0", UIWidgetTypes::Default);
@@ -142,9 +142,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0_1_0\nbtn0_1_0 Test");
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0_1.as_mut().unwrap().add_widget(btn0_1_0);
 
             let btn0_1_1 = UIManagerData::create_widget("btn0_1_1", UIWidgetTypes::Default);
@@ -165,9 +165,9 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0_1_1\nbtn0_1_1 Test");
-            ui_component._callback_touch_down = Some(&touch_down);
-            ui_component._callback_touch_up = Some(&touch_up);
-            ui_component._callback_touch_move = Some(&touch_move);
+            ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+            ui_component._callback_touch_up = Some(&TOUCH_UP);
+            ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0_1.as_mut().unwrap().add_widget(btn0_1_1);
         }
     }

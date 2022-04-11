@@ -387,7 +387,7 @@ impl ProjectEffectManager {
             // update dynamic constants
             let gpu_particle_dynamic_constant = &mut self._gpu_particle_dynamic_constants[process_emitter_count as usize];
             {
-                gpu_particle_dynamic_constant._gpu_particle_constant_flags = 0;
+                gpu_particle_dynamic_constant._gpu_particle_constant_flags = GPU_PARTICLE_CONSTANT_FLAG_NONE;
                 if is_first_update {
                     gpu_particle_dynamic_constant._gpu_particle_constant_flags |= GPU_PARTICLE_CONSTANT_FLAG_FIRST_UPDATE;
                 }

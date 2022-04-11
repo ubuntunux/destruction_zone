@@ -229,31 +229,29 @@ impl ProjectApplication {
 pub fn run_application() {
     let vulkan_api_version: u32;
     let enable_immediate_mode: bool;
-    let enable_validation_layer: bool;
     let is_concurrent_mode: bool;
 
     #[cfg(target_os = "android")]
     {
         vulkan_api_version = vk::make_version(1, 0, 0);
         enable_immediate_mode = false;
-        enable_validation_layer = false;
         is_concurrent_mode = false;
     }
     #[cfg(not(target_os = "android"))]
     {
-        vulkan_api_version = vk::make_version(1, 2, 0);
+        // NOTE: vulkan version 1.3.0+ have to exists at least one validation layer. Otherwise, an error occurs.
+        vulkan_api_version = vk::make_api_version(0, 1, 2, 0);
         enable_immediate_mode = true;
-        enable_validation_layer = true;
         is_concurrent_mode = true;
     }
 
     unsafe {
         constants::VULKAN_API_VERSION = vulkan_api_version;
         constants::DEBUG_MESSAGE_LEVEL = vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
-        constants::VULKAN_LAYERS = vec!["VK_LAYER_LUNARG_standard_validation".to_string()];
+        // NOTE: vulkan version 1.3.0+ have to exists at least one validation layer. Otherwise, an error occurs.
+        constants::REQUIRED_VALIDATION_LAYERS = vec!["VK_LAYER_MESA_device_select".to_string()];
         constants::REQUIRE_DEVICE_EXTENSIONS = vec!["VK_KHR_swapchain".to_string()];
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
-        constants::ENABLE_VALIDATION_LAYER = enable_validation_layer;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;
         constants::METER_PER_UNIT = 1.0;
         constants::NEAR = 0.1;

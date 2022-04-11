@@ -64,13 +64,13 @@ impl GameUIManager {
         let project_ui_manager = unsafe { &mut *(self._project_ui_manager as *mut ProjectUIManager) };
         let root_widget = project_ui_manager.get_root_widget_mut();
 
-        static touch_down: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+        static TOUCH_DOWN: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
             // println!("touch_down");
         };
-        static touch_move: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+        static TOUCH_MOVE: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
             // println!("touch_move");
         };
-        static touch_up: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
+        static TOUCH_UP: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
             // println!("touch_up");
         };
 
@@ -84,9 +84,9 @@ impl GameUIManager {
         ui_component.set_pos(window_center.x - ui_size * 0.5, window_center.y - ui_size * 0.5);
         ui_component.set_size(ui_size, ui_size);
         ui_component.set_material_instance(&project_resources.get_material_instance_data("ui/crosshair"));
-        ui_component._callback_touch_down = Some(&touch_down);
-        ui_component._callback_touch_up = Some(&touch_up);
-        ui_component._callback_touch_move = Some(&touch_move);
+        ui_component._callback_touch_down = Some(&TOUCH_DOWN);
+        ui_component._callback_touch_up = Some(&TOUCH_UP);
+        ui_component._callback_touch_move = Some(&TOUCH_MOVE);
         root_widget.add_widget(crosshair_widget);
         self._crosshair_widget = crosshair_widget;
 
