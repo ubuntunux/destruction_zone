@@ -239,7 +239,7 @@ pub fn run_application() {
     }
     #[cfg(not(target_os = "android"))]
     {
-        vulkan_api_version = vk::make_api_version(0, 1, 2, 0);
+        vulkan_api_version = vk::make_api_version(0, 1, 2, 126);
         enable_immediate_mode = true;
         is_concurrent_mode = true;
     }
