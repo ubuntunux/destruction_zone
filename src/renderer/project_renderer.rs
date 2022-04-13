@@ -119,8 +119,6 @@ impl ProjectRendererBase for ProjectRenderer {
     }
 
     fn prepare_framebuffer_and_descriptors(&mut self, device: &Device, resources: &Resources) {
-        log::info!("RendererData::prepare_framebuffer_and_descriptors");
-
         // Bloom
         self._renderer_data_bloom.initialize(
             device,

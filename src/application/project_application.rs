@@ -248,7 +248,13 @@ pub fn run_application() {
         constants::VULKAN_API_VERSION = vulkan_api_version;
         constants::DEBUG_MESSAGE_LEVEL = vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
         constants::REQUIRED_VALIDATION_LAYERS = vec!["VK_LAYER_LUNARG_standard_validation".to_string()];
-        constants::REQUIRE_DEVICE_EXTENSIONS = vec!["VK_KHR_swapchain".to_string()];
+        constants::REQUIRE_DEVICE_EXTENSIONS = vec![
+            "VK_KHR_swapchain".to_string(),
+            "VK_NV_ray_tracing".to_string(),
+            "VK_EXT_descriptor_indexing".to_string(),
+            "VK_EXT_scalar_block_layout".to_string(),
+            "VK_KHR_get_memory_requirements2".to_string()
+        ];
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;
         constants::METER_PER_UNIT = 1.0;
