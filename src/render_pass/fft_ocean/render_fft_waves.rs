@@ -67,7 +67,7 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> R
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("render_fft_x"),
-            _pipeline_vertex_shader_file: PathBuf::from("render_quad.vert"),
+            _pipeline_vertex_shader_file: PathBuf::from("common/render_quad.vert"),
             _pipeline_fragment_shader_file: PathBuf::from("fft_ocean/render_fft_waves.frag"),
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_shader_defines: vec![String::from("RENDER_FFT_X")],
@@ -104,7 +104,7 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> R
         },
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("render_fft_y"),
-            _pipeline_vertex_shader_file: PathBuf::from("render_quad.vert"),
+            _pipeline_vertex_shader_file: PathBuf::from("common/render_quad.vert"),
             _pipeline_fragment_shader_file: PathBuf::from("fft_ocean/render_fft_waves.frag"),
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_shader_defines: Vec::new(),

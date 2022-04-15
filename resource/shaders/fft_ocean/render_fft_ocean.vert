@@ -2,10 +2,10 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
-#include "../scene_constants.glsl"
-#include "../utility.glsl"
+#include "../common/scene_constants.glsl"
+#include "../common/utility.glsl"
 #include "render_fft_ocean_common.glsl"
-#include "../shading.glsl"
+#include "../common/shading.glsl"
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;

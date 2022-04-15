@@ -1,4 +1,4 @@
-#include "terrain/terrain_render_vs.glsl"
+#include "../terrain/terrain_render_vs.glsl"
 
 #ifdef FRAGMENT_SHADER
 layout (location = 0) in VERTEX_OUTPUT vs_output;

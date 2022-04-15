@@ -2,7 +2,7 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
-#include "../scene_constants.glsl"
+#include "../common/scene_constants.glsl"
 #include "atmosphere_common.glsl"
 #include "render_atmosphere_common.glsl"
 

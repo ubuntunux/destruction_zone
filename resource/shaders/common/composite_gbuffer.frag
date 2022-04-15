@@ -4,7 +4,7 @@
 
 #include "scene_constants.glsl"
 #include "utility.glsl"
-#include "precomputed_atmosphere/atmosphere_predefined.glsl"
+#include "../precomputed_atmosphere/atmosphere_predefined.glsl"
 #include "shading.glsl"
 #include "render_quad_common.glsl"
 

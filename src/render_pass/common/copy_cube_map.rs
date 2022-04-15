@@ -50,7 +50,7 @@ pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> 
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("copy"),
-            _pipeline_compute_shader_file: PathBuf::from("copy_cube_map.comp"),
+            _pipeline_compute_shader_file: PathBuf::from("common/copy_cube_map.comp"),
             _pipeline_bind_point: vk::PipelineBindPoint::COMPUTE,
             _descriptor_data_create_infos: vec![
                 DescriptorDataCreateInfo { _descriptor_binding_index: 0, _descriptor_image_layer: 0, ..input.clone() },
@@ -70,7 +70,7 @@ pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> 
         },
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("blend"),
-            _pipeline_compute_shader_file: PathBuf::from("blend_cube_map.comp"),
+            _pipeline_compute_shader_file: PathBuf::from("common/blend_cube_map.comp"),
             _pipeline_bind_point: vk::PipelineBindPoint::COMPUTE,
             _push_constant_ranges: vec![vk::PushConstantRange {
                 stage_flags: vk::ShaderStageFlags::ALL,

@@ -2,10 +2,10 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
-#include "../scene_constants.glsl"
+#include "../common/scene_constants.glsl"
 #include "render_particle_common.glsl"
-#include "../utility.glsl"
-#include "../shading.glsl"
+#include "../common/utility.glsl"
+#include "../common/shading.glsl"
 
 layout(location = 0) in VERTEX_OUTPUT vs_output;
 

@@ -10,10 +10,11 @@ use crate::render_pass::{
     effect,
     fft_ocean,
     precomputed_atmosphere,
+    ray_tracing
 };
 
 pub fn get_render_pass_data_create_infos(project_renderer: &ProjectRenderer) -> Vec<RenderPassDataCreateInfo> {
-    vec![
+    let mut render_pass_data_create_infos = vec![
         common::clear_render_target::get_render_pass_data_create_info(project_renderer, &[vk::Format::R16G16B16A16_SFLOAT], vk::Format::UNDEFINED),
         common::clear_render_target::get_render_pass_data_create_info(project_renderer, &[vk::Format::R32_SFLOAT], vk::Format::UNDEFINED),
         common::clear_render_target::get_render_pass_data_create_info(project_renderer, &[vk::Format::R32G32B32A32_SFLOAT], vk::Format::UNDEFINED),
@@ -87,5 +88,11 @@ pub fn get_render_pass_data_create_infos(project_renderer: &ProjectRenderer) -> 
         precomputed_atmosphere::compute_single_scattering::get_render_pass_data_create_info(project_renderer),
         precomputed_atmosphere::compute_scattering_density::get_render_pass_data_create_info(project_renderer),
         precomputed_atmosphere::render_atmosphere::get_render_pass_data_create_info(project_renderer),
-    ]
+    ];
+
+    if project_renderer.get_renderer_data().get_use_ray_tracing() {
+        //render_pass_data_create_infos.push(ray_tracing::ray_tracing::get_render_pass_data_create_info(project_renderer));
+    }
+
+    render_pass_data_create_infos
 }

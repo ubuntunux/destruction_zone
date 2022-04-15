@@ -19,7 +19,7 @@ pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> 
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("downsampling"),
-            _pipeline_compute_shader_file: PathBuf::from("downsampling.comp"),
+            _pipeline_compute_shader_file: PathBuf::from("common/downsampling.comp"),
             _pipeline_bind_point: vk::PipelineBindPoint::COMPUTE,
             _descriptor_data_create_infos: vec![
                 DescriptorDataCreateInfo {

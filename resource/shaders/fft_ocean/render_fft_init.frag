@@ -2,8 +2,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
-#include "../scene_constants.glsl"
-#include "../render_quad_common.glsl"
+#include "../common/scene_constants.glsl"
+#include "../common/render_quad_common.glsl"
 
 layout( push_constant ) uniform PushConstant_FFT_Init
 {

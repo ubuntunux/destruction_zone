@@ -80,8 +80,8 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, rend
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("render_object"),
-            _pipeline_vertex_shader_file: PathBuf::from("render_object.vert"),
-            _pipeline_fragment_shader_file: PathBuf::from("render_object.frag"),
+            _pipeline_vertex_shader_file: PathBuf::from("common/render_object.vert"),
+            _pipeline_fragment_shader_file: PathBuf::from("common/render_object.frag"),
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_shader_defines: vec![
                 format!("RenderMode={:?}", RenderMode::CaptureHeightMap as i32),

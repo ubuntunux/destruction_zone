@@ -230,6 +230,8 @@ pub fn run_application() {
     let vulkan_api_version: u32;
     let enable_immediate_mode: bool;
     let is_concurrent_mode: bool;
+    let enable_ray_tracing = true;
+    let enable_validation_layer = true;
 
     #[cfg(target_os = "android")]
     {
@@ -247,14 +249,18 @@ pub fn run_application() {
     unsafe {
         constants::VULKAN_API_VERSION = vulkan_api_version;
         constants::DEBUG_MESSAGE_LEVEL = vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
-        constants::REQUIRED_VALIDATION_LAYERS = vec!["VK_LAYER_LUNARG_standard_validation".to_string()];
-        constants::REQUIRE_DEVICE_EXTENSIONS = vec![
-            "VK_KHR_swapchain".to_string(),
-            "VK_NV_ray_tracing".to_string(),
-            "VK_EXT_descriptor_indexing".to_string(),
-            "VK_EXT_scalar_block_layout".to_string(),
-            "VK_KHR_get_memory_requirements2".to_string()
-        ];
+        if enable_validation_layer {
+            constants::REQUIRED_INSTANCE_LAYERS = vec!["VK_LAYER_LUNARG_standard_validation".to_string()];
+        }
+        constants::REQUIRED_DEVICE_EXTENSIONS = vec!["VK_KHR_swapchain".to_string()];
+        if enable_ray_tracing {
+            constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec![
+                "VK_NV_ray_tracing".to_string(),
+                "VK_EXT_descriptor_indexing".to_string(),
+                "VK_EXT_scalar_block_layout".to_string(),
+                "VK_KHR_get_memory_requirements2".to_string()
+            ];
+        }
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;
         constants::METER_PER_UNIT = 1.0;

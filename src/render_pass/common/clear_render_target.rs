@@ -128,8 +128,8 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer, rend
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("clear"),
-            _pipeline_vertex_shader_file: PathBuf::from("render_quad.vert"),
-            _pipeline_fragment_shader_file: PathBuf::from("clear_color.frag"),
+            _pipeline_vertex_shader_file: PathBuf::from("common/render_quad.vert"),
+            _pipeline_fragment_shader_file: PathBuf::from("common/clear_color.frag"),
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_shader_defines: vec![
                 format!("ColorAttachmentCount={:?}", color_attachment_descriptions.len() as i32),

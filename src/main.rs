@@ -1,3 +1,6 @@
+extern crate rust_engine_3d;
+extern crate ash;
+
 pub mod application;
 pub mod application_constants;
 pub mod effect;

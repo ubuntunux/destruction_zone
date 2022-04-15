@@ -1,5 +1,5 @@
 #if (RenderMode_Forward == RenderMode)
-#include "precomputed_atmosphere/atmosphere_predefined.glsl"
+#include "../precomputed_atmosphere/atmosphere_predefined.glsl"
 #endif
 
 layout(binding = 0) uniform SceneConstants

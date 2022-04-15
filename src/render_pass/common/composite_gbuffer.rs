@@ -76,8 +76,8 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> R
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("composite_gbuffer"),
-            _pipeline_vertex_shader_file: PathBuf::from("render_quad.vert"),
-            _pipeline_fragment_shader_file: PathBuf::from("composite_gbuffer.frag"),
+            _pipeline_vertex_shader_file: PathBuf::from("common/render_quad.vert"),
+            _pipeline_fragment_shader_file: PathBuf::from("common/composite_gbuffer.frag"),
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_shader_defines: Vec::new(),
             _pipeline_dynamic_states: vec![vk::DynamicState::VIEWPORT, vk::DynamicState::SCISSOR],
