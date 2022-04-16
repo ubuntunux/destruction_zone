@@ -103,9 +103,10 @@ impl Bullet {
             let velocity = (&self._initial_velocity + transform.get_front() * bullet_data._bullet_speed) * delta_time;
             transform.move_position(&velocity);
 
+            let current_position = transform.get_position();
+
             if self._is_alive {
                 // check bullet range
-                let current_position = transform.get_position();
                 let move_distance = (current_position - &self._initial_position).norm();
                 if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
                     self._is_alive = false;
