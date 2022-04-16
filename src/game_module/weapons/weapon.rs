@@ -165,7 +165,11 @@ impl WeaponTrait for BeamEmitter {
         project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
 
         // create bullet
-        let bullet = Bullet::create_bullet(self.get_bullet_data(), self._owner_actor.clone(), &bullet_render_object);
+        let bullet = Bullet::create_bullet(
+            self._owner_actor.clone(),
+            self.get_owner_actor().get_velocity(),
+            self.get_bullet_data(),
+            &bullet_render_object);
         project_application.get_game_client_mut()._weapon_manager.regist_bullets(&bullet);
     }
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32, _height_map_data: &HeightMapData) {

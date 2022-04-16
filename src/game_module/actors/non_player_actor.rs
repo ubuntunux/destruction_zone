@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
@@ -46,12 +48,11 @@ impl ActorTrait for NonPlayerActor {
     fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
-    fn get_transform(&self) -> &TransformObjectData {
-        self._ship.get_transform()
-    }
+    fn get_transform(&self) -> &TransformObjectData { self._ship.get_transform() }
     fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
+    fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
     fn fire(&mut self, _project_application: &ProjectApplication) {
         unimplemented!()
     }

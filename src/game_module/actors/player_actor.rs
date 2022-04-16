@@ -1,3 +1,5 @@
+use nalgebra::Vector3;
+
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
@@ -9,8 +11,7 @@ use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
-use nalgebra::Vector3;
-use crate::game_module::game_constants::{BULLET_DISTANCE_MAX, BULLET_CHECK_STEP};
+use crate::game_module::game_constants::{ BULLET_DISTANCE_MAX, BULLET_CHECK_STEP };
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -56,6 +57,7 @@ impl ActorTrait for PlayerActor {
     fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
+    fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
     fn fire(&mut self, project_application: &ProjectApplication) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let main_camera = &project_application.get_project_scene_manager().get_main_camera().borrow();
