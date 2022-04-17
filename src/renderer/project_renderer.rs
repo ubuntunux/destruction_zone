@@ -17,6 +17,7 @@ use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::buffer::{ self, ShaderBufferData };
 use rust_engine_3d::vulkan_context::descriptor::{ DescriptorResourceInfo };
 use rust_engine_3d::vulkan_context::geometry_buffer::{ GeometryData };
+use rust_engine_3d::vulkan_context::ray_tracing::{ RayTracingData };
 use rust_engine_3d::vulkan_context::render_pass::{ RenderPassDataCreateInfo, PipelineData };
 use rust_engine_3d::vulkan_context::texture::{ self, TextureData };
 use rust_engine_3d::vulkan_context::vulkan_context::{ self, SwapchainArray, MipLevels };
@@ -53,6 +54,7 @@ use crate::renderer::shader_buffer_datas::{
     ShaderBufferDataMap,
 };
 use crate::render_pass::render_pass;
+
 
 pub type RenderTargetDataMap = HashMap<RenderTargetType, TextureData>;
 
@@ -104,9 +106,27 @@ impl ProjectRendererBase for ProjectRenderer {
     fn initialize_project_renderer(&mut self, renderer_data: &RendererData) {
         self._renderer_data = renderer_data;
         self._resources = renderer_data._resources.as_ptr();
+
         shader_buffer_datas::regist_shader_buffer_datas(renderer_data.get_device(), renderer_data.get_device_memory_properties(), &mut self._shader_buffer_data_map);
+
         self.create_render_targets(renderer_data);
         self.get_fft_ocean_mut().regist_fft_ocean_textures(renderer_data, self.get_resources_mut());
+
+
+        // TEST CODE
+        if renderer_data._use_ray_tracing {
+            log::info!("///////////////////////////////////////////////");
+            log::info!("TEST CODE: RAY TRACING");
+            log::info!("///////////////////////////////////////////////");
+            let mut ray_tracing_data = RayTracingData::create_ray_tracing_data();
+            ray_tracing_data.initialize_ray_tracing_data(
+                renderer_data.get_device(),
+                renderer_data.get_device_memory_properties(),
+                renderer_data.get_ray_tracing(),
+                renderer_data.get_command_pool(),
+                renderer_data.get_graphics_queue(),
+            )
+        }
     }
 
     fn is_first_rendering(&self) -> bool {

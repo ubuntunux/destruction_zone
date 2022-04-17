@@ -1,5 +1,6 @@
 extern crate rust_engine_3d;
 extern crate ash;
+extern crate nalgebra;
 
 pub mod application;
 pub mod application_constants;

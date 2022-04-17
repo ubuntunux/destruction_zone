@@ -72,7 +72,6 @@ pub struct SceneConstants {
     pub _reserved0: i32,
     pub _reserved1: i32,
     pub _reserved2: i32,
-
 }
 
 // scene_constants.glsl - struct VIEW_CONSTANTS
