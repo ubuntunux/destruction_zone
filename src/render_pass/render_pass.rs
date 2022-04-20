@@ -91,7 +91,7 @@ pub fn get_render_pass_data_create_infos(project_renderer: &ProjectRenderer) -> 
     ];
 
     if project_renderer.get_renderer_data().get_use_ray_tracing() {
-        //render_pass_data_create_infos.push(ray_tracing::ray_tracing::get_render_pass_data_create_info(project_renderer));
+        render_pass_data_create_infos.push(ray_tracing::ray_tracing::get_render_pass_data_create_info(project_renderer));
     }
 
     render_pass_data_create_infos
