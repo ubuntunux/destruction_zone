@@ -13,6 +13,7 @@ use rust_engine_3d::renderer::material_instance::{ PipelineBindingData, Material
 use rust_engine_3d::renderer::render_element::RenderElementData;
 use rust_engine_3d::renderer::renderer::{ ProjectRendererBase, RendererData };
 use rust_engine_3d::renderer::ui::UIManagerData;
+use rust_engine_3d::renderer::utility;
 use rust_engine_3d::resource::resource::Resources;
 use rust_engine_3d::vulkan_context::buffer::{ self, ShaderBufferData };
 use rust_engine_3d::vulkan_context::descriptor::{ DescriptorResourceInfo };
@@ -111,22 +112,6 @@ impl ProjectRendererBase for ProjectRenderer {
 
         self.create_render_targets(renderer_data);
         self.get_fft_ocean_mut().regist_fft_ocean_textures(renderer_data, self.get_resources_mut());
-
-
-        // TEST CODE
-        if renderer_data._use_ray_tracing {
-            log::info!("///////////////////////////////////////////////");
-            log::info!("TEST CODE: RAY TRACING");
-            log::info!("///////////////////////////////////////////////");
-            let mut ray_tracing_data = RayTracingData::create_ray_tracing_data();
-            ray_tracing_data.initialize_ray_tracing_data(
-                renderer_data.get_device(),
-                renderer_data.get_device_memory_properties(),
-                renderer_data.get_ray_tracing(),
-                renderer_data.get_command_pool(),
-                renderer_data.get_graphics_queue(),
-            )
-        }
     }
 
     fn is_first_rendering(&self) -> bool {
@@ -234,6 +219,19 @@ impl ProjectRendererBase for ProjectRenderer {
 
         self.get_fft_ocean_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
         self.get_atmosphere_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
+
+        // TEST CODE
+        log::info!("/////////////////////////////////////////////////////////");
+        log::info!("TEST CODE: RayTracing create_descriptor_sets");
+        log::info!("/////////////////////////////////////////////////////////");
+        let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
+        let render_ray_tracing_pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
+        let ray_tracing_accel_struct_ptr = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
+        let render_font_descriptor_sets = utility::create_descriptor_sets(
+            device,
+            render_ray_tracing_pipeline_binding_data,
+            &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct_ptr.clone())) ]
+        );
     }
 
     fn destroy_framebuffer_and_descriptors(&mut self, device: &Device) {
