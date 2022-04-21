@@ -221,17 +221,19 @@ impl ProjectRendererBase for ProjectRenderer {
         self.get_atmosphere_mut().prepare_framebuffer_and_descriptors(self, self.get_resources());
 
         // TEST CODE
-        log::info!("/////////////////////////////////////////////////////////");
-        log::info!("TEST CODE: RayTracing create_descriptor_sets");
-        log::info!("/////////////////////////////////////////////////////////");
-        let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
-        let render_ray_tracing_pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
-        let ray_tracing_accel_struct_ptr = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
-        let render_font_descriptor_sets = utility::create_descriptor_sets(
-            device,
-            render_ray_tracing_pipeline_binding_data,
-            &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct_ptr.clone())) ]
-        );
+        if self.get_renderer_data().get_use_ray_tracing() {
+            log::info!("--------------------------------------------------");
+            log::info!("TEST CODE: RayTracing create_descriptor_sets");
+            log::info!("--------------------------------------------------");
+            let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
+            let render_ray_tracing_pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
+            let ray_tracing_accel_struct_ptr = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
+            let render_font_descriptor_sets = utility::create_descriptor_sets(
+                device,
+                render_ray_tracing_pipeline_binding_data,
+                &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct_ptr.clone())) ]
+            );
+        }
     }
 
     fn destroy_framebuffer_and_descriptors(&mut self, device: &Device) {
