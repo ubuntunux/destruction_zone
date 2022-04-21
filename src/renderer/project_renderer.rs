@@ -222,17 +222,14 @@ impl ProjectRendererBase for ProjectRenderer {
 
         // TEST CODE
         if self.get_renderer_data().get_use_ray_tracing() {
-            log::info!("--------------------------------------------------");
-            log::info!("TEST CODE: RayTracing create_descriptor_sets");
-            log::info!("--------------------------------------------------");
+            log::info!(">>> TEST CODE: RayTracing create_descriptor_sets");
             let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
             let render_ray_tracing_pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
-            //let ray_tracing_accel_struct = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
-            let ray_tracing_accel_struct = DescriptorResourceInfo::AccelerationStructureNV(self.get_renderer_data()._ray_tracing_test_data._top_accel_struct);
+            let top_level_descriptor_resource_info = self.get_renderer_data()._ray_tracing_test_data.get_top_level_descriptor_resource_info();
             let render_ray_tracing_descriptor_sets = utility::create_descriptor_sets(
                 device,
                 render_ray_tracing_pipeline_binding_data,
-                &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct.clone())) ]
+                &[ (0, utility::create_swapchain_array(top_level_descriptor_resource_info.clone())) ]
             );
         }
     }
@@ -493,7 +490,7 @@ impl ProjectRendererBase for ProjectRenderer {
             renderer_data.end_render_pass(command_buffer);
         }
 
-        // read image
+        // TEST CODE: readback image
         // let texture_data = self.get_render_target(RenderTargetType::CaptureHeightMap);
         // let buffer_size = unsafe { renderer_data.get_device().get_image_memory_requirements(texture_data._image).size };
         // let mut read_data: Vec<f32> = vec![0.0; buffer_size as usize];
