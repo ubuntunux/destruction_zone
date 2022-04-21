@@ -227,11 +227,12 @@ impl ProjectRendererBase for ProjectRenderer {
             log::info!("--------------------------------------------------");
             let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
             let render_ray_tracing_pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
-            let ray_tracing_accel_struct_ptr = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
-            let render_font_descriptor_sets = utility::create_descriptor_sets(
+            //let ray_tracing_accel_struct = DescriptorResourceInfo::WriteDescriptorSetAccelerationStructure(&self.get_renderer_data()._ray_tracing_test_data._top_write_descriptor_set_accel_struct);
+            let ray_tracing_accel_struct = DescriptorResourceInfo::AccelerationStructureNV(self.get_renderer_data()._ray_tracing_test_data._top_accel_struct);
+            let render_ray_tracing_descriptor_sets = utility::create_descriptor_sets(
                 device,
                 render_ray_tracing_pipeline_binding_data,
-                &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct_ptr.clone())) ]
+                &[ (0, utility::create_swapchain_array(ray_tracing_accel_struct.clone())) ]
             );
         }
     }
