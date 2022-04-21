@@ -421,6 +421,11 @@ impl ProjectRendererBase for ProjectRenderer {
         // render ocean
         self._fft_ocean.render_ocean(command_buffer, swapchain_index, &renderer_data, &resources);
 
+        // TEST_CODE: ray tracing test
+        if renderer_data._use_ray_tracing {
+            self.render_ray_tracing(renderer_data, command_buffer, swapchain_index, &resources);
+        }
+
         // render atmosphere
         let render_light_probe_mode: bool = false;
         self._atmosphere.render_precomputed_atmosphere(command_buffer, swapchain_index, &quad_geometry_data, &renderer_data, render_light_probe_mode);
@@ -946,6 +951,106 @@ impl ProjectRenderer {
                 renderer_data.draw_elements(command_buffer, &render_element._geometry_data.borrow());
             }
             renderer_data.end_render_pass(command_buffer);
+        }
+    }
+
+    // TEST_CODE
+    fn render_ray_tracing(
+        &self,
+        renderer_data: &RendererData,
+        command_buffer: vk::CommandBuffer,
+        swapchain_index: u32,
+        resources: &Resources
+    ) {
+        // image barrier
+        let scene_color = self.get_render_target(RenderTargetType::SceneColorCopy);
+        let range = vk::ImageSubresourceRange {
+            aspect_mask: vk::ImageAspectFlags::COLOR,
+            base_mip_level: 0,
+            level_count: 1,
+            base_array_layer: 0,
+            layer_count: 1,
+        };
+        let barrier = vk::ImageMemoryBarrier::builder()
+            .src_access_mask(vk::AccessFlags::empty())
+            .dst_access_mask(vk::AccessFlags::SHADER_WRITE)
+            .old_layout(vk::ImageLayout::UNDEFINED)
+            .new_layout(vk::ImageLayout::GENERAL)
+            .image(scene_color._image)
+            .subresource_range(range)
+            .build();
+
+        renderer_data.pipeline_barrier(
+            command_buffer,
+            vk::PipelineStageFlags::ALL_COMMANDS,
+            vk::PipelineStageFlags::ALL_COMMANDS,
+            vk::DependencyFlags::empty(),
+            &[],
+            &[],
+            &[barrier],
+        );
+
+        let ray_tracing_properties = renderer_data.get_ray_tracing_properties();
+        let material_instance = resources.get_material_instance_data("system/ray_tracing").borrow();
+        let pipeline_binding_data = material_instance.get_default_pipeline_binding_data();
+        let pipeline_data = &pipeline_binding_data.get_pipeline_data().borrow();
+
+        if let Some(ref shader_binding_table) = pipeline_data._shader_binding_table {
+            let handle_size = ray_tracing_properties.shader_group_handle_size as u64;
+
+            // |[ raygen shader ]|[ hit shader  ]|[ miss shader ]|
+            // |                 |               |               |
+            // | 0               | 1             | 2             | 3
+
+            let sbt_raygen_buffer = shader_binding_table._buffer;
+            let sbt_raygen_offset = 0;
+
+            let sbt_miss_buffer = shader_binding_table._buffer;
+            let sbt_miss_offset = 2 * handle_size;
+            let sbt_miss_stride = handle_size;
+
+            let sbt_hit_buffer = shader_binding_table._buffer;
+            let sbt_hit_offset = 1 * handle_size;
+            let sbt_hit_stride = handle_size;
+
+            let sbt_call_buffer = vk::Buffer::null();
+            let sbt_call_offset = 0;
+            let sbt_call_stride = 0;
+
+            assert_eq!(vk::PipelineBindPoint::RAY_TRACING_NV, pipeline_binding_data.get_pipeline_bind_point(), "diff PipelineBindPoint");
+
+            unsafe {
+                renderer_data._device.cmd_bind_pipeline(
+                    command_buffer,
+                    pipeline_binding_data.get_pipeline_bind_point(),
+                    pipeline_data._pipeline,
+                );
+
+                renderer_data.bind_descriptor_sets(
+                    command_buffer,
+                    swapchain_index,
+                    pipeline_binding_data,
+                    None
+                );
+
+                renderer_data._ray_tracing.cmd_trace_rays(
+                    command_buffer,
+                    sbt_raygen_buffer,
+                    sbt_raygen_offset,
+                    sbt_miss_buffer,
+                    sbt_miss_offset,
+                    sbt_miss_stride,
+                    sbt_hit_buffer,
+                    sbt_hit_offset,
+                    sbt_hit_stride,
+                    sbt_call_buffer,
+                    sbt_call_offset,
+                    sbt_call_stride,
+                    scene_color._image_width,
+                    scene_color._image_height,
+                    1,
+                )
+            }
         }
     }
 
