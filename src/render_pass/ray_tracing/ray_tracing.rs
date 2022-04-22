@@ -35,7 +35,7 @@ pub fn get_render_pass_data_create_info(_project_renderer: &ProjectRenderer) -> 
                     _descriptor_binding_index: 1,
                     _descriptor_name: enum_to_string(&RenderTargetType::SceneColor),
                     _descriptor_resource_type: DescriptorResourceType::StorageRenderTarget,
-                    _descriptor_shader_stage: vk::ShaderStageFlags::COMPUTE,
+                    _descriptor_shader_stage: vk::ShaderStageFlags::RAYGEN_NV,
                     ..Default::default()
                 },
             ],

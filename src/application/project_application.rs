@@ -230,7 +230,7 @@ pub fn run_application() {
     let vulkan_api_version: u32;
     let enable_immediate_mode: bool;
     let is_concurrent_mode: bool;
-    let enable_ray_tracing = false;
+    let enable_ray_tracing = true;
     let enable_validation_layer = true;
 
     #[cfg(target_os = "android")]
@@ -255,7 +255,12 @@ pub fn run_application() {
         }
         constants::REQUIRED_DEVICE_EXTENSIONS = vec!["VK_KHR_swapchain".to_string()];
         if enable_ray_tracing {
-            constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec!["VK_NV_ray_tracing".to_string()];
+            constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec![
+                "VK_NV_ray_tracing".to_string(),
+                // "VK_EXT_descriptor_indexing".to_string(),
+                // "VK_EXT_scalar_block_layout".to_string(),
+                // "VK_KHR_get_memory_requirements2".to_string()
+            ];
         }
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;

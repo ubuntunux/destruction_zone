@@ -229,7 +229,7 @@ impl ProjectRendererBase for ProjectRenderer {
             let render_ray_tracing_descriptor_sets = utility::create_descriptor_sets(
                 device,
                 render_ray_tracing_pipeline_binding_data,
-                &[ (0, utility::create_swapchain_array(top_level_descriptor_resource_info.clone())) ]
+                &[ (0, utility::create_swapchain_array(top_level_descriptor_resource_info.clone())) ],
             );
         }
     }
@@ -421,17 +421,17 @@ impl ProjectRendererBase for ProjectRenderer {
         // render ocean
         self._fft_ocean.render_ocean(command_buffer, swapchain_index, &renderer_data, &resources);
 
-        // TEST_CODE: ray tracing test
-        if renderer_data._use_ray_tracing {
-            self.render_ray_tracing(renderer_data, command_buffer, swapchain_index, &resources);
-        }
-
         // render atmosphere
         let render_light_probe_mode: bool = false;
         self._atmosphere.render_precomputed_atmosphere(command_buffer, swapchain_index, &quad_geometry_data, &renderer_data, render_light_probe_mode);
 
         // render translucent
         self.render_translucent(renderer_data, command_buffer, swapchain_index, &resources);
+
+        // TEST_CODE: ray tracing test
+        if renderer_data._use_ray_tracing {
+            self.render_ray_tracing(renderer_data, command_buffer, swapchain_index, &resources);
+        }
 
         // post-process: taa, bloom, motion blur
         self.render_post_process(renderer_data, command_buffer, swapchain_index, &quad_geometry_data, &resources);
@@ -453,8 +453,7 @@ impl ProjectRendererBase for ProjectRenderer {
 
         // Render Debug
         if RenderTargetType::BackBuffer != self._debug_render_target {
-            let render_debug_material_instance_name = "render_debug";
-            let mut render_debug_material_instance_data: RefMut<MaterialInstanceData> = resources.get_material_instance_data(&render_debug_material_instance_name).borrow_mut();
+            let mut render_debug_material_instance_data: RefMut<MaterialInstanceData> = resources.get_material_instance_data(&"system/render_debug").borrow_mut();
             let mut render_debug_pipeline_binding_data = render_debug_material_instance_data.get_default_pipeline_binding_data_mut();
             renderer_data.begin_render_pass_pipeline(
                 command_buffer,
