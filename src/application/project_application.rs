@@ -252,7 +252,18 @@ pub fn run_application() {
             constants::REQUIRED_INSTANCE_LAYERS = vec!["VK_LAYER_MESA_device_select".to_string()];
             //constants::REQUIRED_INSTANCE_LAYERS = vec!["VK_LAYER_LUNARG_standard_validation".to_string()];
         }
-        constants::REQUIRED_DEVICE_EXTENSIONS = vec!["VK_KHR_swapchain".to_string()];
+        constants::REQUIRED_DEVICE_EXTENSIONS = vec![
+            "VK_KHR_swapchain".to_string(),
+            "VK_KHR_buffer_device_address".to_string()
+        ];
+        // ray tracing
+        constants::USE_RAY_TRACING = true;
+        constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec![
+            "VK_NV_ray_tracing".to_string(),
+            "VK_KHR_ray_tracing_pipeline".to_string(),
+            "VK_KHR_acceleration_structure".to_string(),
+            "VK_KHR_deferred_host_operations".to_string()
+        ];
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;
         constants::METER_PER_UNIT = 1.0;
@@ -269,8 +280,6 @@ pub fn run_application() {
         // effect
         constants::MAX_EMITTER_COUNT = 1024;
         constants::MAX_PARTICLE_COUNT = 262144;
-        // ray tracing
-        constants::USE_RAY_TRACING = true;
     }
 
     // create
