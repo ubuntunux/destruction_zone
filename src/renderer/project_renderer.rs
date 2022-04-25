@@ -429,7 +429,7 @@ impl ProjectRendererBase for ProjectRenderer {
         self.render_translucent(renderer_data, command_buffer, swapchain_index, &resources);
 
         // TEST_CODE: ray tracing test
-        if renderer_data._use_ray_tracing {
+        if renderer_data.get_use_ray_tracing() {
             self.render_ray_tracing(renderer_data, command_buffer, swapchain_index, &resources);
         }
 
