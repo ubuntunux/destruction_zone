@@ -4,7 +4,7 @@
 layout(binding = 0) uniform accelerationStructureNV topLevelAS;
 layout(rgba16f, binding = 1) uniform image2D image;
 
-layout(location = 0) rayPayloadNV vec3 hitValue;
+layout(location = 0) rayPayloadNV vec4 hitValue;
 
 void main() 
 {
@@ -22,5 +22,8 @@ void main()
     float tmax = 100.0;
     traceNV(topLevelAS, rayFlags, cullMask, 0 /*sbtRecordOffset*/, 0 /*sbtRecordStride*/, 0 /*missIndex*/, origin, tmin, direction, tmax, 0 /*payload*/);
 
-    imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(hitValue, 0.0));
+    if(0 != hitValue.w)
+    {
+        imageStore(image, ivec2(gl_LaunchIDNV.xy), hitValue);
+    }
 }
