@@ -1,4 +1,4 @@
 {
-    "material_name": "render_ui",
+    "material_name": "ui/render_ui",
     "material_parameters": {}
 }

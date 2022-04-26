@@ -1,2 +1,2 @@
-{"material_name": "render_ssao",
+{"material_name": "common/render_ssao",
  "material_parameters": {"ssaoNoise":"common/random_normal"}}
