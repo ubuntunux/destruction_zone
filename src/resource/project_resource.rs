@@ -21,15 +21,15 @@ use crate::game_module::ship::ship_controller::ShipControllerData;
 use crate::game_module::weapons::bullet::BulletData;
 use crate::game_module::weapons::weapon::{WeaponDataCreateInfo, WeaponData};
 
-pub const SCENE_FILE_PATH: &str = "resource/scenes";
-pub const AUDIO_FILE_PATH: &str = "resource/sounds";
-pub const AUDIO_BANK_FILE_PATH: &str = "resource/sound_banks";
-pub const EFFECT_FILE_PATH: &str = "resource/effects";
-pub const BUILDING_DATA_FILE_PATH: &str = "resource/game_datas/buildings";
-pub const BULLET_DATA_FILE_PATH: &str = "resource/game_datas/bullets";
-pub const SHIP_CONTROLLER_DATA_FILE_PATH: &str = "resource/game_datas/ship_controllers";
-pub const SHIP_DATA_FILE_PATH: &str = "resource/game_datas/ships";
-pub const WEAPON_DATA_FILE_PATH: &str = "resource/game_datas/weapons";
+pub const SCENE_FILE_PATH: &str = "resources/scenes";
+pub const AUDIO_FILE_PATH: &str = "resources/sounds";
+pub const AUDIO_BANK_FILE_PATH: &str = "resources/sound_banks";
+pub const EFFECT_FILE_PATH: &str = "resources/effects";
+pub const BUILDING_DATA_FILE_PATH: &str = "resources/game_datas/buildings";
+pub const BULLET_DATA_FILE_PATH: &str = "resources/game_datas/bullets";
+pub const SHIP_CONTROLLER_DATA_FILE_PATH: &str = "resources/game_datas/ship_controllers";
+pub const SHIP_DATA_FILE_PATH: &str = "resources/game_datas/ships";
+pub const WEAPON_DATA_FILE_PATH: &str = "resources/game_datas/weapons";
 
 pub const EXT_SCENE: &str = "scene";
 pub const AUDIO_SOURCE_EXTS: [&str; 2] = ["wav", "mp3"];
@@ -38,7 +38,7 @@ pub const EXT_EFFECT: &str = "effect";
 pub const EXT_GAME_DATA: &str = "data";
 
 pub const DEFAULT_EFFECT_NAME: &str = "default";
-pub const DEFAULT_EFFECT_MATERIAL_INSTANCE_NAME: &str = "system/render_particle";
+pub const DEFAULT_EFFECT_MATERIAL_INSTANCE_NAME: &str = "common/render_particle";
 pub const DEFAULT_GAME_DATA_NAME: &str = "default";
 pub const DEFAULT_AUDIO_NAME: &str = "default";
 pub const DEFAULT_AUDIO_BANK_NAME: &str = "default";

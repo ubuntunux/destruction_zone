@@ -28,8 +28,8 @@ pub fn walk_directory(dir: &Path, extensions: &[&str]) -> Vec<PathBuf> {
 // }
 
 fn main() {
-    let files = walk_directory(&Path::new("resource"), &[]);
-    let mut write_file = fs::File::create("resource/resources.txt").expect("Failed to create file");
+    let files = walk_directory(&Path::new("resources"), &[]);
+    let mut write_file = fs::File::create("resources/resources.txt").expect("Failed to create file");
     for filename in files {
         write_file.write(format!("{}\n", filename.to_str().unwrap()).as_bytes()).expect("Failed to write");
     }
