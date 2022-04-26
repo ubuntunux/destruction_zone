@@ -254,15 +254,16 @@ pub fn run_application() {
         }
         constants::REQUIRED_DEVICE_EXTENSIONS = vec![
             "VK_KHR_swapchain".to_string(),
-            "VK_KHR_buffer_device_address".to_string()
+            "VK_KHR_buffer_device_address".to_string(),
+            "VK_KHR_deferred_host_operations".to_string(),
         ];
         // ray tracing
         constants::USE_RAY_TRACING = true;
         constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec![
             "VK_NV_ray_tracing".to_string(),
+            "VK_KHR_ray_query".to_string(),
             "VK_KHR_ray_tracing_pipeline".to_string(),
             "VK_KHR_acceleration_structure".to_string(),
-            "VK_KHR_deferred_host_operations".to_string()
         ];
         constants::ENABLE_IMMEDIATE_MODE = enable_immediate_mode;
         constants::IS_CONCURRENT_MODE = is_concurrent_mode;
