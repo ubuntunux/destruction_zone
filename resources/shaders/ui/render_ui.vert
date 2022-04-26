@@ -2,8 +2,8 @@
 #extension GL_ARB_separate_shader_objects : enable
 #extension GL_GOOGLE_include_directive : enable
 
-#include "utility.glsl"
-#include "scene_constants.glsl"
+#include "../common/utility.glsl"
+#include "../common/scene_constants.glsl"
 #include "render_ui_common.glsl"
 
 layout (location = 0) in vec3 vs_in_position;

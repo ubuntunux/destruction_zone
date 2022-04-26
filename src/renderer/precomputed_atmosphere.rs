@@ -579,7 +579,7 @@ impl AtmosphereModel {
         renderer_data.render_material_instance(
             command_buffer,
             swapchain_index,
-            "system/precomputed_atmosphere",
+            "system/precomputed_atmosphere/precomputed_atmosphere",
             "compute_transmittance/recompute_transmittance",
             quad_geometry_data,
             None,
@@ -615,7 +615,7 @@ impl AtmosphereModel {
         renderer_data.render_material_instance(
             command_buffer,
             swapchain_index,
-            "system/precomputed_atmosphere",
+            "system/precomputed_atmosphere/precomputed_atmosphere",
             "compute_transmittance/default",
             quad_geometry_data,
             None,
@@ -627,7 +627,7 @@ impl AtmosphereModel {
         renderer_data.render_material_instance(
             command_buffer,
             swapchain_index,
-            "system/precomputed_atmosphere",
+            "system/precomputed_atmosphere/precomputed_atmosphere",
             if blend { "compute_direct_irradiance/default" } else { "compute_direct_irradiance/additive" },
             quad_geometry_data,
             None,
@@ -641,7 +641,7 @@ impl AtmosphereModel {
             renderer_data.render_material_instance(
                 command_buffer,
                 swapchain_index,
-                "system/precomputed_atmosphere",
+                "system/precomputed_atmosphere/precomputed_atmosphere",
                 if blend { "compute_single_scattering/additive" } else { "compute_single_scattering/default" },
                 quad_geometry_data,
                 Some(&atmosphere._compute_single_scattering_framebuffers[layer]),
@@ -658,7 +658,7 @@ impl AtmosphereModel {
                 renderer_data.render_material_instance(
                     command_buffer,
                     swapchain_index,
-                    "system/precomputed_atmosphere",
+                    "system/precomputed_atmosphere/precomputed_atmosphere",
                     "compute_scattering_density/default",
                     quad_geometry_data,
                     Some(&atmosphere._compute_scattering_density_framebuffers[layer]),
@@ -672,7 +672,7 @@ impl AtmosphereModel {
             renderer_data.render_material_instance(
                 command_buffer,
                 swapchain_index,
-                "system/precomputed_atmosphere",
+                "system/precomputed_atmosphere/precomputed_atmosphere",
                 "compute_indirect_irradiance/default",
                 quad_geometry_data,
                 None,
@@ -686,7 +686,7 @@ impl AtmosphereModel {
                 renderer_data.render_material_instance(
                     command_buffer,
                     swapchain_index,
-                    "system/precomputed_atmosphere",
+                    "system/precomputed_atmosphere/precomputed_atmosphere",
                     "compute_multiple_scattering/default",
                     quad_geometry_data,
                     Some(&atmosphere._compute_multiple_scattering_framebuffers[layer]),
@@ -864,7 +864,7 @@ impl Atmosphere {
         let delta_mie_scattering = project_renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_DELTA_MIE_SCATTERING);
         let scattering = project_renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_SCATTERING);
         let optional_single_mie_scattering = project_renderer.get_render_target(RenderTargetType::PRECOMPUTED_ATMOSPHERE_OPTIONAL_SINGLE_MIE_SCATTERING);
-        let material_instance = resources.get_material_instance_data("system/precomputed_atmosphere").borrow();
+        let material_instance = resources.get_material_instance_data("system/precomputed_atmosphere/precomputed_atmosphere").borrow();
         let compute_multiple_scattering_pipeline_binding_data = material_instance.get_pipeline_binding_data("compute_multiple_scattering/default");
         let compute_single_scattering_pipeline_binding_data = material_instance.get_pipeline_binding_data("compute_single_scattering/default");
         let compute_scattering_density_pipeline_binding_data = material_instance.get_pipeline_binding_data("compute_scattering_density/default");
@@ -941,7 +941,7 @@ impl Atmosphere {
         renderer_data.render_material_instance(
             command_buffer,
             swapchain_index,
-            "system/precomputed_atmosphere",
+            "system/precomputed_atmosphere/precomputed_atmosphere",
             "render_atmosphere/default",
             quad_geometry_data,
             None,
@@ -956,7 +956,7 @@ impl Atmosphere {
         renderer_data.render_material_instance(
             command_buffer,
             swapchain_index,
-            "system/precomputed_atmosphere",
+            "system/precomputed_atmosphere/precomputed_atmosphere",
             "composite_atmosphere/default",
             quad_geometry_data,
             None,

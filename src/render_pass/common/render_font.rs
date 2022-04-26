@@ -70,8 +70,8 @@ pub fn get_render_pass_data_create_info(project_renderer: &ProjectRenderer) -> R
     let pipeline_data_create_infos = vec![
         PipelineDataCreateInfo {
             _pipeline_data_create_info_name: String::from("render_font"),
-            _pipeline_vertex_shader_file: PathBuf::from("common/render_font.vert"),
-            _pipeline_fragment_shader_file: PathBuf::from("common/render_font.frag"),
+            _pipeline_vertex_shader_file: PathBuf::from("ui/render_font.vert"),
+            _pipeline_fragment_shader_file: PathBuf::from("ui/render_font.frag"),
             _pipeline_shader_defines: if font::USE_DISTANCE_FIELD { vec![String::from("USE_DISTANCE_FIELD")] } else { Vec::new() },
             _pipeline_bind_point: vk::PipelineBindPoint::GRAPHICS,
             _pipeline_dynamic_states: vec![vk::DynamicState::VIEWPORT, vk::DynamicState::SCISSOR],
