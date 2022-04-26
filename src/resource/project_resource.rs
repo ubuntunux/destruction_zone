@@ -38,7 +38,7 @@ pub const EXT_EFFECT: &str = "effect";
 pub const EXT_GAME_DATA: &str = "data";
 
 pub const DEFAULT_EFFECT_NAME: &str = "default";
-pub const DEFAULT_EFFECT_MATERIAL_INSTANCE_NAME: &str = "system/common/render_particle";
+pub const DEFAULT_EFFECT_MATERIAL_INSTANCE_NAME: &str = "common/render_particle";
 pub const DEFAULT_GAME_DATA_NAME: &str = "default";
 pub const DEFAULT_AUDIO_NAME: &str = "default";
 pub const DEFAULT_AUDIO_BANK_NAME: &str = "default";

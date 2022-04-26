@@ -273,7 +273,7 @@ impl ProjectEffectManager {
         project_renderer: &ProjectRenderer,
         resources: &Resources
     ) {
-        let material_instance_data = &resources.get_material_instance_data("system/effect/process_gpu_particle").borrow();
+        let material_instance_data = &resources.get_material_instance_data("effect/process_gpu_particle").borrow();
 
         let pipeline_binding_data: &PipelineBindingData = material_instance_data.get_pipeline_binding_data("process_gpu_particle/compute_gpu_particle_count");
         let dispatch_count = unsafe { MAX_EMITTER_COUNT * 2 };
@@ -447,7 +447,7 @@ impl ProjectEffectManager {
             }
 
             //
-            let material_instance_data = &resources.get_material_instance_data("system/effect/process_gpu_particle").borrow();
+            let material_instance_data = &resources.get_material_instance_data("effect/process_gpu_particle").borrow();
 
             // barrier for compute gpu particle count pipeline
             let gpu_particle_static_constants_buffer_data = &gpu_particle_static_constants_buffer._buffers[swapchain_index as usize];
