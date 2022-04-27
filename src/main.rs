@@ -10,8 +10,8 @@ pub mod game_module;
 pub mod renderer;
 pub mod resource;
 
-use crate::application::project_application::run_application;
+use crate::application::project_application::run_project_application;
 
 pub fn main() {
-    run_application();
+    run_project_application();
 }

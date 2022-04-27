@@ -4,7 +4,12 @@ use ash::vk;
 use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::constants;
-use rust_engine_3d::application::application::{self, ProjectApplicationBase, EngineApplication };
+use rust_engine_3d::application::application::{
+    self,
+    ProjectApplicationBase,
+    EngineApplication,
+    WindowMode
+};
 use rust_engine_3d::application::audio_manager::AudioManager;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::renderer::renderer_data::RendererData;
@@ -221,12 +226,12 @@ impl ProjectApplication {
     }
 }
 
-pub fn run_application() {
+pub fn run_project_application() {
     // application setting
     let app_name: String = "Destruction Zone".to_string();
     let app_version: u32 = 1;
     let initial_window_size: Vector2<i32> = Vector2::new(1024, 768);
-    let is_fullscreen = false;
+    let window_mode = WindowMode::WindowMode;
     let log_level = LevelFilter::Info;
 
     // vulkan setting
@@ -309,7 +314,7 @@ pub fn run_application() {
         app_name,
         app_version,
         initial_window_size,
-        is_fullscreen,
+        window_mode,
         log_level,
         &application,
         application.get_project_resources(),
