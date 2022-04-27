@@ -4,7 +4,7 @@ use ash::vk;
 use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::constants;
-use rust_engine_3d::application::application::{self, ApplicationBase, EngineApplication };
+use rust_engine_3d::application::application::{self, ProjectApplicationBase, EngineApplication };
 use rust_engine_3d::application::audio_manager::AudioManager;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::renderer::renderer_data::RendererData;
@@ -14,6 +14,7 @@ use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::resource::project_resource::ProjectResources;
 use crate::game_module::game_client::GameClient;
+use nalgebra::Vector2;
 
 
 pub struct ProjectApplication {
@@ -28,8 +29,8 @@ pub struct ProjectApplication {
     pub _is_game_mode: bool
 }
 
-impl ApplicationBase for ProjectApplication {
-    fn initialize_application(&mut self, engine_application: &EngineApplication) {
+impl ProjectApplicationBase for ProjectApplication {
+    fn initialize_project_application(&mut self, engine_application: &EngineApplication) {
         self._engine_application = engine_application;
         self._audio_manager = engine_application.get_audio_manager();
         self._effect_manager = engine_application.get_effect_manager();
@@ -37,7 +38,7 @@ impl ApplicationBase for ProjectApplication {
         self.get_game_client_mut().initialize_game_client(self);
     }
 
-    fn terminate_application(&mut self) {
+    fn terminate_project_application(&mut self) {
         self._game_client.destroy_game_client();
     }
 
@@ -152,7 +153,7 @@ impl ApplicationBase for ProjectApplication {
         }
     }
 
-    fn update_application(&mut self) {
+    fn update_project_application(&mut self) {
         let application = self as *mut ProjectApplication;
         if self._is_game_mode {
             self._game_client.update_game_client(application);
@@ -221,6 +222,14 @@ impl ProjectApplication {
 }
 
 pub fn run_application() {
+    // application setting
+    let app_name: String = "Destruction Zone".to_string();
+    let app_version: u32 = 1;
+    let initial_window_size: Vector2<i32> = Vector2::new(1024, 768);
+    let is_fullscreen = false;
+    let log_level = LevelFilter::Info;
+
+    // vulkan setting
     let vulkan_api_version: u32;
     let enable_immediate_mode: bool;
     let is_concurrent_mode: bool;
@@ -297,7 +306,11 @@ pub fn run_application() {
     };
 
     application::run_application(
-        LevelFilter::Info,
+        app_name,
+        app_version,
+        initial_window_size,
+        is_fullscreen,
+        log_level,
         &application,
         application.get_project_resources(),
         application.get_project_scene_manager(),

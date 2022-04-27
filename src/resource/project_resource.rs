@@ -57,18 +57,18 @@ pub struct ProjectResources {
 }
 
 impl ProjectResourcesBase for ProjectResources {
-    fn initialize_project_resources(&mut self, engine_resources: &EngineResources, renderer_context: &mut RendererContext) {
+    fn initialize_project_resources(&mut self, engine_resources: &EngineResources, renderer_context: &RendererContext) {
         self._engine_resources = engine_resources;
         self.load_scene_datas(renderer_context);
         self.load_game_datas();
     }
-    fn destroy_project_resources(&mut self, renderer_context: &mut RendererContext) {
+    fn destroy_project_resources(&mut self, renderer_context: &RendererContext) {
         self.unload_game_datas();
         self.unload_scene_datas(renderer_context);
     }
-    fn load_graphics_datas(&mut self, _renderer_context: &mut RendererContext) {
+    fn load_graphics_datas(&mut self, _renderer_context: &RendererContext) {
     }
-    fn unload_graphics_datas(&mut self, _renderer_context: &mut RendererContext) {
+    fn unload_graphics_datas(&mut self, _renderer_context: &RendererContext) {
     }
     fn regist_resource(&mut self) {
     }
@@ -164,7 +164,7 @@ impl ProjectResources {
         }
     }
 
-    pub fn unload_scene_datas(&mut self, renderer_context: &RendererContext) {
+    pub fn unload_scene_datas(&mut self, _renderer_context: &RendererContext) {
         self._scene_data_create_infos_map.clear();
     }
 
