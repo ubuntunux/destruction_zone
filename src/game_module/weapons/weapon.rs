@@ -1,17 +1,17 @@
 use nalgebra::Vector3;
 use serde::{ Serialize, Deserialize };
 
+use rust_engine_3d::application::audio_manager::AudioLoop;
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::application::project_application::ProjectApplication;
-use crate::application::project_audio_manager::AudioLoop;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
 use crate::game_module::game_constants::{FIRE_PITCH_MIN, FIRE_PITCH_MAX};
-use crate::application::project_scene_manager::ProjectSceneManager;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -162,7 +162,7 @@ impl WeaponTrait for BeamEmitter {
         };
 
         let bullet_render_object = project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
-        project_application.get_project_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+        project_application.get_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
 
         // create bullet
         let bullet = Bullet::create_bullet(

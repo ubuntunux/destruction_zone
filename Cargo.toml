@@ -36,10 +36,6 @@ raw-window-handle = "0.4.3"
 #cpal = "0.13.3"
 #ndk-glue = "0.3"
 
-[dependencies.sdl2]
-version = "0.34.5"
-features = ["mixer"]
-
 [lib]
 crate-type = ["lib", "cdylib"]
 

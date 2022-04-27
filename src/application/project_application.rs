@@ -1,16 +1,16 @@
 use log::LevelFilter;
 
 use ash::vk;
-use sdl2::{ self, Sdl };
 use winit::event::VirtualKeyCode;
+
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::{self, ApplicationBase, EngineApplication };
+use rust_engine_3d::application::audio_manager::AudioManager;
+use rust_engine_3d::effect::effect_manager::EffectManager;
+use rust_engine_3d::renderer::renderer_data::RendererData;
 
 use crate::application_constants;
-use crate::application::project_audio_manager::ProjectAudioManager;
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::effect::effect_manager::ProjectEffectManager;
-use crate::renderer::project_renderer::ProjectRenderer;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::resource::project_resource::ProjectResources;
 use crate::game_module::game_client::GameClient;
@@ -18,29 +18,27 @@ use crate::game_module::game_client::GameClient;
 
 pub struct ProjectApplication {
     pub _engine_application: *const EngineApplication,
+    pub _audio_manager: *const AudioManager,
+    pub _effect_manager: *const EffectManager,
+    pub _renderer_data: *const RendererData,
     pub _project_resources: Box<ProjectResources>,
-    pub _project_renderer: Box<ProjectRenderer>,
     pub _project_scene_manager: Box<ProjectSceneManager>,
-    pub _project_effect_manager: Box<ProjectEffectManager>,
     pub _project_ui_manager: Box<ProjectUIManager>,
-    pub _project_audio_manager: Box<ProjectAudioManager>,
     pub _game_client: Box<GameClient>,
-    pub _is_game_mode: bool,
-    pub _sdl: Sdl
+    pub _is_game_mode: bool
 }
 
 impl ApplicationBase for ProjectApplication {
     fn initialize_application(&mut self, engine_application: &EngineApplication) {
         self._engine_application = engine_application;
-        self._project_audio_manager.initialize_audio_manager(self, self._project_resources.as_ref());
-        self._project_effect_manager.initialize_project_effect_manager();
+        self._audio_manager = engine_application.get_audio_manager();
+        self._effect_manager = engine_application.get_effect_manager();
+        self._renderer_data = engine_application.get_renderer_context().get_renderer_data();
         self.get_game_client_mut().initialize_game_client(self);
     }
 
     fn terminate_application(&mut self) {
         self._game_client.destroy_game_client();
-        self._project_audio_manager.destroy_audio_manager();
-        self._project_effect_manager.destroy_effect_manager();
     }
 
     fn update_event(&mut self) {
@@ -93,15 +91,15 @@ impl ApplicationBase for ProjectApplication {
             let _rotation_speed = application_constants::CAMERA_ROTATION_SPEED;
 
             if released_key_left_bracket {
-                self.get_project_renderer_mut().prev_debug_render_target();
+                self.get_renderer_data_mut().prev_debug_render_target();
             } else if released_key_right_bracket {
-                self.get_project_renderer_mut().next_debug_render_target();
+                self.get_renderer_data_mut().next_debug_render_target();
             }
 
             if released_key_subtract {
-                self.get_project_renderer_mut().prev_debug_render_target_miplevel();
+                self.get_renderer_data_mut().prev_debug_render_target_miplevel();
             } else if released_key_equals {
-                self.get_project_renderer_mut().next_debug_render_target_miplevel();
+                self.get_renderer_data_mut().next_debug_render_target_miplevel();
             }
 
             #[cfg(target_os = "android")]
@@ -159,25 +157,21 @@ impl ApplicationBase for ProjectApplication {
         if self._is_game_mode {
             self._game_client.update_game_client(application);
         }
-        self.get_project_audio_manager_mut().update_audio_manager();
     }
 }
 
 impl ProjectApplication {
-    pub fn get_sdl(&self) -> &Sdl {
-        &self._sdl
-    }
     pub fn get_engine_application(&self) -> &EngineApplication {
         unsafe { &*self._engine_application }
     }
     pub fn get_engine_application_mut(&self) -> &mut EngineApplication {
         unsafe { &mut *(self._engine_application as *mut EngineApplication) }
     }
-    pub fn get_project_effect_manager(&self) -> &ProjectEffectManager {
-        &self._project_effect_manager
+    pub fn get_effect_manager(&self) -> &EffectManager {
+        unsafe { &*self._effect_manager }
     }
-    pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager {
-        unsafe { &mut *((self._project_effect_manager.as_ref() as *const ProjectEffectManager) as *mut ProjectEffectManager) }
+    pub fn get_effect_manager_mut(&self) -> &mut EffectManager {
+        unsafe { &mut *(self._effect_manager as *mut EffectManager) }
     }
     pub fn get_project_resources(&self) -> &ProjectResources {
         &self._project_resources
@@ -191,11 +185,11 @@ impl ProjectApplication {
     pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager {
         unsafe { &mut *((self._project_scene_manager.as_ref() as *const ProjectSceneManager) as *mut ProjectSceneManager) }
     }
-    pub fn get_project_renderer(&self) -> &ProjectRenderer {
-        &self._project_renderer
+    pub fn get_renderer_data(&self) -> &RendererData {
+        unsafe { &*self._renderer_data }
     }
-    pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer {
-        unsafe { &mut *((self._project_renderer.as_ref() as *const ProjectRenderer) as *mut ProjectRenderer) }
+    pub fn get_renderer_data_mut(&self) -> &mut RendererData {
+        unsafe { &mut *(self._renderer_data as *mut RendererData) }
     }
     pub fn get_project_ui_manager(&self) -> &ProjectUIManager {
         &self._project_ui_manager
@@ -203,11 +197,11 @@ impl ProjectApplication {
     pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
         unsafe { &mut *((self._project_ui_manager.as_ref() as *const ProjectUIManager) as *mut ProjectUIManager) }
     }
-    pub fn get_project_audio_manager(&self) -> &ProjectAudioManager {
-        &self._project_audio_manager
+    pub fn get_audio_manager(&self) -> &AudioManager {
+        unsafe { &*self._audio_manager }
     }
-    pub fn get_project_audio_manager_mut(&self) -> &mut ProjectAudioManager {
-        unsafe { &mut *((self._project_audio_manager.as_ref() as *const ProjectAudioManager) as *mut ProjectAudioManager) }
+    pub fn get_audio_manager_mut(&self) -> &mut AudioManager {
+        unsafe { &mut *(self._audio_manager as *mut AudioManager) }
     }
     pub fn get_game_client(&self) -> &GameClient {
         &self._game_client
@@ -258,7 +252,7 @@ pub fn run_application() {
             "VK_KHR_deferred_host_operations".to_string(),
         ];
         // ray tracing
-        constants::USE_RAY_TRACING = true;
+        constants::USE_RAY_TRACING = false;
         constants::REQUIRED_RAY_TRACING_EXTENSIONS = vec![
             "VK_NV_ray_tracing".to_string(),
             "VK_KHR_ray_query".to_string(),
@@ -284,30 +278,21 @@ pub fn run_application() {
     }
 
     // create
-    let sdl = sdl2::init().expect("failed to sdl2::init");
     let project_resources = ProjectResources::create_project_resources();
-    let mut project_renderer = ProjectRenderer::create_project_renderer();
-    let mut project_scene_manager = ProjectSceneManager::create_project_scene_manager();
-    let project_effect_manager = ProjectEffectManager::create_project_effect_manager();
+    let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
-    let project_audio_manager = ProjectAudioManager::create_audio_manager(&sdl);
     let game_client = GameClient::create_game_client();
-
-    // set manager
-    project_renderer.set_project_effect_manager(project_effect_manager.as_ref());
-    project_scene_manager.set_project_effect_manager(project_effect_manager.as_ref());
 
     // initialize
     let application = ProjectApplication {
         _engine_application: std::ptr::null(),
+        _renderer_data: std::ptr::null(),
+        _effect_manager: std::ptr::null(),
+        _audio_manager: std::ptr::null(),
         _project_resources: project_resources,
-        _project_renderer: project_renderer,
         _project_scene_manager: project_scene_manager,
-        _project_effect_manager: project_effect_manager,
         _project_ui_manager: project_ui_manager,
-        _project_audio_manager: project_audio_manager,
         _game_client: game_client,
-        _sdl: sdl,
         _is_game_mode: false,
     };
 
@@ -316,7 +301,6 @@ pub fn run_application() {
         &application,
         application.get_project_resources(),
         application.get_project_scene_manager(),
-        application.get_project_renderer(),
-        application.get_project_ui_manager(),
+        application.get_project_ui_manager()
     );
 }

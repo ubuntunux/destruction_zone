@@ -1,5 +1,5 @@
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
-use rust_engine_3d::renderer::ui::{ UIManagerData, Widget, UIWidgetTypes, WidgetDefault, HorizontalAlign, VerticalAlign, UILayoutType };
+use rust_engine_3d::renderer::ui::{ UIManager, Widget, UIWidgetTypes, WidgetDefault, HorizontalAlign, VerticalAlign, UILayoutType };
 
 const WIDGET_UI_WIDTH: f32 = 120.0;
 const WIDGET_UI_HEIGHT: f32 = 24.0;
@@ -19,7 +19,7 @@ pub struct ShieldPointWidget {
 
 // Implementation
 fn create_hit_point_layer_widget(parent_widget: &mut dyn Widget) -> *mut WidgetDefault {
-    let hit_point_layer = unsafe { &mut *(UIManagerData::create_widget("hit_point_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
+    let hit_point_layer = unsafe { &mut *(UIManager::create_widget("hit_point_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
     let ui_component = hit_point_layer.get_ui_component_mut();
     ui_component.set_layout_type(UILayoutType::BoxLayout);
     ui_component.set_text("Point");
@@ -38,7 +38,7 @@ fn create_hit_point_layer_widget(parent_widget: &mut dyn Widget) -> *mut WidgetD
 }
 
 fn create_hit_point_bar_widget(parent_widget: &mut dyn Widget, color: u32) -> *mut WidgetDefault {
-    let hull_point_bar = unsafe { &mut *(UIManagerData::create_widget("hit_point_bar", UIWidgetTypes::Default) as *mut WidgetDefault) };
+    let hull_point_bar = unsafe { &mut *(UIManager::create_widget("hit_point_bar", UIWidgetTypes::Default) as *mut WidgetDefault) };
     let ui_component = hull_point_bar.get_ui_component_mut();
     ui_component.set_size_hint_x(Some(0.5));
     ui_component.set_size_hint_y(Some(1.0));

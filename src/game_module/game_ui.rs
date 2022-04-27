@@ -3,7 +3,7 @@ use nalgebra::{ Vector2 };
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use rust_engine_3d::renderer::ui::{
     ProjectUIManagerBase,
-    UIManagerData, Widget,
+    UIManager, Widget,
     UIWidgetTypes,
     WidgetDefault,
     HorizontalAlign,
@@ -78,7 +78,7 @@ impl GameUIManager {
         let window_center = Vector2::<f32>::new(window_size.x as f32 * 0.5, window_size.y as f32 * 0.5,);
 
         //
-        let crosshair_widget: *mut WidgetDefault = UIManagerData::create_widget("cursor", UIWidgetTypes::Default) as *mut WidgetDefault;
+        let crosshair_widget: *mut WidgetDefault = UIManager::create_widget("cursor", UIWidgetTypes::Default) as *mut WidgetDefault;
         let ui_component = unsafe { &mut crosshair_widget.as_mut().unwrap().get_ui_component_mut() };
         let ui_size = 50.0f32;
         ui_component.set_pos(window_center.x - ui_size * 0.5, window_center.y - ui_size * 0.5);
@@ -99,7 +99,7 @@ impl GameUIManager {
         let hud_ui_padding: f32 = 4.0;
 
         // Target Hud
-        let target_hud_layer = unsafe { &mut *(UIManagerData::create_widget("target_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let target_hud_layer = unsafe { &mut *(UIManager::create_widget("target_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_hud_layer.get_ui_component_mut();
         ui_component.set_size(hud_layer_width, hud_layer_height);
         ui_component.set_center(window_center.x, window_center.y);
@@ -114,7 +114,7 @@ impl GameUIManager {
         root_widget.add_widget(target_hud_layer);
         self._target_hud_layer = target_hud_layer;
 
-        let target_distance = unsafe { &mut *(UIManagerData::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let target_distance = unsafe { &mut *(UIManager::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_distance.get_ui_component_mut();
         ui_component.set_text("100m");
         ui_component.set_size(hud_ui_width, hud_ui_height);
@@ -132,7 +132,7 @@ impl GameUIManager {
         self._target_shield_point_widget = Some(ShieldPointWidget::create_shield_point_widget(target_hud_layer));
 
         // Player Hud
-        let player_hud_layer = unsafe { &mut *(UIManagerData::create_widget("player_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let player_hud_layer = unsafe { &mut *(UIManager::create_widget("player_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = player_hud_layer.get_ui_component_mut();
         ui_component.set_size(hud_layer_width, hud_layer_height);
         ui_component.set_pos(window_size.x as f32 - 200.0, window_center.y);

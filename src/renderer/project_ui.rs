@@ -1,21 +1,21 @@
-use rust_engine_3d::renderer::ui::{ProjectUIManagerBase, UIManagerData, UIWidgetTypes, Widget, UILayoutType, Orientation, HorizontalAlign, VerticalAlign, WidgetDefault};
-use rust_engine_3d::renderer::renderer::RendererData;
-use rust_engine_3d::resource::resource::Resources;
+use rust_engine_3d::renderer::ui::{ProjectUIManagerBase, UIManager, UIWidgetTypes, Widget, UILayoutType, Orientation, HorizontalAlign, VerticalAlign, WidgetDefault};
+use rust_engine_3d::renderer::renderer_context::RendererContext;
+use rust_engine_3d::resource::resource::EngineResources;
 use rust_engine_3d::vulkan_context::vulkan_context::{ get_color32 };
 
 
 pub struct ProjectUIManager {
-    pub _ui_manager_data: *const UIManagerData,
+    pub _ui_manager: *const UIManager,
     pub _root_widget: *const dyn Widget,
 }
 
 impl ProjectUIManagerBase for ProjectUIManager {
-    fn get_ui_manager_data(&self) -> &UIManagerData {
-        unsafe { &*(self._ui_manager_data) }
+    fn get_ui_manager(&self) -> &UIManager {
+        unsafe { &*(self._ui_manager) }
     }
 
-    fn get_ui_manager_data_mut(&self) -> &mut UIManagerData {
-        unsafe { &mut *(self._ui_manager_data as *mut UIManagerData) }
+    fn get_ui_manager_mut(&self) -> &mut UIManager {
+        unsafe { &mut *(self._ui_manager as *mut UIManager) }
     }
 
     fn get_root_widget(&self) -> &dyn Widget {
@@ -26,12 +26,12 @@ impl ProjectUIManagerBase for ProjectUIManager {
         unsafe { &mut *(self._root_widget as *mut dyn Widget) }
     }
 
-    fn initialize_project_ui_manager(&mut self, ui_manager_data: &UIManagerData) {
-        self._ui_manager_data = ui_manager_data;
-        self._root_widget = self.get_ui_manager_data().get_root_ptr();
+    fn initialize_project_ui_manager(&mut self, ui_manager: &UIManager) {
+        self._ui_manager = ui_manager;
+        self._root_widget = self.get_ui_manager().get_root_ptr();
     }
 
-    fn build_ui(&mut self, _renderer_data: &RendererData, resources: &Resources) {
+    fn build_ui(&mut self, _renderer_context: &RendererContext, engine_resources: &EngineResources) {
         unsafe {
             let root = self.get_root_widget_mut();
 
@@ -46,7 +46,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             };
 
             //
-            let btn0 = UIManagerData::create_widget("btn0", UIWidgetTypes::Default);
+            let btn0 = UIManager::create_widget("btn0", UIWidgetTypes::Default);
             let ui_component = &mut btn0.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_pos(25.0,255.0);
             ui_component.set_size(200.0, 100.0);
@@ -60,13 +60,13 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
             ui_component.set_text("btn0\nbtn0 Child Test");
-            ui_component.set_material_instance(&resources.get_material_instance_data("ui/render_ui_test"));
+            ui_component.set_material_instance(&engine_resources.get_material_instance_data("ui/render_ui_test"));
             ui_component._callback_touch_down = Some(&TOUCH_DOWN);
             ui_component._callback_touch_up = Some(&TOUCH_UP);
             ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             root.add_widget(btn0);
 
-            let btn0_0 = UIManagerData::create_widget("btn0_0", UIWidgetTypes::Default);
+            let btn0_0 = UIManager::create_widget("btn0_0", UIWidgetTypes::Default);
             let ui_component = &mut btn0_0.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_pos(0.0, 5.0);
             ui_component.set_size(100.0, 50.0);
@@ -85,7 +85,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0.as_mut().unwrap().add_widget(btn0_0);
 
-            let btn0_0_0 = UIManagerData::create_widget("btn0_0_0", UIWidgetTypes::Default);
+            let btn0_0_0 = UIManager::create_widget("btn0_0_0", UIWidgetTypes::Default);
             let ui_component = &mut btn0_0_0.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_pos(0.0, 5.0);
             ui_component.set_size(200.0, 100.0);
@@ -105,7 +105,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             btn0_0.as_mut().unwrap().add_widget(btn0_0_0);
 
             //
-            let btn0_1 = UIManagerData::create_widget("btn0_1", UIWidgetTypes::Default);
+            let btn0_1 = UIManager::create_widget("btn0_1", UIWidgetTypes::Default);
             let ui_component = &mut btn0_1.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_layout_type(UILayoutType::BoxLayout);
             ui_component.set_layout_orientation(Orientation::VERTICAL);
@@ -128,7 +128,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0.as_mut().unwrap().add_widget(btn0_1);
 
-            let btn0_1_0 = UIManagerData::create_widget("btn0_1_0", UIWidgetTypes::Default);
+            let btn0_1_0 = UIManager::create_widget("btn0_1_0", UIWidgetTypes::Default);
             let ui_component = &mut btn0_1_0.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_pos(0.0, 5.0);
             ui_component.set_size(50.0, 75.0);
@@ -147,7 +147,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component._callback_touch_move = Some(&TOUCH_MOVE);
             btn0_1.as_mut().unwrap().add_widget(btn0_1_0);
 
-            let btn0_1_1 = UIManagerData::create_widget("btn0_1_1", UIWidgetTypes::Default);
+            let btn0_1_1 = UIManager::create_widget("btn0_1_1", UIWidgetTypes::Default);
             let ui_component = &mut btn0_1_1.as_mut().unwrap().get_ui_component_mut();
             ui_component.set_halign(HorizontalAlign::RIGHT);
             ui_component.set_valign(VerticalAlign::BOTTOM);
@@ -176,7 +176,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
 impl ProjectUIManager {
     pub fn create_project_ui_manager() -> Box<ProjectUIManager> {
         Box::new(ProjectUIManager {
-            _ui_manager_data: std::ptr::null(),
+            _ui_manager: std::ptr::null(),
             _root_widget: std::ptr::null() as *const WidgetDefault,
         })
     }

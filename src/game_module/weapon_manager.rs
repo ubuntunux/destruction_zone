@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
 use nalgebra::Vector3;
+
+use rust_engine_3d::application::audio_manager::AudioLoop;
+use rust_engine_3d::effect::effect_data::EffectCreateInfo;
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::application::project_application::ProjectApplication;
-use crate::application::project_audio_manager::AudioLoop;
-use crate::effect::effect_data::EffectCreateInfo;
 use crate::game_module::weapons::bullet::Bullet;
 use crate::game_module::actor_manager::{ActorManager, ActorMap};
 
@@ -94,7 +95,7 @@ impl WeaponManager {
                     }
 
                     if false == bullet.get_bullet_data()._bullet_destroy_sound_bank.is_empty() {
-                        project_application.get_project_audio_manager_mut().create_audio_bank(&bullet.get_bullet_data()._bullet_destroy_sound_bank, AudioLoop::ONCE);
+                        project_application.get_audio_manager_mut().create_audio_bank(&bullet.get_bullet_data()._bullet_destroy_sound_bank, AudioLoop::ONCE);
                     }
                 }
                 project_application.get_project_scene_manager_mut().remove_static_render_object(&bullet._bullet_render_object.borrow()._render_object_name);

@@ -3,7 +3,7 @@
 // use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 // use rust_engine_3d::renderer::ui::{
 //     ProjectUIManagerBase,
-//     UIManagerData, Widget,
+//     UIManager, Widget,
 //     UIWidgetTypes,
 //     WidgetTrait,
 //     HorizontalAlign,

@@ -11,25 +11,31 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
-use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManagerData };
+use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManager };
+use rust_engine_3d::effect::effect_manager::EffectManager;
+use rust_engine_3d::effect::effect_data::{ EffectCreateInfo, EffectInstance };
 use rust_engine_3d::renderer::font::FontManager;
-use rust_engine_3d::renderer::renderer::RendererData;
+use rust_engine_3d::renderer::renderer_context::RendererContext;
 use rust_engine_3d::renderer::camera::{ CameraCreateInfo, CameraObjectData};
 use rust_engine_3d::renderer::light::{ DirectionalLightCreateInfo, DirectionalLightData };
 use rust_engine_3d::renderer::render_element::{ RenderElementData };
 use rust_engine_3d::renderer::render_object::{ RenderObjectCreateInfo, RenderObjectData };
 use rust_engine_3d::renderer::light::LightConstants;
-use rust_engine_3d::resource::resource::{ Resources, get_resource_name_from_file_path, TEXTURE_SOURCE_FILE_PATH, IMAGE_SOURCE_EXTS };
+use rust_engine_3d::renderer::renderer_data::RendererData;
+use rust_engine_3d::resource::resource::{
+    EngineResources,
+    get_resource_name_from_file_path,
+    TEXTURE_SOURCE_FILE_PATH,
+    EXT_IMAGE_SOURCE,
+    ProjectResourcesBase
+};
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
-use crate::application_constants;
-use crate::effect::effect_manager::ProjectEffectManager;
-use crate::effect::effect_data::{ EffectCreateInfo, EffectInstance };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::level_datas::level_data::LevelData;
-use crate::renderer::project_renderer::ProjectRenderer;
 use crate::resource::project_resource::ProjectResources;
+
 
 type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
@@ -63,10 +69,10 @@ impl Default for SceneDataCreateInfo {
 
 #[derive(Clone)]
 pub struct ProjectSceneManager {
-    pub _scene_manager_data: *const SceneManagerData,
+    pub _scene_manager: *const SceneManager,
     pub _project_resources: *const ProjectResources,
-    pub _project_renderer: *const ProjectRenderer,
-    pub _project_effect_manager: *const ProjectEffectManager,
+    pub _renderer_data: *const RendererData,
+    pub _effect_manager: *const EffectManager,
     pub _window_size: Vector2<i32>,
     pub _scene_name: String,
     pub _sea_height: f32,
@@ -91,14 +97,16 @@ pub struct ProjectSceneManager {
 impl ProjectSceneManagerBase for ProjectSceneManager {
     fn initialize_project_scene_manager(
         &mut self,
-        scene_manager_data: &SceneManagerData,
-        renderer_data: &RendererData,
-        resources: &Resources,
+        scene_manager: &SceneManager,
+        renderer_context: &RendererContext,
+        effect_manager: &EffectManager,
+        engine_resources: &EngineResources,
         window_size: &Vector2<i32>,
     ) {
-        self._project_renderer = renderer_data._project_renderer as *const ProjectRenderer;
-        self._scene_manager_data = scene_manager_data;
-        self._project_resources = resources._project_resources as *const ProjectResources;
+        self._renderer_data = renderer_context._renderer_data.as_ptr();
+        self._effect_manager = effect_manager;
+        self._scene_manager = scene_manager;
+        self._project_resources = engine_resources._project_resources as *const ProjectResources;
 
         self.resized_window(window_size.x, window_size.y);
     }
@@ -240,7 +248,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         let scene_data_create_info = project_resources.get_scene_data(scene_data_name).borrow();
 
         self._sea_height = scene_data_create_info._sea_height;
-        self.get_project_renderer_mut()._fft_ocean.set_height(scene_data_create_info._sea_height);
+        self.get_renderer_data_mut()._fft_ocean.set_height(scene_data_create_info._sea_height);
 
         // cameras
         for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
@@ -296,11 +304,11 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             let texture_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
             let mut height_map_directory: PathBuf = texture_directory.clone();
             height_map_directory.push("stages");
-            let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &IMAGE_SOURCE_EXTS);
+            let height_map_files = project_resources.get_engine_resources().collect_engine_resources(height_map_directory.as_path(), &EXT_IMAGE_SOURCE);
             for height_map_file in height_map_files.iter() {
                 let resource_name = get_resource_name_from_file_path(&texture_directory, &height_map_file);
                 if resource_name == stage_height_map_name {
-                    let (image_width, image_height, _image_layers, image_data, _image_format) = Resources::load_image_data(height_map_file);
+                    let (image_width, image_height, _image_layers, image_data, _image_format) = EngineResources::load_image_data(height_map_file);
                     stage_model._transform_object.update_transform_object();
                     stage_model.update_bound_box();
                     self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data, scene_data_create_info._sea_height);
@@ -361,7 +369,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         }
         // effects
         for (effect_name, effect_id) in self._effect_id_map.iter() {
-            let effect = self.get_project_effect_manager().get_effect(*effect_id).unwrap().borrow();
+            let effect = self.get_effect_manager().get_effect(*effect_id).unwrap().borrow();
             let effect_create_info = EffectCreateInfo {
                 _effect_position: effect._effect_transform.get_position().clone() as Vector3<f32>,
                 _effect_rotation: effect._effect_transform.get_rotation().clone() as Vector3<f32>,
@@ -421,8 +429,6 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
             render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
         }
 
-        self.get_project_effect_manager_mut().update_effects(delta_time as f32);
-
         // gather render elements
         ProjectSceneManager::gather_render_elements(
             &main_camera,
@@ -446,6 +452,15 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         font_manager.log(format!("StaticMesh: {:?}, Shadow: {:?}", self._static_render_elements.len(), self._static_shadow_render_elements.len()));
         font_manager.log(format!("SkeletalMesh: {:?}, Shadow: {:?}", self._skeletal_render_elements.len(), self._skeletal_shadow_render_elements.len()));
     }
+
+    fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
+    fn get_main_light(&self) -> &RcRefCell<DirectionalLightData> { &self._main_light }
+    fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
+    fn get_capture_height_map(&self) -> &RcRefCell<DirectionalLightData> { &self._capture_height_map }
+    fn get_static_render_elements(&self) -> &Vec<RenderElementData> { &self._static_render_elements }
+    fn get_static_shadow_render_elements(&self) -> &Vec<RenderElementData> { &self._static_shadow_render_elements }
+    fn get_skeletal_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_render_elements }
+    fn get_skeletal_shadow_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_shadow_render_elements }
 }
 
 impl ProjectSceneManager {
@@ -453,7 +468,7 @@ impl ProjectSceneManager {
         let default_camera = CameraObjectData::create_camera_object_data(&String::from("default_camera"), &CameraCreateInfo::default());
         let light_probe_camera_create_info = CameraCreateInfo {
             fov: 90.0,
-            window_size: Vector2::new(application_constants::LIGHT_PROBE_SIZE as i32, application_constants::LIGHT_PROBE_SIZE as i32),
+            window_size: Vector2::new(constants::LIGHT_PROBE_SIZE as i32, constants::LIGHT_PROBE_SIZE as i32),
             enable_jitter: false,
             ..Default::default()
         };
@@ -471,19 +486,19 @@ impl ProjectSceneManager {
             &DirectionalLightCreateInfo {
                 _rotation: Vector3::new(std::f32::consts::PI * -0.5, 0.0, 0.0),
                 _shadow_dimensions: Vector4::new(
-                    application_constants::CAPTURE_HEIGHT_MAP_DISTANCE,
-                    application_constants::CAPTURE_HEIGHT_MAP_DISTANCE,
-                    -application_constants::CAPTURE_HEIGHT_MAP_DEPTH,
-                    application_constants::CAPTURE_HEIGHT_MAP_DEPTH
+                    constants::CAPTURE_HEIGHT_MAP_DISTANCE,
+                    constants::CAPTURE_HEIGHT_MAP_DISTANCE,
+                    -constants::CAPTURE_HEIGHT_MAP_DEPTH,
+                    constants::CAPTURE_HEIGHT_MAP_DEPTH
                 ),
                 ..Default::default()
             }
         );
         Box::new(ProjectSceneManager {
-            _scene_manager_data: std::ptr::null(),
+            _scene_manager: std::ptr::null(),
             _project_resources: std::ptr::null(),
-            _project_renderer: std::ptr::null(),
-            _project_effect_manager: std::ptr::null(),
+            _renderer_data: std::ptr::null(),
+            _effect_manager: std::ptr::null(),
             _window_size: default_camera._window_size.into(),
             _scene_name: String::new(),
             _sea_height: 0.0,
@@ -504,36 +519,27 @@ impl ProjectSceneManager {
             _level_data: LevelData::default(),
         })
     }
-    pub fn get_scene_manager_data(&self) -> &SceneManagerData { unsafe { &*self._scene_manager_data } }
-    pub fn get_scene_manager_data_mut(&self) -> &mut SceneManagerData { unsafe { &mut *(self._scene_manager_data as *mut SceneManagerData) } }
-    pub fn get_project_renderer(&self) -> &ProjectRenderer { unsafe { &*self._project_renderer } }
-    pub fn get_project_renderer_mut(&self) -> &mut ProjectRenderer { unsafe { &mut *(self._project_renderer as *mut ProjectRenderer) } }
+
     pub fn get_project_resources(&self) -> &ProjectResources { unsafe { &*self._project_resources } }
     pub fn get_project_resources_mut(&self) -> &mut ProjectResources { unsafe { &mut *(self._project_resources as *mut ProjectResources) } }
-    pub fn get_engine_resources(&self) -> &Resources { self.get_project_resources().get_engine_resources() }
-    pub fn get_engine_resources_mut(&self) -> &mut Resources { self.get_project_resources().get_engine_resources_mut() }
-    pub fn get_project_effect_manager(&self) -> &ProjectEffectManager { unsafe { &*self._project_effect_manager } }
-    pub fn get_project_effect_manager_mut(&self) -> &mut ProjectEffectManager { unsafe { &mut *(self._project_effect_manager as *mut ProjectEffectManager) } }
-    pub fn set_project_effect_manager(&mut self, project_effect_manager: *const ProjectEffectManager) { self._project_effect_manager = project_effect_manager; }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
     pub fn get_level_data(&self) -> &LevelData { &self._level_data }
+    pub fn get_scene_manager(&self) -> &SceneManager { unsafe { &*self._scene_manager } }
+    pub fn get_scene_manager_mut(&self) -> &mut SceneManager { unsafe { &mut *(self._scene_manager as *mut SceneManager) } }
+    pub fn get_renderer_data(&self) -> &RendererData { unsafe { &*self._renderer_data } }
+    pub fn get_renderer_data_mut(&self) -> &mut RendererData { unsafe { &mut *(self._renderer_data as *mut RendererData) } }
+    pub fn get_engine_resources(&self) -> &EngineResources { self.get_project_resources().get_engine_resources() }
+    pub fn get_engine_resources_mut(&self) -> &mut EngineResources { self.get_project_resources().get_engine_resources_mut() }
+    pub fn get_effect_manager(&self) -> &EffectManager { unsafe { &*self._effect_manager } }
+    pub fn get_effect_manager_mut(&self) -> &mut EffectManager { unsafe { &mut *(self._effect_manager as *mut EffectManager) } }
+    pub fn set_effect_manager(&mut self, effect_manager: *const EffectManager) { self._effect_manager = effect_manager; }
     pub fn get_sea_height(&self) -> f32 { self._sea_height }
-    pub fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
-    pub fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
     pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {
         let new_object_name = system::generate_unique_name(&self._camera_object_map, object_name);
         let camera_object_data = newRcRefCell(CameraObjectData::create_camera_object_data(&new_object_name, camera_create_info));
         self._camera_object_map.insert(new_object_name, camera_object_data.clone());
         camera_object_data
     }
-    pub fn get_main_light(&self) -> &RcRefCell<DirectionalLightData> {
-        &self._main_light
-    }
-
-    pub fn get_capture_height_map(&self) -> &RcRefCell<DirectionalLightData> {
-        &self._capture_height_map
-    }
-
     pub fn add_light_object(&mut self, object_name: &str, light_create_info: &DirectionalLightCreateInfo) -> RcRefCell<DirectionalLightData> {
         let new_object_name = system::generate_unique_name(&self._directional_light_object_map, object_name);
         let light_object_data = newRcRefCell(DirectionalLightData::create_light_data(&new_object_name, light_create_info));
@@ -560,7 +566,7 @@ impl ProjectSceneManager {
     pub fn add_effect(&mut self, object_name: &str, effect_create_info: &EffectCreateInfo) -> i64 {
         let new_object_name = system::generate_unique_name(&self._effect_id_map, &object_name);
         let effect_data = self.get_project_resources().get_effect_data(&effect_create_info._effect_data_name);
-        let effect_id = self.get_project_effect_manager_mut().create_effect(effect_create_info, &effect_data);
+        let effect_id = self.get_effect_manager_mut().create_effect(effect_create_info, &effect_data);
         self._effect_id_map.insert(new_object_name, effect_id);
         effect_id
     }
@@ -581,26 +587,28 @@ impl ProjectSceneManager {
         self._skeletal_render_object_map.remove(object_name);
     }
 
-    pub fn get_static_render_elements(&self) -> &Vec<RenderElementData> {
-        &self._static_render_elements
-    }
-
-    pub fn get_static_shadow_render_elements(&self) -> &Vec<RenderElementData> {
-        &self._static_shadow_render_elements
-    }
-
-    pub fn get_skeletal_render_elements(&self) -> &Vec<RenderElementData> {
-        &self._skeletal_render_elements
-    }
-
-    pub fn get_skeletal_shadow_render_elements(&self) -> &Vec<RenderElementData> {
-        &self._skeletal_shadow_render_elements
-    }
-
     pub fn get_effect(&self, effect_id: i64) -> Option<&RcRefCell<EffectInstance>> {
-        self.get_project_effect_manager().get_effect(effect_id)
+        self.get_effect_manager().get_effect(effect_id)
     }
 
+    pub fn initialize_light_probe_cameras(&mut self) {
+        let pi = std::f32::consts::PI;
+        let half_pi = std::f32::consts::PI * 0.5;
+        let rotations: [Vector3<f32>; constants::CUBE_LAYER_COUNT] = [
+            Vector3::new(0.0, half_pi, 0.0),
+            Vector3::new(0.0, -half_pi, 0.0),
+            Vector3::new(-half_pi, 0.0, 0.0),
+            Vector3::new(half_pi, 0.0, 0.0),
+            Vector3::new(0.0, 0.0, 0.0),
+            Vector3::new(0.0, pi, 0.0)
+        ];
+        let inverse_front = Vector3::new(1.0, 1.0, -1.0);
+        for i in 0..constants::CUBE_LAYER_COUNT {
+            self._light_probe_cameras[i].borrow_mut()._transform_object.set_rotation(&rotations[i]);
+            self._light_probe_cameras[i].borrow_mut()._transform_object.set_scale(&inverse_front);
+            self._light_probe_cameras[i].borrow_mut().update_camera_object_data();
+        }
+    }
     pub fn view_frustum_culling_geometry(camera: &CameraObjectData, geometry_bound_box: &BoundingBox) -> bool {
         let to_geometry = &geometry_bound_box._center - camera.get_camera_position();
         for plane in camera._view_frustum_planes.iter() {
@@ -611,7 +619,6 @@ impl ProjectSceneManager {
         }
         false
     }
-
     pub fn shadow_culling(light: &DirectionalLightData, geometry_bound_box: &BoundingBox) -> bool {
         let shadow_view_projection = light.get_shadow_view_projection();
         let bound_min: Vector4<f32> = shadow_view_projection * Vector4::new(geometry_bound_box._min.x, geometry_bound_box._min.y, geometry_bound_box._min.z, 1.0);
@@ -623,7 +630,6 @@ impl ProjectSceneManager {
         }
         false
     }
-
     pub fn gather_render_elements(
         camera: &CameraObjectData,
         light: &DirectionalLightData,
@@ -657,25 +663,6 @@ impl ProjectSceneManager {
                     })
                 }
             }
-        }
-    }
-
-    pub fn initialize_light_probe_cameras(&mut self) {
-        let pi = std::f32::consts::PI;
-        let half_pi = std::f32::consts::PI * 0.5;
-        let rotations: [Vector3<f32>; constants::CUBE_LAYER_COUNT] = [
-            Vector3::new(0.0, half_pi, 0.0),
-            Vector3::new(0.0, -half_pi, 0.0),
-            Vector3::new(-half_pi, 0.0, 0.0),
-            Vector3::new(half_pi, 0.0, 0.0),
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(0.0, pi, 0.0)
-        ];
-        let inverse_front = Vector3::new(1.0, 1.0, -1.0);
-        for i in 0..constants::CUBE_LAYER_COUNT {
-            self._light_probe_cameras[i].borrow_mut()._transform_object.set_rotation(&rotations[i]);
-            self._light_probe_cameras[i].borrow_mut()._transform_object.set_scale(&inverse_front);
-            self._light_probe_cameras[i].borrow_mut().update_camera_object_data();
         }
     }
 }
