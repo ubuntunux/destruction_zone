@@ -25,7 +25,7 @@ use rust_engine_3d::renderer::renderer_data::RendererData;
 use rust_engine_3d::resource::resource::{
     EngineResources,
     get_resource_name_from_file_path,
-    TEXTURE_SOURCE_FILE_PATH,
+    TEXTURE_SOURCE_DIRECTORY,
     EXT_IMAGE_SOURCE,
     ProjectResourcesBase
 };
@@ -301,10 +301,10 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
         {
             let mut stage_model = maybe_stage_model.unwrap().borrow_mut();
             let stage_height_map_name: String = stage_model._model_data.borrow()._model_data_name.clone() + "_heightmap";
-            let texture_directory = PathBuf::from(TEXTURE_SOURCE_FILE_PATH);
+            let texture_directory = PathBuf::from(TEXTURE_SOURCE_DIRECTORY);
             let mut height_map_directory: PathBuf = texture_directory.clone();
             height_map_directory.push("stages");
-            let height_map_files = project_resources.get_engine_resources().collect_engine_resources(height_map_directory.as_path(), &EXT_IMAGE_SOURCE);
+            let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &EXT_IMAGE_SOURCE);
             for height_map_file in height_map_files.iter() {
                 let resource_name = get_resource_name_from_file_path(&texture_directory, &height_map_file);
                 if resource_name == stage_height_map_name {

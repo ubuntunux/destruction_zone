@@ -5,11 +5,14 @@ use std::path::{ Path, PathBuf };
 use serde_json::{ self };
 
 use rust_engine_3d::resource::resource::{
+    PROJECT_RESOURCE_PATH,
     ResourceDataMap,
     ProjectResourcesBase,
     EngineResources,
     get_unique_resource_name
 };
+use rust_engine_3d::application::audio_manager::{AudioData, AudioBankData};
+use rust_engine_3d::effect::effect_data::EffectData;
 use rust_engine_3d::renderer::renderer_context::{ RendererContext };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::renderer::font::FontData;
@@ -23,15 +26,13 @@ use crate::game_module::ship::ship::{ShipDataCreateInfo, ShipData};
 use crate::game_module::ship::ship_controller::ShipControllerData;
 use crate::game_module::weapons::bullet::BulletData;
 use crate::game_module::weapons::weapon::{WeaponDataCreateInfo, WeaponData};
-use rust_engine_3d::application::audio_manager::{AudioData, AudioBankData};
-use rust_engine_3d::effect::effect_data::EffectData;
 
-pub const SCENE_FILE_PATH: &str = "resources/scenes";
-pub const BUILDING_DATA_FILE_PATH: &str = "resources/game_datas/buildings";
-pub const BULLET_DATA_FILE_PATH: &str = "resources/game_datas/bullets";
-pub const SHIP_CONTROLLER_DATA_FILE_PATH: &str = "resources/game_datas/ship_controllers";
-pub const SHIP_DATA_FILE_PATH: &str = "resources/game_datas/ships";
-pub const WEAPON_DATA_FILE_PATH: &str = "resources/game_datas/weapons";
+pub const SCENE_FILE_PATH: &str = "scenes";
+pub const BUILDING_DATA_FILE_PATH: &str = "game_datas/buildings";
+pub const BULLET_DATA_FILE_PATH: &str = "game_datas/bullets";
+pub const SHIP_CONTROLLER_DATA_FILE_PATH: &str = "game_datas/ship_controllers";
+pub const SHIP_DATA_FILE_PATH: &str = "game_datas/ships";
+pub const WEAPON_DATA_FILE_PATH: &str = "game_datas/weapons";
 
 pub const EXT_SCENE: &str = "scene";
 pub const EXT_GAME_DATA: &str = "data";
@@ -148,14 +149,14 @@ impl ProjectResources {
     pub fn get_engine_resources_mut(&self) -> &mut EngineResources {
         unsafe { &mut *(self._engine_resources as *mut EngineResources) }
     }
-    pub fn collect_engine_resources(&self, dir: &Path, extensions: &[&str]) -> Vec<PathBuf> {
-        self.get_engine_resources().collect_engine_resources(dir, extensions)
+    pub fn collect_resources(&self, dir: &Path, extensions: &[&str]) -> Vec<PathBuf> {
+        self.get_engine_resources().collect_resources(dir, extensions)
     }
 
     // SceneData
     pub fn load_scene_datas(&mut self, _renderer_context: &RendererContext) {
         let scene_directory = PathBuf::from(SCENE_FILE_PATH);
-        let scene_data_files: Vec<PathBuf> = self.collect_engine_resources(&scene_directory, &[EXT_SCENE]);
+        let scene_data_files: Vec<PathBuf> = self.collect_resources(&scene_directory, &[EXT_SCENE]);
         for scene_data_file in scene_data_files {
             let scene_data_name = get_unique_resource_name(&self._scene_data_create_infos_map, &scene_directory, &scene_data_file);
             let loaded_contents = system::load(&scene_data_file);
@@ -169,7 +170,8 @@ impl ProjectResources {
     }
 
     pub fn save_scene_data(&mut self, scene_data_name: &str, scene_data_create_info: &SceneDataCreateInfo) {
-        let mut scene_data_filepath = PathBuf::from(SCENE_FILE_PATH);
+        let mut scene_data_filepath = PathBuf::from(PROJECT_RESOURCE_PATH);
+        scene_data_filepath.push(SCENE_FILE_PATH);
         scene_data_filepath.push(scene_data_name);
         scene_data_filepath.set_extension(EXT_SCENE);
         let mut write_file = File::create(&scene_data_filepath).expect("Failed to create file");
@@ -208,7 +210,8 @@ impl ProjectResources {
         let game_data_directory = PathBuf::from(SHIP_CONTROLLER_DATA_FILE_PATH);
 
         // create ship contorller data
-        let mut default_ship_controller_data_file_path: PathBuf = game_data_directory.clone();
+        let mut default_ship_controller_data_file_path: PathBuf = PathBuf::from(PROJECT_RESOURCE_PATH);
+        default_ship_controller_data_file_path.push(&game_data_directory);
         default_ship_controller_data_file_path.push(&DEFAULT_GAME_DATA_NAME);
         default_ship_controller_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
@@ -221,7 +224,7 @@ impl ProjectResources {
         }
 
         // load_ship_controller_datas
-        let game_data_files: Vec<PathBuf> = self.collect_engine_resources(&game_data_directory, &[EXT_GAME_DATA]);
+        let game_data_files: Vec<PathBuf> = self.collect_resources(&game_data_directory, &[EXT_GAME_DATA]);
         for game_data_file in game_data_files {
             let game_data_name = get_unique_resource_name(&self._ship_controller_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
@@ -247,7 +250,8 @@ impl ProjectResources {
         let game_data_directory = PathBuf::from(SHIP_DATA_FILE_PATH);
 
         // create ship data
-        let mut default_ship_data_file_path: PathBuf = game_data_directory.clone();
+        let mut default_ship_data_file_path: PathBuf = PathBuf::from(PROJECT_RESOURCE_PATH);
+        default_ship_data_file_path.push(&game_data_directory);
         default_ship_data_file_path.push(&DEFAULT_GAME_DATA_NAME);
         default_ship_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
@@ -263,7 +267,7 @@ impl ProjectResources {
         }
 
         // load ship data
-        let game_data_files: Vec<PathBuf> = self.collect_engine_resources(&game_data_directory, &[EXT_GAME_DATA]);
+        let game_data_files: Vec<PathBuf> = self.collect_resources(&game_data_directory, &[EXT_GAME_DATA]);
         for game_data_file in game_data_files {
             let game_data_name = get_unique_resource_name(&self._ship_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
@@ -291,7 +295,8 @@ impl ProjectResources {
         let game_data_directory = PathBuf::from(BULLET_DATA_FILE_PATH);
 
         // create bullet data
-        let mut default_bullet_data_file_path: PathBuf = game_data_directory.clone();
+        let mut default_bullet_data_file_path: PathBuf = PathBuf::from(PROJECT_RESOURCE_PATH);
+        default_bullet_data_file_path.push(&game_data_directory);
         default_bullet_data_file_path.push(&DEFAULT_GAME_DATA_NAME);
         default_bullet_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
@@ -304,7 +309,7 @@ impl ProjectResources {
         }
 
         // load bullet data
-        let game_data_files: Vec<PathBuf> = self.collect_engine_resources(&game_data_directory, &[EXT_GAME_DATA]);
+        let game_data_files: Vec<PathBuf> = self.collect_resources(&game_data_directory, &[EXT_GAME_DATA]);
         for game_data_file in game_data_files {
             let game_data_name = get_unique_resource_name(&self._bullet_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
@@ -330,7 +335,8 @@ impl ProjectResources {
         let game_data_directory = PathBuf::from(WEAPON_DATA_FILE_PATH);
 
         // create weapon data
-        let mut default_weapon_data_file_path: PathBuf = game_data_directory.clone();
+        let mut default_weapon_data_file_path: PathBuf = PathBuf::from(PROJECT_RESOURCE_PATH);
+        default_weapon_data_file_path.push(&game_data_directory);
         default_weapon_data_file_path.push(&DEFAULT_GAME_DATA_NAME);
         default_weapon_data_file_path.set_extension(EXT_GAME_DATA);
         #[cfg(not(target_os = "android"))]
@@ -346,7 +352,7 @@ impl ProjectResources {
         }
 
         // load weapon data
-        let game_data_files: Vec<PathBuf> = self.collect_engine_resources(&game_data_directory, &[EXT_GAME_DATA]);
+        let game_data_files: Vec<PathBuf> = self.collect_resources(&game_data_directory, &[EXT_GAME_DATA]);
         for game_data_file in game_data_files {
             let game_data_name = get_unique_resource_name(&self._weapon_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
