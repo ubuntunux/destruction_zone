@@ -111,9 +111,14 @@ impl PlayerActor {
         {
             cockpit_offset.y = 0.0;
             cockpit_offset.normalize_mut();
+            if main_camera._transform_object.get_up().y < 0.0 {
+                cockpit_offset = -cockpit_offset;
+            }
+
             let bound_box = &self._ship._render_object.borrow()._bound_box;
             const BOUND_BOX_MIN: f32 = 2.0;
             cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
+
             cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
         }
 
