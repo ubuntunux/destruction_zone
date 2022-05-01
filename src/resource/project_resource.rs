@@ -80,7 +80,7 @@ impl ProjectResourcesBase for ProjectResources {
         self.get_engine_resources().has_audio_data(resource_name)
     }
     fn get_audio_data(&self, resource_name: &str) -> &ResourceData {
-        self.get_engine_resources().get_audio_data(resource_name)
+        self.get_engine_resources_mut().get_audio_data(resource_name)
     }
     fn has_audio_bank_data(&self, resource_name: &str) -> bool {
         self.get_engine_resources().has_audio_bank_data(resource_name)
