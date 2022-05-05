@@ -156,6 +156,7 @@ impl ProjectResources {
 
     // SceneData
     pub fn load_scene_datas(&mut self, _renderer_context: &RendererContext) {
+        log::info!("    load_scene_datas");
         let scene_directory = PathBuf::from(SCENE_FILE_PATH);
         let scene_data_files: Vec<PathBuf> = self.collect_resources(&scene_directory, &[EXT_SCENE]);
         for scene_data_file in scene_data_files {
@@ -193,6 +194,7 @@ impl ProjectResources {
 
     // Game Datas
     fn load_game_datas(&mut self) {
+        log::info!("    load_game_datas");
         self.load_bullet_datas();
         self.load_weapon_datas();
         self.load_ship_controller_datas();
