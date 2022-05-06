@@ -12,7 +12,6 @@ use rust_engine_3d::resource::resource::{
     EngineResources,
     get_unique_resource_name,
 };
-use rust_engine_3d::application::audio_manager::AudioBankData;
 use rust_engine_3d::effect::effect_data::EffectData;
 use rust_engine_3d::renderer::renderer_context::{ RendererContext };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
@@ -85,8 +84,8 @@ impl ProjectResourcesBase for ProjectResources {
     fn has_audio_bank_data(&self, resource_name: &str) -> bool {
         self.get_engine_resources().has_audio_bank_data(resource_name)
     }
-    fn get_audio_bank_data(&self, resource_name: &str) -> Option<&RcRefCell<AudioBankData>> {
-        self.get_engine_resources().get_audio_bank_data(resource_name)
+    fn get_audio_bank_data(&self, resource_name: &str) -> &ResourceData {
+        self.get_engine_resources_mut().get_audio_bank_data(resource_name)
     }
     fn has_effect_data(&self, resource_name: &str) -> bool {
         self.get_engine_resources().has_effect_data(resource_name)
