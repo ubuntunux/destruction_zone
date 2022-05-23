@@ -95,7 +95,7 @@ impl WeaponManager {
                     }
 
                     if false == bullet.get_bullet_data()._bullet_destroy_sound_bank.is_empty() {
-                        project_application.get_audio_manager_mut().create_audio_bank(&bullet.get_bullet_data()._bullet_destroy_sound_bank, AudioLoop::ONCE);
+                        project_application.get_audio_manager_mut().create_audio_instance_from_bank(&bullet.get_bullet_data()._bullet_destroy_sound_bank, AudioLoop::ONCE);
                     }
                 }
                 project_application.get_project_scene_manager_mut().remove_static_render_object(&bullet._bullet_render_object.borrow()._render_object_name);

@@ -162,7 +162,7 @@ impl WeaponTrait for BeamEmitter {
         };
 
         let bullet_render_object = project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
-        project_application.get_audio_manager_mut().create_audio("assaultrifle1", AudioLoop::ONCE);
+        project_application.get_audio_manager_mut().create_audio_instance("assaultrifle1", AudioLoop::ONCE);
 
         // create bullet
         let bullet = Bullet::create_bullet(
