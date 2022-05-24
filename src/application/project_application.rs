@@ -282,9 +282,9 @@ pub fn run_project_application() {
         // shadow
         constants::SHADOW_MAP_SIZE = 2048;
         constants::SHADOW_SAMPLES = 4;
-        constants::SHADOW_BIAS = 0.004;
+        constants::SHADOW_BIAS = 0.005;
         constants::SHADOW_DISTANCE = 200.0;
-        constants::SHADOW_DEPTH = 1000.0;
+        constants::SHADOW_DEPTH = 2000.0;
         constants::SHADOW_EXP = 500.0;
         // effect
         constants::MAX_EMITTER_COUNT = 1024;
