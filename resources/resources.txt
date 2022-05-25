@@ -434,6 +434,7 @@ resources/game_datas/ships/tank.data
 resources/game_datas/bullets/beam.data
 resources/game_datas/bullets/default.data
 resources/effects/bullet_destroy.effect
+resources/scenes/sponza.scene
 resources/scenes/default.scene
 resources/material_instances/weapons/beam_emitter.matinst
 resources/material_instances/stages/default_stage.matinst

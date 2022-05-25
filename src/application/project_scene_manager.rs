@@ -481,19 +481,21 @@ impl ProjectSceneManager {
             system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera5"), &light_probe_camera_create_info))
         ];
         let default_light = DirectionalLightData::create_light_data(&String::from("default_light"), &DirectionalLightCreateInfo::default());
-        let capture_height_map = DirectionalLightData::create_light_data(
-            &String::from("capture_height_map"),
-            &DirectionalLightCreateInfo {
-                _rotation: Vector3::new(std::f32::consts::PI * -0.5, 0.0, 0.0),
-                _shadow_dimensions: Vector4::new(
-                    constants::CAPTURE_HEIGHT_MAP_DISTANCE,
-                    constants::CAPTURE_HEIGHT_MAP_DISTANCE,
-                    -constants::CAPTURE_HEIGHT_MAP_DEPTH,
-                    constants::CAPTURE_HEIGHT_MAP_DEPTH
-                ),
-                ..Default::default()
-            }
-        );
+        let capture_height_map = unsafe {
+            DirectionalLightData::create_light_data(
+                &String::from("capture_height_map"),
+                &DirectionalLightCreateInfo {
+                    _rotation: Vector3::new(std::f32::consts::PI * -0.5, 0.0, 0.0),
+                    _shadow_dimensions: Vector4::new(
+                        constants::CAPTURE_HEIGHT_MAP_DISTANCE,
+                        constants::CAPTURE_HEIGHT_MAP_DISTANCE,
+                        -constants::CAPTURE_HEIGHT_MAP_DEPTH,
+                        constants::CAPTURE_HEIGHT_MAP_DEPTH
+                    ),
+                    ..Default::default()
+                }
+            )
+        };
         Box::new(ProjectSceneManager {
             _scene_manager: std::ptr::null(),
             _project_resources: std::ptr::null(),
