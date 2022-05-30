@@ -1,4 +1,5 @@
 pub mod game_constants;
+pub mod game_controller;
 pub mod game_client;
 pub mod game_states;
 pub mod level_datas;

@@ -47,7 +47,7 @@ impl WeaponManager {
         self._bullets_array.remove(&id);
     }
 
-    pub fn update_weapon_manager(&mut self, project_application: &ProjectApplication, actor_manager: &mut ActorManager, delta_time: f32) {
+    pub fn update_weapon_manager(&mut self, delta_time: f32, project_application: &ProjectApplication, actor_manager: &mut ActorManager) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
 
         let mut dead_bullets: Vec<u64> = Vec::new();

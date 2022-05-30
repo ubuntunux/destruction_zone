@@ -4,15 +4,21 @@ use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::math::{ degree_to_radian, lerp };
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
+use crate::game_module::game_controller::{ GameViewMode, GameController };
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
-use crate::game_module::game_constants::{ BULLET_DISTANCE_MAX, BULLET_CHECK_STEP };
+use crate::game_module::game_constants::{
+    BULLET_DISTANCE_MAX,
+    BULLET_CHECK_STEP,
+};
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
+
 
 pub struct PlayerActor {
     pub _id: u64,
@@ -59,21 +65,26 @@ impl ActorTrait for PlayerActor {
         self._ship.get_transform_mut()
     }
     fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
-    fn fire(&mut self, project_application: &ProjectApplication) {
+    fn actor_fire(&mut self, project_application: &ProjectApplication, game_controller: &GameController) {
+        let main_camera = project_application.get_project_scene_manager().get_main_camera();
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let main_camera = project_application.get_project_scene_manager().get_main_camera().borrow();
-        let camera_position: &Vector3<f32> = main_camera.get_camera_position();
-        let camera_dir = main_camera._transform_object.get_front();
+        let transform = unsafe { &*(self._ship._transform_object) };
+        let start_position = transform.get_position();
+        let fire_dir: Vector3<f32> = match game_controller._game_view_mode {
+            GameViewMode::TopViewMode => transform.get_front().clone() as Vector3<f32>,
+            GameViewMode::FpsViewMode => main_camera.borrow().get_camera_front().clone() as Vector3<f32>,
+            _ => Vector3::zeros(),
+        };
         let loop_count: usize = (BULLET_DISTANCE_MAX / BULLET_CHECK_STEP).ceil() as usize;
         for i in 0..loop_count {
             let check_dist = BULLET_CHECK_STEP * i as f32;
-            self._target_position = camera_position - camera_dir * check_dist;
+            self._target_position = start_position - fire_dir * check_dist;
             let floating_height = height_map_data.get_height(&self._target_position, 0);
             if self._target_position.y < floating_height {
                 break;
             }
         }
-        self._ship.fire(project_application, &self._target_position);
+        self._ship.ship_fire(project_application, &self._target_position);
     }
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
         unimplemented!()
@@ -94,16 +105,18 @@ impl PlayerActor {
         })
     }
 
-    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, camera_distance: f32) {
-        let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
-
-        // update actor controller
-        self._ship._controller.update_controller(delta_time, transform, height_map_data);
-
-        // update camera transform
+    pub fn update_camera(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, game_controller: &GameController) {
         let ship_controller = &self._ship._controller;
-        main_camera._transform_object.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
-        main_camera._transform_object.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+        let dist_ratio: f32 = game_controller.get_camera_distance_ratio();
+        if game_controller._game_view_mode == GameViewMode::TopViewMode {
+            let pitch: f32 = lerp(-25.0, -75.0, dist_ratio);
+            main_camera._transform_object.set_pitch(degree_to_radian(pitch));
+        } else if game_controller._game_view_mode == GameViewMode::FpsViewMode {
+            main_camera._transform_object.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
+            main_camera._transform_object.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+        } else {
+            assert!(false, "Not implemented.");
+        }
         main_camera._transform_object.update_transform_object();
 
         // set camera offset
@@ -122,14 +135,25 @@ impl PlayerActor {
             cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
         }
 
-        let mut camera_pos = ship_controller.get_position() + main_camera._transform_object.get_front() * camera_distance + cockpit_offset;
+        let mut camera_pos = ship_controller.get_position() + main_camera._transform_object.get_front() * game_controller._camera_distance + cockpit_offset;
         let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
         if camera_pos.y < floating_height {
             camera_pos.y = floating_height;
         }
         main_camera._transform_object.set_position(&camera_pos);
+    }
+
+
+    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, game_controller: &GameController) {
+        let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
+
+        // update actor controller
+        self._ship._controller.update_controller(delta_time, transform, height_map_data);
+
+        self.update_camera(delta_time, height_map_data, main_camera, game_controller);
 
         // update player transform
+        let ship_controller = &self._ship._controller;
         let roll = ship_controller.get_roll();
         let yaw = std::f32::consts::PI - roll * 0.5;
         transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);

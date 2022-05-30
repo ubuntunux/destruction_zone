@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
-use rust_engine_3d::utilities::math::lerp;
 
 use crate::application::project_application::ProjectApplication;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::actors::non_player_actor::NonPlayerActor;
-use crate::game_module::game_constants::{ CAMERA_DISTANCE_MIN, CAMERA_DISTANCE_MAX, CAMERA_DISTANCE_SPEED};
+use crate::game_module::game_controller::GameController;
 use crate::game_module::level_datas::spawn_point::{SpawnPointType, ShipSpawnPointData};
-use crate::application::project_scene_manager::ProjectSceneManager;
 
 pub type ActorMap = HashMap<u64, Box<dyn ActorTrait>>;
 
@@ -17,8 +16,6 @@ pub struct ActorManager {
     pub _id_generator: u64,
     pub _player_actor: *const PlayerActor,
     pub _actors: ActorMap,
-    pub _camera_distance: f32,
-    pub _camera_goal_distance: f32,
 }
 
 pub fn calc_floating_height(render_object: &RenderObjectData) -> f32 {
@@ -27,13 +24,10 @@ pub fn calc_floating_height(render_object: &RenderObjectData) -> f32 {
 
 impl ActorManager {
     pub fn create_actor_manager() -> Box<ActorManager> {
-        let default_camera_distance = (CAMERA_DISTANCE_MIN + CAMERA_DISTANCE_MAX) * 0.5;
         Box::new(ActorManager {
             _id_generator: 0,
             _player_actor: std::ptr::null(),
             _actors: HashMap::new(),
-            _camera_distance: default_camera_distance,
-            _camera_goal_distance: default_camera_distance,
         })
     }
 
@@ -100,25 +94,11 @@ impl ActorManager {
         unsafe { &mut *(self._player_actor as *mut PlayerActor) }
     }
 
-    pub fn update_camera_distance(&mut self, distance: f32) {
-        self._camera_goal_distance += distance;
-        if self._camera_goal_distance < CAMERA_DISTANCE_MIN {
-            self._camera_goal_distance = CAMERA_DISTANCE_MIN;
-        } else if CAMERA_DISTANCE_MAX < self._camera_goal_distance {
-            self._camera_goal_distance = CAMERA_DISTANCE_MAX;
-        }
-    }
-
-    pub fn update_actor_manager(&mut self, project_application: &ProjectApplication, delta_time: f32) {
-        if self._camera_goal_distance != self._camera_distance {
-            self._camera_distance = lerp(self._camera_distance, self._camera_goal_distance, 1.0f32.min(delta_time * CAMERA_DISTANCE_SPEED));
-        }
-
+    pub fn update_actor_manager(&mut self, delta_time: f32, project_application: &ProjectApplication, game_controller: &GameController) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-
         let mut main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let player_actor = self.get_player_actor_mut();
-        player_actor.update_player_actor(delta_time, height_map_data, &mut main_camera, self._camera_distance);
+        player_actor.update_player_actor(delta_time, height_map_data, &mut main_camera, game_controller);
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
