@@ -17,7 +17,6 @@ use crate::game_module::game_constants::{
     BULLET_DISTANCE_MAX,
     BULLET_CHECK_STEP,
 };
-use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 
 pub struct PlayerActor {
@@ -65,16 +64,10 @@ impl ActorTrait for PlayerActor {
         self._ship.get_transform_mut()
     }
     fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
-    fn actor_fire(&mut self, project_application: &ProjectApplication, game_controller: &GameController) {
-        let main_camera = project_application.get_project_scene_manager().get_main_camera();
+    fn actor_fire(&mut self, project_application: &ProjectApplication, fire_dir: &Vector3<f32>) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let transform = unsafe { &*(self._ship._transform_object) };
         let start_position = transform.get_position();
-        let fire_dir: Vector3<f32> = match game_controller._game_view_mode {
-            GameViewMode::TopViewMode => transform.get_front().clone() as Vector3<f32>,
-            GameViewMode::FpsViewMode => main_camera.borrow().get_camera_front().clone() as Vector3<f32>,
-            _ => Vector3::zeros(),
-        };
         let loop_count: usize = (BULLET_DISTANCE_MAX / BULLET_CHECK_STEP).ceil() as usize;
         for i in 0..loop_count {
             let check_dist = BULLET_CHECK_STEP * i as f32;
@@ -86,6 +79,7 @@ impl ActorTrait for PlayerActor {
         }
         self._ship.ship_fire(project_application, &self._target_position);
     }
+
     fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
         unimplemented!()
     }

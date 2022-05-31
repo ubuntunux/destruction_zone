@@ -153,16 +153,28 @@ impl GameUIManager {
     pub fn destroy_game_ui_manager(&mut self) {
     }
 
+    pub fn get_crosshair_mut(&mut self) -> &mut WidgetDefault {
+        unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) }
+    }
+
+    pub fn show_crosshair(&mut self, show: bool) {
+        let ui_component = self.get_crosshair_mut().get_ui_component_mut();
+        ui_component.set_visible(show);
+    }
+
     pub fn update_game_ui(&mut self, _delta_time: f32, project_application: &ProjectApplication, actor_manager: &ActorManager) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_engine_application()._window_size;
 
         // Cross Hair
-        self._crosshair_pos.x = window_size.x as f32 * 0.5;
-        self._crosshair_pos.y = window_size.y as f32 * 0.5;
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
-        let ui_component = crosshair_widget.get_ui_component_mut();
-        ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
+        if crosshair_widget._ui_component.get_visible() {
+            self._crosshair_pos.x = window_size.x as f32 * 0.5;
+            self._crosshair_pos.y = window_size.y as f32 * 0.5;
+            let ui_component = crosshair_widget.get_ui_component_mut();
+            ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
+        }
+
 
         // Player Hud
         {
