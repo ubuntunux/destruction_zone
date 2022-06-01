@@ -1,6 +1,5 @@
 use nalgebra::Vector3;
 
-use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
@@ -55,9 +54,7 @@ impl ActorTrait for PlayerActor {
     fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
-    fn get_transform(&self) -> &TransformObjectData {
-        self._ship.get_transform()
-    }
+    fn get_transform(&self) -> &TransformObjectData { self._ship.get_transform() }
     fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
@@ -97,7 +94,7 @@ impl PlayerActor {
         })
     }
 
-    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, game_controller: &GameController) {
+    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, game_controller: &GameController) {
         let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 
         self._ship._controller.update_controller(delta_time, transform, height_map_data);
@@ -108,8 +105,10 @@ impl PlayerActor {
             transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
             transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
         } else if game_controller._game_view_mode == GameViewMode::FpsViewMode {
-            let yaw = std::f32::consts::PI - ship_controller.get_rotation().z * 0.5;
-            transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
+            // apply roll weight to pitch
+            let roll_weight: f32 = 0.0;
+            let yaw = ship_controller.get_rotation().y - ship_controller.get_rotation().z * roll_weight;
+            transform.set_yaw(yaw);
         } else {
             assert!(false, "Not implemented.");
         }

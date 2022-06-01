@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use nalgebra::{Vector2, Vector3};
 use winit::event::VirtualKeyCode;
 
@@ -19,7 +21,6 @@ use crate::game_module::game_constants::{
 };
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::height_map_data::HeightMapData;
-
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -191,19 +192,19 @@ impl GameController {
 
     pub fn update_camera(
         &mut self,
-        delta_time: f32,
+        _delta_time: f32,
         height_map_data: &HeightMapData,
         player_actor: &PlayerActor
     ) {
         let mut main_camera = self.get_main_camera().borrow_mut();
-        let ship_controller = player_actor.get_controller();
+        let player_transform = player_actor.get_transform();
         let dist_ratio: f32 = self.get_camera_distance_ratio();
         if self._game_view_mode == GameViewMode::TopViewMode {
-            let pitch: f32 = math::lerp(-25.0, -75.0, dist_ratio);
-            main_camera._transform_object.set_pitch(math::degree_to_radian(pitch));
-            //main_camera._transform_object.set_yaw(0.0);
+            let pitch: f32 = math::degree_to_radian(math::lerp(-25.0, -75.0, dist_ratio));
+            main_camera._transform_object.set_pitch(pitch);
         } else if self._game_view_mode == GameViewMode::FpsViewMode {
-            main_camera._transform_object.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+            let yaw = player_transform.get_yaw() + std::f32::consts::PI;
+            main_camera._transform_object.set_yaw(yaw);
         } else {
             assert!(false, "Not implemented.");
         }
@@ -224,7 +225,7 @@ impl GameController {
             cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
         }
 
-        let mut camera_pos = ship_controller.get_position() + main_camera._transform_object.get_front() * self._camera_distance + cockpit_offset;
+        let mut camera_pos = player_transform.get_position() + main_camera._transform_object.get_front() * self._camera_distance + cockpit_offset;
         let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
         if camera_pos.y < floating_height {
             camera_pos.y = floating_height;

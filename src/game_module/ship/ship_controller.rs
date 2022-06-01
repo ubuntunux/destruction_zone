@@ -178,6 +178,10 @@ impl ShipController {
             self._rotation.z = roll;
         }
 
+        // pitch, yaw
+        self._rotation.x += self.get_velocity_pitch() * delta_time;
+        self._rotation.y += self.get_velocity_yaw() * delta_time;
+
         // reset
         self._prev_velocity.clone_from(&self._velocity);
         self._acceleration = Vector3::zeros();

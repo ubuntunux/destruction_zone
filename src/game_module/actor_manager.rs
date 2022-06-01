@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
-
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
@@ -96,9 +95,8 @@ impl ActorManager {
 
     pub fn update_actor_manager(&mut self, delta_time: f32, project_application: &ProjectApplication, game_controller: &GameController) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let mut main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let player_actor = self.get_player_actor_mut();
-        player_actor.update_player_actor(delta_time, height_map_data, &mut main_camera, game_controller);
+        player_actor.update_player_actor(delta_time, height_map_data, game_controller);
 
         for actor in self._actors.values_mut() {
             if false == actor.is_player_actor() {
