@@ -66,9 +66,12 @@ impl ActorTrait for NonPlayerActor {
         // update transform
         transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
         transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
-        transform.set_roll(ship_controller.get_roll());
+        transform.set_roll(ship_controller.get_rotation().z);
         transform.set_position(ship_controller.get_position());
         transform.update_matrix();
+
+        // update ship
+        self._ship.update_ship(delta_time, height_map_data);
     }
 }
 

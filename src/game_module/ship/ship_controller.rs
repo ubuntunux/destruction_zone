@@ -59,14 +59,19 @@ pub struct ShipController {
     pub _rotation_velocity: Vector2<f32>,
     pub _rotation_acceleration: Vector2<f32>,
     pub _position: Vector3<f32>,
-    pub _roll: f32,
+    pub _rotation: Vector3<f32>,
     pub _boost: bool,
     pub _on_ground: bool,
 }
 
 // implementation
 impl ShipController {
-    pub fn create_ship_controller(controller_data: &RcRefCell<ShipControllerData>, floating_height: f32) -> ShipController {
+    pub fn create_ship_controller(
+        controller_data: &RcRefCell<ShipControllerData>,
+        postion: &Vector3<f32>,
+        rotation: &Vector3<f32>,
+        floating_height: f32
+    ) -> ShipController {
         ShipController {
             _controller_data: controller_data.clone(),
             _prev_velocity: Vector3::zeros(),
@@ -75,8 +80,8 @@ impl ShipController {
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
-            _position: Vector3::zeros(),
-            _roll: 0.0,
+            _position: postion.clone_owned(),
+            _rotation: rotation.clone_owned(),
             _boost: false,
             _on_ground: false,
         }
@@ -95,8 +100,9 @@ impl ShipController {
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
     pub fn get_velocity(&self) -> &Vector3<f32> { &self._velocity }
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
-    pub fn get_roll(&self) -> f32 { self._roll }
-
+    pub fn set_position(&mut self, position: &Vector3<f32>) { self._position.clone_from(position); }
+    pub fn get_rotation(&self) -> &Vector3<f32> { &self._rotation }
+    pub fn set_rotation(&mut self, rotation: &Vector3<f32>) { self._rotation.clone_from(rotation); }
     pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, height_map_data: &HeightMapData) {
         let mut goal_roll = 0.0;
 
@@ -135,8 +141,8 @@ impl ShipController {
         }
 
         // apply velocity
-        let mut position = transform.get_position().clone() + &self._velocity * delta_time;
-        if position != *transform.get_position() || false == self._on_ground {
+        let mut position = &self._position + &self._velocity * delta_time;
+        if position != self._position || false == self._on_ground {
             self._on_ground = false;
             let floating_height = height_map_data.get_height(&position, 0) + self._floating_height;
             if position.y < floating_height {
@@ -159,7 +165,7 @@ impl ShipController {
         }
 
         // roll
-        let mut roll = transform.get_roll();
+        let mut roll = self._rotation.z;
         if goal_roll != roll {
             let roll_diff = goal_roll - roll;
             let sign = if 0.0 <= roll_diff { 1.0 } else { -1.0 };
@@ -169,9 +175,10 @@ impl ShipController {
             } else {
                 roll += roll_speed * roll_diff.abs() / controller_data._side_step_roll;
             }
-            self._roll = roll;
+            self._rotation.z = roll;
         }
 
+        // reset
         self._prev_velocity.clone_from(&self._velocity);
         self._acceleration = Vector3::zeros();
         self._rotation_acceleration = Vector2::zeros();

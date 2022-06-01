@@ -192,7 +192,7 @@ impl GameUIManager {
                 let distance = (actor_pos - player_actor_pos).norm();
                 let ship = actor.get_ship();
                 let clamp: bool = true;
-                let screen_pos: Vector2<f32> = main_camera.convert_to_screen_pos(actor_pos, clamp);
+                let screen_pos: Vector2<f32> = main_camera.convert_world_to_screen(actor_pos, clamp);
                 let target_hud_layer = unsafe { self._target_hud_layer.as_mut().unwrap().get_ui_component_mut() };
                 target_hud_layer.set_center(screen_pos.x, screen_pos.y);
 

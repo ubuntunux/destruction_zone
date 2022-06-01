@@ -4,8 +4,6 @@ use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
-use rust_engine_3d::utilities::math::{ degree_to_radian, lerp };
-
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
@@ -67,11 +65,11 @@ impl ActorTrait for PlayerActor {
     fn actor_fire(&mut self, project_application: &ProjectApplication, fire_dir: &Vector3<f32>) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let transform = unsafe { &*(self._ship._transform_object) };
-        let start_position = transform.get_position();
+        self._target_position.clone_from(transform.get_position());
         let loop_count: usize = (BULLET_DISTANCE_MAX / BULLET_CHECK_STEP).ceil() as usize;
         for i in 0..loop_count {
             let check_dist = BULLET_CHECK_STEP * i as f32;
-            self._target_position = start_position - fire_dir * check_dist;
+            self._target_position += fire_dir * check_dist;
             let floating_height = height_map_data.get_height(&self._target_position, 0);
             if self._target_position.y < floating_height {
                 break;
@@ -99,63 +97,27 @@ impl PlayerActor {
         })
     }
 
-    pub fn update_camera(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, game_controller: &GameController) {
-        let ship_controller = &self._ship._controller;
-        let dist_ratio: f32 = game_controller.get_camera_distance_ratio();
-        if game_controller._game_view_mode == GameViewMode::TopViewMode {
-            let pitch: f32 = lerp(-25.0, -75.0, dist_ratio);
-            main_camera._transform_object.set_pitch(degree_to_radian(pitch));
-        } else if game_controller._game_view_mode == GameViewMode::FpsViewMode {
-            main_camera._transform_object.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
-            main_camera._transform_object.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
-        } else {
-            assert!(false, "Not implemented.");
-        }
-        main_camera._transform_object.update_transform_object();
-
-        // set camera offset
-        let mut cockpit_offset = main_camera._transform_object.get_front().clone();
-        {
-            cockpit_offset.y = 0.0;
-            cockpit_offset.normalize_mut();
-            if main_camera._transform_object.get_up().y < 0.0 {
-                cockpit_offset = -cockpit_offset;
-            }
-
-            let bound_box = &self._ship._render_object.borrow()._bound_box;
-            const BOUND_BOX_MIN: f32 = 2.0;
-            cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
-
-            cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
-        }
-
-        let mut camera_pos = ship_controller.get_position() + main_camera._transform_object.get_front() * game_controller._camera_distance + cockpit_offset;
-        let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
-        if camera_pos.y < floating_height {
-            camera_pos.y = floating_height;
-        }
-        main_camera._transform_object.set_position(&camera_pos);
-    }
-
-
     pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, main_camera: &mut CameraObjectData, game_controller: &GameController) {
         let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 
-        // update actor controller
         self._ship._controller.update_controller(delta_time, transform, height_map_data);
-
-        self.update_camera(delta_time, height_map_data, main_camera, game_controller);
 
         // update player transform
         let ship_controller = &self._ship._controller;
-        let roll = ship_controller.get_roll();
-        let yaw = std::f32::consts::PI - roll * 0.5;
-        transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
-        transform.set_roll(roll);
+        if game_controller._game_view_mode == GameViewMode::TopViewMode {
+            transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
+            transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+        } else if game_controller._game_view_mode == GameViewMode::FpsViewMode {
+            let yaw = std::f32::consts::PI - ship_controller.get_rotation().z * 0.5;
+            transform.set_yaw(main_camera._transform_object.get_yaw() + yaw);
+        } else {
+            assert!(false, "Not implemented.");
+        }
+        transform.set_roll(ship_controller.get_rotation().z);
         transform.set_position(ship_controller.get_position());
         transform.update_matrix();
 
-        // update weapon
+        // update ship
         self.get_ship_mut().update_ship(delta_time, height_map_data);
     }
 }

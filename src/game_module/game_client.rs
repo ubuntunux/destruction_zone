@@ -31,8 +31,10 @@ impl GameClient {
         // open scene
         project_application.get_project_scene_manager_mut().open_scene_data("default");
 
+        // initialize game clients
+        let main_camera = project_application.get_project_scene_manager().get_main_camera();
         self._game_ui_manager.initialize_game_ui_manager(project_application);
-        self._game_controller.initialize_game_controller(self._game_ui_manager.as_mut());
+        self._game_controller.initialize_game_controller(&self._game_ui_manager, main_camera);
         self._actor_manager.initialize_actor_manager(project_application);
         self._weapon_manager.initialize_weapon_manager(project_application);
     }
@@ -59,7 +61,7 @@ impl GameClient {
         }
 
         if pressed_key_c {
-            self._game_controller.toggle_view_mode(&mut self._game_ui_manager);
+            self._game_controller.toggle_view_mode();
         }
 
         match self._game_controller._game_view_mode {
@@ -86,7 +88,7 @@ impl GameClient {
     pub fn update_game_client(&mut self, project_application: *mut ProjectApplication) {
         let project_application = unsafe { &(*project_application) };
         let delta_time = project_application.get_engine_application()._time_data._delta_time as f32;
-        self._game_controller.update_game_controller(delta_time);
+        self._game_controller.update_game_controller(delta_time, project_application);
         self._actor_manager.update_actor_manager(delta_time, project_application, self._game_controller.as_ref());
         self._weapon_manager.update_weapon_manager(delta_time, project_application, self._actor_manager.as_mut());
         self._game_ui_manager.update_game_ui(delta_time, project_application, self._actor_manager.as_ref());

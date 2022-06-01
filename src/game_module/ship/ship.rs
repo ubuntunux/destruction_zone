@@ -3,7 +3,7 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
+use rust_engine_3d::utilities::system::{RcRefCell, new_RcRefCell};
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
@@ -73,7 +73,7 @@ pub struct ShipInstance {
 // Implementation
 impl ShipData {
     pub fn create_ship_data(ship_data_name: &str, ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ShipControllerData>) -> RcRefCell<ShipData> {
-        newRcRefCell(ShipData {
+        new_RcRefCell(ShipData {
             _ship_name: ship_data_name.to_string(),
             _ship_type: ship_data_create_info._ship_type,
             _model_data_name: ship_data_create_info._model_data_name.clone(),
@@ -92,15 +92,20 @@ impl ShipInstance {
         ship_data: &RcRefCell<ShipData>,
         render_object: &RcRefCell<RenderObjectData>
     ) -> ShipInstance {
-        let transform_object = (&mut render_object.borrow_mut()._transform_object as *mut TransformObjectData).clone();
+        let transform_object: &TransformObjectData = &render_object.borrow()._transform_object;
         let floating_height = calc_floating_height(&render_object.borrow());
         ShipInstance {
             _ship_data: ship_data.clone(),
             _hull: 0.0,
             _shields: 0.0,
             _render_object: render_object.clone(),
-            _transform_object: transform_object,
-            _controller: ShipController::create_ship_controller(&ship_data.borrow()._contoller_data, floating_height),
+            _transform_object: (transform_object as *const TransformObjectData as *mut TransformObjectData).clone(),
+            _controller: ShipController::create_ship_controller(
+                &ship_data.borrow()._contoller_data,
+                transform_object.get_position(),
+                transform_object.get_rotation(),
+                floating_height
+            ),
             _weapons: Vec::new(),
             _current_weapons: Vec::new(),
         }

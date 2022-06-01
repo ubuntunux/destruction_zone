@@ -14,7 +14,7 @@ use rust_engine_3d::resource::resource::{
 };
 use rust_engine_3d::effect::effect_data::EffectData;
 use rust_engine_3d::renderer::renderer_context::{ RendererContext };
-use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
+use rust_engine_3d::utilities::system::{ self, RcRefCell, new_RcRefCell };
 use rust_engine_3d::renderer::font::FontData;
 use rust_engine_3d::renderer::model::ModelData;
 use rust_engine_3d::renderer::mesh::MeshData;
@@ -162,7 +162,7 @@ impl ProjectResources {
             let scene_data_name = get_unique_resource_name(&self._scene_data_create_infos_map, &scene_directory, &scene_data_file);
             let loaded_contents = system::load(&scene_data_file);
             let scene_data_create_info: SceneDataCreateInfo = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
-            self._scene_data_create_infos_map.insert(scene_data_name.clone(), newRcRefCell(scene_data_create_info));
+            self._scene_data_create_infos_map.insert(scene_data_name.clone(), new_RcRefCell(scene_data_create_info));
         }
     }
 
@@ -180,7 +180,7 @@ impl ProjectResources {
         write_contents = write_contents.replace(",\"", ",\n\"");
         write_file.write(write_contents.as_bytes()).expect("Failed to write");
 
-        self._scene_data_create_infos_map.insert(String::from(scene_data_name), newRcRefCell(scene_data_create_info.clone()));
+        self._scene_data_create_infos_map.insert(String::from(scene_data_name), new_RcRefCell(scene_data_create_info.clone()));
     }
 
     pub fn has_scene_data(&self, resource_name: &str) -> bool {
@@ -231,7 +231,7 @@ impl ProjectResources {
             let game_data_name = get_unique_resource_name(&self._ship_controller_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
             let ship_controller_data: ShipControllerData = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
-            self._ship_controller_data_map.insert(game_data_name.clone(), newRcRefCell(ship_controller_data));
+            self._ship_controller_data_map.insert(game_data_name.clone(), new_RcRefCell(ship_controller_data));
         }
     }
 
@@ -316,7 +316,7 @@ impl ProjectResources {
             let game_data_name = get_unique_resource_name(&self._bullet_data_map, &game_data_directory, &game_data_file);
             let loaded_contents = system::load(&game_data_file);
             let bullet_data: BulletData = serde_json::from_reader(loaded_contents).expect("Failed to deserialize.");
-            self._bullet_data_map.insert(game_data_name.clone(), newRcRefCell(bullet_data));
+            self._bullet_data_map.insert(game_data_name.clone(), new_RcRefCell(bullet_data));
         }
     }
 
