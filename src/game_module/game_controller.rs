@@ -58,6 +58,9 @@ impl GameController {
 
     pub fn get_game_ui_manager(&self) -> &GameUIManager { unsafe { &*self._game_ui_manager } }
     pub fn get_game_ui_manager_mut(&self) -> &mut GameUIManager { unsafe { &mut *(self._game_ui_manager as *mut GameUIManager) } }
+    pub fn get_main_camera(&self) -> &RefCell<CameraObjectData> {
+        unsafe { &*self._main_camera.as_ptr() }
+    }
 
     pub fn is_view_mode(&self, target_view_mode: GameViewMode) -> bool {
         if target_view_mode == self._game_view_mode { true } else { false }
@@ -98,8 +101,7 @@ impl GameController {
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let btn_right_hold: bool = mouse_input_data._btn_r_hold;
 
-        let main_camera_ref = self._main_camera.upgrade().unwrap();
-        let mut main_camera = main_camera_ref.borrow_mut();
+        let mut main_camera = self.get_main_camera().borrow_mut();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
         if btn_right_hold && 0.0 != mouse_delta.x {
@@ -141,8 +143,7 @@ impl GameController {
         let hold_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
-        let main_camera_ref = self._main_camera.upgrade().unwrap();
-        let mut main_camera = main_camera_ref.borrow_mut();
+        let mut main_camera = self.get_main_camera().borrow_mut();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
         // fire
@@ -194,8 +195,7 @@ impl GameController {
         height_map_data: &HeightMapData,
         player_actor: &PlayerActor
     ) {
-        let main_camera_ref = self._main_camera.upgrade().unwrap();
-        let mut main_camera = main_camera_ref.borrow_mut();
+        let mut main_camera = self.get_main_camera().borrow_mut();
         let ship_controller = player_actor.get_controller();
         let dist_ratio: f32 = self.get_camera_distance_ratio();
         if self._game_view_mode == GameViewMode::TopViewMode {
