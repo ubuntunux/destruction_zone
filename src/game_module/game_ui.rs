@@ -23,7 +23,8 @@ use crate::renderer::project_ui::ProjectUIManager;
 pub struct GameUIManager {
     pub _project_ui_manager: *const ProjectUIManager,
     pub _crosshair_widget: *const WidgetDefault,
-    pub _crosshair_pos: Vector2<f32>,
+    pub _crosshair_pos: Vector2<i32>,
+    pub _crosshair_tracking_mouse: bool,
     pub _target_hud_layer: *mut WidgetDefault,
     pub _target_distance: *mut WidgetDefault,
     pub _target_hull_point_widget: Option<HullPointWidget>,
@@ -39,6 +40,7 @@ impl GameUIManager {
             _project_ui_manager: std::ptr::null(),
             _crosshair_widget: std::ptr::null(),
             _crosshair_pos: Vector2::zeros(),
+            _crosshair_tracking_mouse: true,
             _target_hud_layer: std::ptr::null_mut(),
             _target_distance: std::ptr::null_mut(),
             _target_hull_point_widget: None,
@@ -162,6 +164,14 @@ impl GameUIManager {
         ui_component.set_visible(show);
     }
 
+    pub fn set_crosshair_tracking_mouse(&mut self, tracking: bool) {
+        self._crosshair_tracking_mouse = tracking;
+    }
+
+    pub fn set_crosshair_pos(&mut self, pos: &Vector2<i32>) {
+        self._crosshair_pos.clone_from(pos);
+    }
+
     pub fn update_game_ui(&mut self, _delta_time: f32, project_application: &ProjectApplication, actor_manager: &ActorManager) {
         let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
         let window_size = &project_application.get_engine_application()._window_size;
@@ -169,12 +179,19 @@ impl GameUIManager {
         // Cross Hair
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
         if crosshair_widget._ui_component.get_visible() {
-            self._crosshair_pos.x = window_size.x as f32 * 0.5;
-            self._crosshair_pos.y = window_size.y as f32 * 0.5;
-            let ui_component = crosshair_widget.get_ui_component_mut();
-            ui_component.set_center(self._crosshair_pos.x, self._crosshair_pos.y);
-        }
+            let crosshair_pos_x: i32;
+            let crosshair_pos_y: i32;
 
+            if self._crosshair_tracking_mouse {
+                crosshair_pos_x = self._crosshair_pos.x;
+                crosshair_pos_y = self._crosshair_pos.y;
+            } else {
+                crosshair_pos_x = window_size.x / 2;
+                crosshair_pos_y = window_size.y / 2;
+            }
+            let ui_component = crosshair_widget.get_ui_component_mut();
+            ui_component.set_center(crosshair_pos_x as f32, crosshair_pos_y as f32);
+        }
 
         // Player Hud
         {

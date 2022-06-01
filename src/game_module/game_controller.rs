@@ -3,7 +3,6 @@ use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::application::application::TimeData;
 use rust_engine_3d::application::input::{KeyboardInputData, MouseMoveData, MouseInputData};
-use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::utilities::math;
 use rust_engine_3d::utilities::system::{RcRefCell, WeakRefCell, into_WeakRefCell};
@@ -14,6 +13,9 @@ use crate::game_module::game_constants::{
     CAMERA_DISTANCE_MIN,
     CAMERA_DISTANCE_MAX,
     CAMERA_DISTANCE_SPEED,
+    MOUSE_PITCH_MIN,
+    MOUSE_PITCH_MAX,
+    MOUSE_ROTATION_SPEED
 };
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::height_map_data::HeightMapData;
@@ -62,7 +64,7 @@ impl GameController {
     }
 
     pub fn change_view_mode(&mut self, view_mode: GameViewMode) {
-        self.get_game_ui_manager_mut().show_crosshair(GameViewMode::FpsViewMode == view_mode);
+        self.get_game_ui_manager_mut().set_crosshair_tracking_mouse(GameViewMode::TopViewMode == view_mode);
         self._game_view_mode = view_mode;
     }
 
@@ -88,13 +90,24 @@ impl GameController {
         &mut self,
         _time_data: &TimeData,
         _keyboard_input_data: &KeyboardInputData,
-        _mouse_move_data: &MouseMoveData,
+        mouse_move_data: &MouseMoveData,
         mouse_input_data: &MouseInputData,
-        _mouse_delta: &Vector2<f32>,
+        mouse_delta: &Vector2<f32>,
         project_application: &ProjectApplication,
     ) {
         let btn_left: bool = mouse_input_data._btn_l_pressed;
+        let btn_right_hold: bool = mouse_input_data._btn_r_hold;
+
+        let main_camera_ref = self._main_camera.upgrade().unwrap();
+        let mut main_camera = main_camera_ref.borrow_mut();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
+
+        if btn_right_hold && 0.0 != mouse_delta.x {
+            let yaw = main_camera._transform_object.get_yaw() - mouse_delta.x * MOUSE_ROTATION_SPEED;
+            main_camera._transform_object.set_yaw(yaw);
+        }
+
+        self.get_game_ui_manager_mut().set_crosshair_pos(&mouse_move_data._mouse_pos);
 
         // fire
         if btn_left {
@@ -128,11 +141,12 @@ impl GameController {
         let hold_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
+        let main_camera_ref = self._main_camera.upgrade().unwrap();
+        let mut main_camera = main_camera_ref.borrow_mut();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
         // fire
         if btn_left {
-            let main_camera = project_application.get_project_scene_manager().get_main_camera().borrow();
             let fire_dir: Vector3<f32> = -main_camera.get_camera_front() as Vector3<f32>;
             player_actor.actor_fire(project_application, &fire_dir);
         }
@@ -144,7 +158,8 @@ impl GameController {
         }
 
         if 0.0 != mouse_delta.y {
-            player_ship_controller.acceleration_pitch(-mouse_delta.y);
+            let pitch = MOUSE_PITCH_MIN.max(MOUSE_PITCH_MAX.min(main_camera._transform_object.get_pitch() - mouse_delta.y * MOUSE_ROTATION_SPEED));
+            main_camera._transform_object.set_pitch(pitch);
         }
 
         if modifier_keys_shift {
@@ -177,17 +192,17 @@ impl GameController {
         &mut self,
         delta_time: f32,
         height_map_data: &HeightMapData,
-        main_camera: &mut CameraObjectData,
         player_actor: &PlayerActor
     ) {
+        let main_camera_ref = self._main_camera.upgrade().unwrap();
+        let mut main_camera = main_camera_ref.borrow_mut();
         let ship_controller = player_actor.get_controller();
         let dist_ratio: f32 = self.get_camera_distance_ratio();
         if self._game_view_mode == GameViewMode::TopViewMode {
             let pitch: f32 = math::lerp(-25.0, -75.0, dist_ratio);
             main_camera._transform_object.set_pitch(math::degree_to_radian(pitch));
-            main_camera._transform_object.set_yaw(0.0);
+            //main_camera._transform_object.set_yaw(0.0);
         } else if self._game_view_mode == GameViewMode::FpsViewMode {
-            main_camera._transform_object.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
             main_camera._transform_object.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
         } else {
             assert!(false, "Not implemented.");
@@ -222,9 +237,8 @@ impl GameController {
             self._camera_distance = math::lerp(self._camera_distance, self._camera_goal_distance, 1.0f32.min(delta_time * CAMERA_DISTANCE_SPEED));
         }
 
-        let mut main_camera = project_application.get_project_scene_manager().get_main_camera().borrow_mut();
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor();
-        self.update_camera(delta_time, height_map_data, &mut main_camera, player_actor);
+        self.update_camera(delta_time, height_map_data, player_actor);
     }
 }
