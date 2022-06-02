@@ -15,12 +15,15 @@ use crate::game_module::game_constants::{
     CAMERA_DISTANCE_MIN,
     CAMERA_DISTANCE_MAX,
     CAMERA_DISTANCE_SPEED,
+    CAMERA_EDGE_SCROLL_SPEED,
+    CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE,
     MOUSE_PITCH_MIN,
     MOUSE_PITCH_MAX,
     MOUSE_ROTATION_SPEED
 };
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::height_map_data::HeightMapData;
+
 
 #[repr(i32)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -92,8 +95,8 @@ impl GameController {
 
     pub fn update_event_for_top_view_mode(
         &mut self,
-        _time_data: &TimeData,
-        _keyboard_input_data: &KeyboardInputData,
+        time_data: &TimeData,
+        keyboard_input_data: &KeyboardInputData,
         mouse_move_data: &MouseMoveData,
         mouse_input_data: &MouseInputData,
         mouse_delta: &Vector2<f32>,
@@ -101,10 +104,53 @@ impl GameController {
     ) {
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let btn_right_hold: bool = mouse_input_data._btn_r_hold;
+        let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
+        let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
+        let pressed_key_w = keyboard_input_data.get_key_hold(VirtualKeyCode::W);
+        let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
+        let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let mut main_camera = self.get_main_camera().borrow_mut();
         let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
+        let mut front_xz: Vector3<f32> = main_camera._transform_object.get_front().clone_owned();
+        front_xz.y = 0.0;
+        front_xz.try_normalize_mut(0.0);
+
+        let mut left_xz: Vector3<f32> = main_camera._transform_object.get_left().clone_owned();
+        left_xz.y = 0.0;
+        left_xz.try_normalize_mut(0.0);
+
+        // camera move
+        if 0 == mouse_move_data._mouse_pos.x && mouse_move_data._mouse_pos_delta.x < 0 ||
+            0 == mouse_move_data._mouse_pos.y && mouse_move_data._mouse_pos_delta.y < 0 ||
+            (main_camera._window_size.x - 1) == mouse_move_data._mouse_pos.x && 0 < mouse_move_data._mouse_pos_delta.x ||
+            (main_camera._window_size.y - 1) == mouse_move_data._mouse_pos.y && 0 < mouse_move_data._mouse_pos_delta.y {
+            let move_delta: Vector3<f32> = (front_xz * mouse_move_data._mouse_pos_delta.y as f32 + left_xz * mouse_move_data._mouse_pos_delta.x as f32) * CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE;
+            main_camera._transform_object.move_position(&move_delta);
+        } else {
+            let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
+            let camera_move_speed: f32 = CAMERA_EDGE_SCROLL_SPEED * camera_move_speed_multiplier * time_data._delta_time as f32;
+            if pressed_key_w {
+                let move_delta = front_xz * -camera_move_speed;
+                main_camera._transform_object.move_position(&move_delta);
+            }
+            else if pressed_key_s {
+                let move_delta = front_xz * camera_move_speed;
+                main_camera._transform_object.move_position(&move_delta);
+            }
+
+            if pressed_key_a {
+                let move_delta = left_xz * -camera_move_speed;
+                main_camera._transform_object.move_position(&move_delta);
+            }
+            else if pressed_key_d {
+                let move_delta = left_xz * camera_move_speed;
+                main_camera._transform_object.move_position(&move_delta);
+            }
+        }
+
+        // camera yaw
         if btn_right_hold && 0.0 != mouse_delta.x {
             let yaw = main_camera._transform_object.get_yaw() - mouse_delta.x * MOUSE_ROTATION_SPEED;
             main_camera._transform_object.set_yaw(yaw);
@@ -198,39 +244,49 @@ impl GameController {
     ) {
         let mut main_camera = self.get_main_camera().borrow_mut();
         let player_transform = player_actor.get_transform();
-        let dist_ratio: f32 = self.get_camera_distance_ratio();
-        if self._game_view_mode == GameViewMode::TopViewMode {
-            let pitch: f32 = math::degree_to_radian(math::lerp(-25.0, -75.0, dist_ratio));
+
+        if GameViewMode::TopViewMode == self._game_view_mode {
+            // camera pitch
+            let pitch: f32 = math::degree_to_radian(-75.0);
             main_camera._transform_object.set_pitch(pitch);
-        } else if self._game_view_mode == GameViewMode::FpsViewMode {
+            main_camera._transform_object.update_transform_object();
+
+            // camera postion
+            let mut camera_pos = main_camera._transform_object.get_position().clone_owned();
+            camera_pos.y = height_map_data.get_height(&camera_pos, 4) + self._camera_distance;
+            main_camera._transform_object.set_position(&camera_pos);
+
+        } else if GameViewMode::FpsViewMode == self._game_view_mode {
+            // camera yaw
             let yaw = player_transform.get_yaw() + std::f32::consts::PI;
             main_camera._transform_object.set_yaw(yaw);
+            main_camera._transform_object.update_transform_object();
+
+            // camera offset
+            let mut cockpit_offset = main_camera._transform_object.get_front().clone();
+            {
+                cockpit_offset.y = 0.0;
+                cockpit_offset.normalize_mut();
+                if main_camera._transform_object.get_up().y < 0.0 {
+                    cockpit_offset = -cockpit_offset;
+                }
+
+                let bound_box = &player_actor.get_ship()._render_object.borrow()._bound_box;
+                const BOUND_BOX_MIN: f32 = 2.0;
+                cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
+                cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
+            }
+
+            // camera postion
+            let mut camera_pos = player_transform.get_position() + main_camera._transform_object.get_front() * self._camera_distance + cockpit_offset;
+            let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
+            if camera_pos.y < floating_height {
+                camera_pos.y = floating_height;
+            }
+            main_camera._transform_object.set_position(&camera_pos);
         } else {
             assert!(false, "Not implemented.");
         }
-        main_camera._transform_object.update_transform_object();
-
-        // set camera offset
-        let mut cockpit_offset = main_camera._transform_object.get_front().clone();
-        {
-            cockpit_offset.y = 0.0;
-            cockpit_offset.normalize_mut();
-            if main_camera._transform_object.get_up().y < 0.0 {
-                cockpit_offset = -cockpit_offset;
-            }
-
-            let bound_box = &player_actor.get_ship()._render_object.borrow()._bound_box;
-            const BOUND_BOX_MIN: f32 = 2.0;
-            cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
-            cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);
-        }
-
-        let mut camera_pos = player_transform.get_position() + main_camera._transform_object.get_front() * self._camera_distance + cockpit_offset;
-        let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
-        if camera_pos.y < floating_height {
-            camera_pos.y = floating_height;
-        }
-        main_camera._transform_object.set_position(&camera_pos);
     }
 
     pub fn update_game_controller(&mut self, delta_time: f32, project_application: &ProjectApplication) {

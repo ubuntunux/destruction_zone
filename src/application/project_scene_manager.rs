@@ -9,11 +9,10 @@ use nalgebra::{
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
-use rust_engine_3d::application::application::TimeData;
+use rust_engine_3d::application::application::EngineApplication;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::effect::effect_data::{ EffectCreateInfo, EffectInstance };
-use rust_engine_3d::renderer::font::FontManager;
 use rust_engine_3d::renderer::renderer_context::RendererContext;
 use rust_engine_3d::renderer::camera::{ CameraCreateInfo, CameraObjectData};
 use rust_engine_3d::renderer::light::{ DirectionalLightCreateInfo, DirectionalLightData };
@@ -599,7 +598,9 @@ impl ProjectSceneManager {
     pub fn destroy_project_scene_manager(&mut self) {
     }
 
-    pub fn update_project_scene_manager(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
+    pub fn update_project_scene_manager(&mut self, engine_application: &EngineApplication) {
+        let time_data = &engine_application._time_data;
+        let font_manager = engine_application.get_font_manager_mut();
         let delta_time: f64 = time_data._delta_time;
 
         let mut main_camera = self._main_camera.borrow_mut();

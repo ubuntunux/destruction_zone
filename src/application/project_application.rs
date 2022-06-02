@@ -103,10 +103,10 @@ impl ProjectApplicationBase for ProjectApplication {
             let released_key_right_bracket = keyboard_input_data.get_key_released(VirtualKeyCode::RBracket);
             let released_key_subtract = keyboard_input_data.get_key_released(VirtualKeyCode::Minus);
             let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
+            let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
             let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
             let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
-            let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
             let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
             let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;
             let pan_speed = application_constants::CAMERA_PAN_SPEED * camera_move_speed_multiplier;
@@ -179,10 +179,8 @@ impl ProjectApplicationBase for ProjectApplication {
             self._game_client.update_game_client(self);
         }
 
-        let engine_resource = unsafe { &*self._engine_application };
-        let time_data = &engine_resource._time_data;
-        let font_manager = engine_resource.get_font_manager_mut();
-        self._project_scene_manager.update_project_scene_manager(time_data, font_manager);
+        let engine_application = unsafe { &*self._engine_application };
+        self._project_scene_manager.update_project_scene_manager(engine_application);
     }
 }
 
