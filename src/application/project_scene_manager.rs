@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::path::{ PathBuf };
 
-use ash::Device;
 use nalgebra::{
     Vector2,
     Vector3,
@@ -11,7 +10,7 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::TimeData;
-use rust_engine_3d::application::scene_manager::{ ProjectSceneManagerBase, SceneManager };
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::effect::effect_data::{ EffectCreateInfo, EffectInstance };
 use rust_engine_3d::renderer::font::FontManager;
@@ -23,11 +22,11 @@ use rust_engine_3d::renderer::render_object::{ RenderObjectCreateInfo, RenderObj
 use rust_engine_3d::renderer::light::LightConstants;
 use rust_engine_3d::renderer::renderer_data::RendererData;
 use rust_engine_3d::resource::resource::{
-    EngineResources,
-    get_resource_name_from_file_path,
     TEXTURE_SOURCE_DIRECTORY,
     EXT_IMAGE_SOURCE,
-    ProjectResourcesBase
+    get_resource_name_from_file_path,
+    EngineResources,
+    ProjectResourcesBase,
 };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, new_RcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
@@ -69,7 +68,6 @@ impl Default for SceneDataCreateInfo {
 
 #[derive(Clone)]
 pub struct ProjectSceneManager {
-    pub _scene_manager: *const SceneManager,
     pub _project_resources: *const ProjectResources,
     pub _renderer_data: *const RendererData,
     pub _effect_manager: *const EffectManager,
@@ -95,364 +93,6 @@ pub struct ProjectSceneManager {
 
 
 impl ProjectSceneManagerBase for ProjectSceneManager {
-    fn initialize_project_scene_manager(
-        &mut self,
-        scene_manager: &SceneManager,
-        renderer_context: &RendererContext,
-        effect_manager: &EffectManager,
-        engine_resources: &EngineResources,
-        window_size: &Vector2<i32>,
-    ) {
-        self._renderer_data = renderer_context._renderer_data.as_ptr();
-        self._effect_manager = effect_manager;
-        self._scene_manager = scene_manager;
-        self._project_resources = engine_resources._project_resources as *const ProjectResources;
-
-        self.resized_window(window_size.x, window_size.y);
-    }
-
-    fn initialize_scene_graphics_data(&self) {
-    }
-
-    fn destroy_scene_graphics_data(&self, _device: &Device) {
-    }
-
-    fn get_window_size(&self) -> &Vector2<i32> {
-        &self._window_size
-    }
-    fn set_window_size(&mut self, width: i32, height: i32) {
-        self._window_size.x = width;
-        self._window_size.y = height;
-    }
-    fn resized_window(&mut self, width: i32, height: i32) {
-        self.set_window_size(width, height);
-        self._main_camera.borrow_mut().set_aspect(width, height);
-    }
-
-    fn create_default_scene_data(&self, scene_data_name: &str) {
-        let mut scene_data_create_info = SceneDataCreateInfo {
-            _sea_height: 0.0,
-            _cameras: HashMap::new(),
-            _directional_lights: HashMap::new(),
-            _effects: HashMap::new(),
-            _static_objects: HashMap::new(),
-            _skeletal_objects: HashMap::new(),
-            _level_data: LevelData::default(),
-        };
-
-        scene_data_create_info._cameras.insert(
-            String::from("main_camera"),
-            CameraCreateInfo {
-                position: Vector3::new(2.0, 2.0, -1.0),
-                rotation: Vector3::new(-0.157, 1.3, 0.0),
-                ..Default::default()
-            }
-        );
-
-        let pitch: f32 = -std::f32::consts::PI * 0.47;
-        scene_data_create_info._directional_lights.insert(
-            String::from("main_light"),
-            DirectionalLightCreateInfo {
-                _position: Vector3::zeros(),
-                _rotation: Vector3::new(pitch, 0.0, 0.3),
-                _light_constants: LightConstants {
-                    _light_direction: Vector3::new(pitch, 0.0, 0.3),
-                    ..Default::default()
-                },
-                ..Default::default()
-            }
-        );
-
-        // scene_data_create_info._effects.insert(
-        //     String::from("effect0"),
-        //     EffectCreateInfo {
-        //         _effect_data_name: String::from("default"),
-        //         _effect_position: Vector3::new(0.0, 4.0, 0.0),
-        //         ..Default::default()
-        //     }
-        // );
-        //
-        // scene_data_create_info._effects.insert(
-        //     String::from("effect1"),
-        //     EffectCreateInfo {
-        //         _effect_data_name: String::from("test"),
-        //         _effect_position: Vector3::new(4.0, 4.0, 0.0),
-        //         ..Default::default()
-        //     }
-        // );
-        //
-        // scene_data_create_info._effects.insert(
-        //     String::from("effect2"),
-        //     EffectCreateInfo {
-        //         _effect_data_name: String::from("test2"),
-        //         _effect_position: Vector3::new(8.0, 4.0, 0.0),
-        //         ..Default::default()
-        //     }
-        // );
-        // scene_data_create_info._static_objects.insert(
-        //     String::from("sponza"),
-        //     RenderObjectCreateInfo {
-        //         _model_data_name: String::from("sponza/sponza"),
-        //         _position: Vector3::new(0.0, 0.0, 0.0),
-        //         _scale: Vector3::new(0.1, 0.1, 0.1),
-        //         ..Default::default()
-        //     }
-        // );
-        // scene_data_create_info._static_objects.insert(
-        //     String::from("sphere"),
-        //     RenderObjectCreateInfo {
-        //         _model_data_name: String::from("sphere"),
-        //         _position: Vector3::new(-2.0, 1.0, 0.0),
-        //         _scale: Vector3::new(1.0, 1.0, 1.0),
-        //         ..Default::default()
-        //     }
-        // );
-        //
-        // for i in 0..3 {
-        //     scene_data_create_info._skeletal_objects.insert(
-        //         format!("skeletal_{}", i),
-        //         RenderObjectCreateInfo {
-        //             _model_data_name: String::from("skeletal"),
-        //             _position: Vector3::new(i as f32, 1.0, 0.0),
-        //             _scale: Vector3::new(0.01, 0.01, 0.01),
-        //             ..Default::default()
-        //         }
-        //     );
-        // }
-
-        scene_data_create_info._static_objects.insert(
-            String::from("stage"),
-            RenderObjectCreateInfo {
-                _model_data_name: String::from("stages/default_stage"),
-                _position: Vector3::new(0.0, -20.0, 0.0),
-                _scale: Vector3::new(2000.0, 1000.0, 2000.0),
-                ..Default::default()
-            }
-        );
-        scene_data_create_info._level_data = LevelData::get_test_level_data();
-
-        self.get_project_resources_mut().save_scene_data(scene_data_name, &scene_data_create_info);
-    }
-
-    fn open_scene_data(&mut self, scene_data_name: &str) {
-        self._scene_name = String::from(scene_data_name);
-
-        self.initialize_light_probe_cameras();
-
-        let project_resources = unsafe { &*self._project_resources };
-
-        if false == project_resources.has_scene_data(scene_data_name) {
-            self.create_default_scene_data(scene_data_name);
-        }
-
-        let scene_data_create_info = project_resources.get_scene_data(scene_data_name).borrow();
-
-        self._sea_height = scene_data_create_info._sea_height;
-        self.get_renderer_data_mut()._fft_ocean.set_height(scene_data_create_info._sea_height);
-
-        // cameras
-        for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
-            let camera_create_info = CameraCreateInfo {
-                window_size: self._window_size.into(),
-                ..camera_create_info.clone()
-            };
-            let camera_object = self.add_camera_object(object_name, &camera_create_info);
-            if 0 == index {
-                self._main_camera = camera_object;
-            }
-        }
-
-        // lights
-        for (index, (object_name, light_create_info)) in scene_data_create_info._directional_lights.iter().enumerate() {
-            let light_create_info = DirectionalLightCreateInfo {
-                _position: light_create_info._position.clone() as Vector3<f32>,
-                _rotation: light_create_info._rotation.clone() as Vector3<f32>,
-                _light_constants: LightConstants {
-                    _light_position: light_create_info._light_constants._light_position.clone() as Vector3<f32>,
-                    _light_direction: light_create_info._light_constants._light_direction.clone() as Vector3<f32>,
-                    _light_color: light_create_info._light_constants._light_color.clone() as Vector3<f32>,
-                    ..Default::default()
-                },
-                ..Default::default()
-            };
-            let light_object = self.add_light_object(object_name, &light_create_info);
-            if 0 == index {
-                self._main_light = light_object;
-            }
-        }
-
-        // effects
-        for (object_name, effect_create_info) in scene_data_create_info._effects.iter() {
-            self.add_effect(object_name, effect_create_info);
-        }
-
-        // static objects
-        for (object_name, render_object_create_info) in scene_data_create_info._static_objects.iter() {
-            self.add_static_render_object(object_name, render_object_create_info);
-        }
-
-        // skeletal objects
-        for (object_name, render_object_create_info) in scene_data_create_info._skeletal_objects.iter() {
-            self.add_skeletal_render_object(object_name, render_object_create_info);
-        }
-
-        // height map
-        let maybe_stage_model = self._static_render_object_map.get("stage");
-        {
-            let mut stage_model = maybe_stage_model.unwrap().borrow_mut();
-            let stage_height_map_name: String = stage_model._model_data.borrow()._model_data_name.clone() + "_heightmap";
-            let texture_directory = PathBuf::from(TEXTURE_SOURCE_DIRECTORY);
-            let mut height_map_directory: PathBuf = texture_directory.clone();
-            height_map_directory.push("stages");
-            let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &EXT_IMAGE_SOURCE);
-            for height_map_file in height_map_files.iter() {
-                let resource_name = get_resource_name_from_file_path(&texture_directory, &height_map_file);
-                if resource_name == stage_height_map_name {
-                    let (image_width, image_height, _image_layers, image_data, _image_format) = EngineResources::load_image_data(height_map_file);
-                    stage_model._transform_object.update_transform_object();
-                    stage_model.update_bound_box();
-                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data, scene_data_create_info._sea_height);
-                    break;
-                }
-            }
-        }
-
-        // level data
-        self._level_data = scene_data_create_info._level_data.clone();
-    }
-
-    fn close_scene_data(&mut self, _device: &Device) {
-        self._camera_object_map.clear();
-        self._directional_light_object_map.clear();
-        self._effect_id_map.clear();
-        self._static_render_object_map.clear();
-        self._skeletal_render_object_map.clear();
-        self._static_render_elements.clear();
-        self._static_shadow_render_elements.clear();
-        self._skeletal_render_elements.clear();
-        self._skeletal_shadow_render_elements.clear();
-    }
-
-    fn save_scene_data(&mut self) {
-        let mut scene_data_create_info = SceneDataCreateInfo {
-            _sea_height: self._sea_height,
-            _cameras: HashMap::new(),
-            _directional_lights: HashMap::new(),
-            _effects: HashMap::new(),
-            _static_objects: HashMap::new(),
-            _skeletal_objects: HashMap::new(),
-            _level_data: LevelData::default(),
-        };
-
-        // cameras
-        for camera_object in self._camera_object_map.values() {
-            let camera = camera_object.borrow();
-            let camera_create_info = CameraCreateInfo {
-                fov: camera._fov,
-                near: camera._near,
-                far: camera._far,
-                position: camera._transform_object.get_position().clone() as Vector3<f32>,
-                rotation: camera._transform_object.get_rotation().clone() as Vector3<f32>,
-                ..Default::default()
-            };
-            scene_data_create_info._cameras.insert(camera._name.clone(), camera_create_info);
-        }
-        // lights
-        for light_object in self._directional_light_object_map.values() {
-            let light = light_object.borrow();
-            let light_create_info = DirectionalLightCreateInfo {
-                _position: light._transform_object.get_position().clone() as Vector3<f32>,
-                _rotation: light._transform_object.get_rotation().clone() as Vector3<f32>,
-                ..Default::default()
-            };
-            scene_data_create_info._directional_lights.insert(light._light_name.clone(), light_create_info);
-        }
-        // effects
-        for (effect_name, effect_id) in self._effect_id_map.iter() {
-            let effect = self.get_effect_manager().get_effect(*effect_id).unwrap().borrow();
-            let effect_create_info = EffectCreateInfo {
-                _effect_position: effect._effect_transform.get_position().clone() as Vector3<f32>,
-                _effect_rotation: effect._effect_transform.get_rotation().clone() as Vector3<f32>,
-                _effect_scale: effect._effect_transform.get_scale().clone() as Vector3<f32>,
-                _effect_data_name: effect._effect_data.borrow()._effect_data_name.clone(),
-            };
-            scene_data_create_info._effects.insert(effect_name.clone(), effect_create_info);
-        }
-        // static objects
-        for static_object in self._static_render_object_map.values() {
-            let object = static_object.borrow();
-            let static_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
-                _position: object._transform_object.get_position().clone() as Vector3<f32>,
-                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
-                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
-            };
-            scene_data_create_info._static_objects.insert(object._render_object_name.clone(), static_object_create_info);
-        }
-        // skeletal objects
-        for skeletal_object in self._skeletal_render_object_map.values() {
-            let object = skeletal_object.borrow();
-            let skeletal_object_create_info = RenderObjectCreateInfo {
-                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
-                _position: object._transform_object.get_position().clone() as Vector3<f32>,
-                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
-                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
-            };
-            scene_data_create_info._skeletal_objects.insert(object._render_object_name.clone(), skeletal_object_create_info);
-        }
-
-        self.get_project_resources_mut().save_scene_data(&self._scene_name, &scene_data_create_info);
-    }
-
-    fn destroy_project_scene_manager(&mut self, device: &Device) {
-        self.destroy_scene_graphics_data(device);
-    }
-
-    fn update_project_scene_manager(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
-        let delta_time: f64 = time_data._delta_time;
-
-        let mut main_camera = self._main_camera.borrow_mut();
-        main_camera.update_camera_object_data();
-        let camera_position = &main_camera.get_camera_position();
-
-        let mut main_light = self._main_light.borrow_mut();
-        main_light.update_light_data(camera_position);
-
-        let mut capture_height_map = self._capture_height_map.borrow_mut();
-        capture_height_map.update_light_data(camera_position);
-
-        for (_key, render_object_data) in self._static_render_object_map.iter() {
-            render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
-        }
-
-        for (_key, render_object_data) in self._skeletal_render_object_map.iter() {
-            render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
-        }
-
-        // gather render elements
-        ProjectSceneManager::gather_render_elements(
-            &main_camera,
-            &main_light,
-            &self._static_render_object_map,
-            &mut self._static_render_elements,
-            &mut self._static_shadow_render_elements
-        );
-
-        ProjectSceneManager::gather_render_elements(
-            &main_camera,
-            &main_light,
-            &self._skeletal_render_object_map,
-            &mut self._skeletal_render_elements,
-            &mut self._skeletal_shadow_render_elements
-        );
-
-        // debug text
-        font_manager.clear_logs();
-        font_manager.log(format!("{:.2}fps / {:.3}ms", time_data._average_fps, time_data._average_frame_time));
-        font_manager.log(format!("StaticMesh: {:?}, Shadow: {:?}", self._static_render_elements.len(), self._static_shadow_render_elements.len()));
-        font_manager.log(format!("SkeletalMesh: {:?}, Shadow: {:?}", self._skeletal_render_elements.len(), self._skeletal_shadow_render_elements.len()));
-    }
-
     fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
     fn get_main_light(&self) -> &RcRefCell<DirectionalLightData> { &self._main_light }
     fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
@@ -497,7 +137,6 @@ impl ProjectSceneManager {
             )
         };
         Box::new(ProjectSceneManager {
-            _scene_manager: std::ptr::null(),
             _project_resources: std::ptr::null(),
             _renderer_data: std::ptr::null(),
             _effect_manager: std::ptr::null(),
@@ -522,12 +161,22 @@ impl ProjectSceneManager {
         })
     }
 
+    pub fn initialize_project_scene_manager(
+        &mut self,
+        renderer_context: &RendererContext,
+        effect_manager: &EffectManager,
+        engine_resources: &EngineResources,
+        window_size: &Vector2<i32>,
+    ) {
+        self._renderer_data = renderer_context._renderer_data.as_ptr();
+        self._effect_manager = effect_manager;
+        self._project_resources = engine_resources._project_resources as *const ProjectResources;
+        self.resized_window(window_size.x, window_size.y);
+    }
     pub fn get_project_resources(&self) -> &ProjectResources { unsafe { &*self._project_resources } }
     pub fn get_project_resources_mut(&self) -> &mut ProjectResources { unsafe { &mut *(self._project_resources as *mut ProjectResources) } }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
     pub fn get_level_data(&self) -> &LevelData { &self._level_data }
-    pub fn get_scene_manager(&self) -> &SceneManager { unsafe { &*self._scene_manager } }
-    pub fn get_scene_manager_mut(&self) -> &mut SceneManager { unsafe { &mut *(self._scene_manager as *mut SceneManager) } }
     pub fn get_renderer_data(&self) -> &RendererData { unsafe { &*self._renderer_data } }
     pub fn get_renderer_data_mut(&self) -> &mut RendererData { unsafe { &mut *(self._renderer_data as *mut RendererData) } }
     pub fn get_engine_resources(&self) -> &EngineResources { self.get_project_resources().get_engine_resources() }
@@ -666,5 +315,332 @@ impl ProjectSceneManager {
                 }
             }
         }
+    }
+
+    pub fn resized_window(&self, width: i32, height: i32) {
+        self._main_camera.borrow_mut().set_aspect(width, height);
+    }
+
+    pub fn create_default_scene_data(&self, scene_data_name: &str) {
+        let mut scene_data_create_info = SceneDataCreateInfo {
+            _sea_height: 0.0,
+            _cameras: HashMap::new(),
+            _directional_lights: HashMap::new(),
+            _effects: HashMap::new(),
+            _static_objects: HashMap::new(),
+            _skeletal_objects: HashMap::new(),
+            _level_data: LevelData::default(),
+        };
+
+        scene_data_create_info._cameras.insert(
+            String::from("main_camera"),
+            CameraCreateInfo {
+                position: Vector3::new(2.0, 2.0, -1.0),
+                rotation: Vector3::new(-0.157, 1.3, 0.0),
+                ..Default::default()
+            }
+        );
+
+        let pitch: f32 = -std::f32::consts::PI * 0.47;
+        scene_data_create_info._directional_lights.insert(
+            String::from("main_light"),
+            DirectionalLightCreateInfo {
+                _position: Vector3::zeros(),
+                _rotation: Vector3::new(pitch, 0.0, 0.3),
+                _light_constants: LightConstants {
+                    _light_direction: Vector3::new(pitch, 0.0, 0.3),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        );
+
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect0"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("default"),
+        //         _effect_position: Vector3::new(0.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect1"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("test"),
+        //         _effect_position: Vector3::new(4.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // scene_data_create_info._effects.insert(
+        //     String::from("effect2"),
+        //     EffectCreateInfo {
+        //         _effect_data_name: String::from("test2"),
+        //         _effect_position: Vector3::new(8.0, 4.0, 0.0),
+        //         ..Default::default()
+        //     }
+        // );
+        // scene_data_create_info._static_objects.insert(
+        //     String::from("sponza"),
+        //     RenderObjectCreateInfo {
+        //         _model_data_name: String::from("sponza/sponza"),
+        //         _position: Vector3::new(0.0, 0.0, 0.0),
+        //         _scale: Vector3::new(0.1, 0.1, 0.1),
+        //         ..Default::default()
+        //     }
+        // );
+        // scene_data_create_info._static_objects.insert(
+        //     String::from("sphere"),
+        //     RenderObjectCreateInfo {
+        //         _model_data_name: String::from("sphere"),
+        //         _position: Vector3::new(-2.0, 1.0, 0.0),
+        //         _scale: Vector3::new(1.0, 1.0, 1.0),
+        //         ..Default::default()
+        //     }
+        // );
+        //
+        // for i in 0..3 {
+        //     scene_data_create_info._skeletal_objects.insert(
+        //         format!("skeletal_{}", i),
+        //         RenderObjectCreateInfo {
+        //             _model_data_name: String::from("skeletal"),
+        //             _position: Vector3::new(i as f32, 1.0, 0.0),
+        //             _scale: Vector3::new(0.01, 0.01, 0.01),
+        //             ..Default::default()
+        //         }
+        //     );
+        // }
+
+        scene_data_create_info._static_objects.insert(
+            String::from("stage"),
+            RenderObjectCreateInfo {
+                _model_data_name: String::from("stages/default_stage"),
+                _position: Vector3::new(0.0, -20.0, 0.0),
+                _scale: Vector3::new(2000.0, 1000.0, 2000.0),
+                ..Default::default()
+            }
+        );
+        scene_data_create_info._level_data = LevelData::get_test_level_data();
+
+        self.get_project_resources_mut().save_scene_data(scene_data_name, &scene_data_create_info);
+    }
+
+    pub fn open_scene_data(&mut self, scene_data_name: &str) {
+        self._scene_name = String::from(scene_data_name);
+
+        self.initialize_light_probe_cameras();
+
+        let project_resources = unsafe { &*self._project_resources };
+
+        if false == project_resources.has_scene_data(scene_data_name) {
+            self.create_default_scene_data(scene_data_name);
+        }
+
+        let scene_data_create_info = project_resources.get_scene_data(scene_data_name).borrow();
+
+        self._sea_height = scene_data_create_info._sea_height;
+        self.get_renderer_data_mut()._fft_ocean.set_height(scene_data_create_info._sea_height);
+
+        // cameras
+        for (index, (object_name, camera_create_info)) in scene_data_create_info._cameras.iter().enumerate() {
+            let camera_create_info = CameraCreateInfo {
+                window_size: self._window_size.into(),
+                ..camera_create_info.clone()
+            };
+            let camera_object = self.add_camera_object(object_name, &camera_create_info);
+            if 0 == index {
+                self._main_camera = camera_object;
+            }
+        }
+
+        // lights
+        for (index, (object_name, light_create_info)) in scene_data_create_info._directional_lights.iter().enumerate() {
+            let light_create_info = DirectionalLightCreateInfo {
+                _position: light_create_info._position.clone() as Vector3<f32>,
+                _rotation: light_create_info._rotation.clone() as Vector3<f32>,
+                _light_constants: LightConstants {
+                    _light_position: light_create_info._light_constants._light_position.clone() as Vector3<f32>,
+                    _light_direction: light_create_info._light_constants._light_direction.clone() as Vector3<f32>,
+                    _light_color: light_create_info._light_constants._light_color.clone() as Vector3<f32>,
+                    ..Default::default()
+                },
+                ..Default::default()
+            };
+            let light_object = self.add_light_object(object_name, &light_create_info);
+            if 0 == index {
+                self._main_light = light_object;
+            }
+        }
+
+        // effects
+        for (object_name, effect_create_info) in scene_data_create_info._effects.iter() {
+            self.add_effect(object_name, effect_create_info);
+        }
+
+        // static objects
+        for (object_name, render_object_create_info) in scene_data_create_info._static_objects.iter() {
+            self.add_static_render_object(object_name, render_object_create_info);
+        }
+
+        // skeletal objects
+        for (object_name, render_object_create_info) in scene_data_create_info._skeletal_objects.iter() {
+            self.add_skeletal_render_object(object_name, render_object_create_info);
+        }
+
+        // height map
+        let maybe_stage_model = self._static_render_object_map.get("stage");
+        {
+            let mut stage_model = maybe_stage_model.unwrap().borrow_mut();
+            let stage_height_map_name: String = stage_model._model_data.borrow()._model_data_name.clone() + "_heightmap";
+            let texture_directory = PathBuf::from(TEXTURE_SOURCE_DIRECTORY);
+            let mut height_map_directory: PathBuf = texture_directory.clone();
+            height_map_directory.push("stages");
+            let height_map_files = project_resources.get_engine_resources().collect_resources(height_map_directory.as_path(), &EXT_IMAGE_SOURCE);
+            for height_map_file in height_map_files.iter() {
+                let resource_name = get_resource_name_from_file_path(&texture_directory, &height_map_file);
+                if resource_name == stage_height_map_name {
+                    let (image_width, image_height, _image_layers, image_data, _image_format) = EngineResources::load_image_data(height_map_file);
+                    stage_model._transform_object.update_transform_object();
+                    stage_model.update_bound_box();
+                    self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data, scene_data_create_info._sea_height);
+                    break;
+                }
+            }
+        }
+
+        // level data
+        self._level_data = scene_data_create_info._level_data.clone();
+    }
+
+    pub fn close_scene_data(&mut self) {
+        self._camera_object_map.clear();
+        self._directional_light_object_map.clear();
+        self._effect_id_map.clear();
+        self._static_render_object_map.clear();
+        self._skeletal_render_object_map.clear();
+        self._static_render_elements.clear();
+        self._static_shadow_render_elements.clear();
+        self._skeletal_render_elements.clear();
+        self._skeletal_shadow_render_elements.clear();
+    }
+
+    pub fn save_scene_data(&mut self) {
+        let mut scene_data_create_info = SceneDataCreateInfo {
+            _sea_height: self._sea_height,
+            _cameras: HashMap::new(),
+            _directional_lights: HashMap::new(),
+            _effects: HashMap::new(),
+            _static_objects: HashMap::new(),
+            _skeletal_objects: HashMap::new(),
+            _level_data: LevelData::default(),
+        };
+
+        // cameras
+        for camera_object in self._camera_object_map.values() {
+            let camera = camera_object.borrow();
+            let camera_create_info = CameraCreateInfo {
+                fov: camera._fov,
+                near: camera._near,
+                far: camera._far,
+                position: camera._transform_object.get_position().clone() as Vector3<f32>,
+                rotation: camera._transform_object.get_rotation().clone() as Vector3<f32>,
+                ..Default::default()
+            };
+            scene_data_create_info._cameras.insert(camera._name.clone(), camera_create_info);
+        }
+        // lights
+        for light_object in self._directional_light_object_map.values() {
+            let light = light_object.borrow();
+            let light_create_info = DirectionalLightCreateInfo {
+                _position: light._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: light._transform_object.get_rotation().clone() as Vector3<f32>,
+                ..Default::default()
+            };
+            scene_data_create_info._directional_lights.insert(light._light_name.clone(), light_create_info);
+        }
+        // effects
+        for (effect_name, effect_id) in self._effect_id_map.iter() {
+            let effect = self.get_effect_manager().get_effect(*effect_id).unwrap().borrow();
+            let effect_create_info = EffectCreateInfo {
+                _effect_position: effect._effect_transform.get_position().clone() as Vector3<f32>,
+                _effect_rotation: effect._effect_transform.get_rotation().clone() as Vector3<f32>,
+                _effect_scale: effect._effect_transform.get_scale().clone() as Vector3<f32>,
+                _effect_data_name: effect._effect_data.borrow()._effect_data_name.clone(),
+            };
+            scene_data_create_info._effects.insert(effect_name.clone(), effect_create_info);
+        }
+        // static objects
+        for static_object in self._static_render_object_map.values() {
+            let object = static_object.borrow();
+            let static_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
+                _position: object._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
+                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
+            };
+            scene_data_create_info._static_objects.insert(object._render_object_name.clone(), static_object_create_info);
+        }
+        // skeletal objects
+        for skeletal_object in self._skeletal_render_object_map.values() {
+            let object = skeletal_object.borrow();
+            let skeletal_object_create_info = RenderObjectCreateInfo {
+                _model_data_name: object._model_data.borrow()._model_data_name.clone(),
+                _position: object._transform_object.get_position().clone() as Vector3<f32>,
+                _rotation: object._transform_object.get_rotation().clone() as Vector3<f32>,
+                _scale: object._transform_object.get_scale().clone() as Vector3<f32>,
+            };
+            scene_data_create_info._skeletal_objects.insert(object._render_object_name.clone(), skeletal_object_create_info);
+        }
+
+        self.get_project_resources_mut().save_scene_data(&self._scene_name, &scene_data_create_info);
+    }
+
+    pub fn destroy_project_scene_manager(&mut self) {
+    }
+
+    pub fn update_project_scene_manager(&mut self, time_data: &TimeData, font_manager: &mut FontManager) {
+        let delta_time: f64 = time_data._delta_time;
+
+        let mut main_camera = self._main_camera.borrow_mut();
+        main_camera.update_camera_object_data();
+        let camera_position = &main_camera.get_camera_position();
+
+        let mut main_light = self._main_light.borrow_mut();
+        main_light.update_light_data(camera_position);
+
+        let mut capture_height_map = self._capture_height_map.borrow_mut();
+        capture_height_map.update_light_data(camera_position);
+
+        for (_key, render_object_data) in self._static_render_object_map.iter() {
+            render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
+        }
+
+        for (_key, render_object_data) in self._skeletal_render_object_map.iter() {
+            render_object_data.borrow_mut().update_render_object_data(delta_time as f32);
+        }
+
+        // gather render elements
+        ProjectSceneManager::gather_render_elements(
+            &main_camera,
+            &main_light,
+            &self._static_render_object_map,
+            &mut self._static_render_elements,
+            &mut self._static_shadow_render_elements
+        );
+
+        ProjectSceneManager::gather_render_elements(
+            &main_camera,
+            &main_light,
+            &self._skeletal_render_object_map,
+            &mut self._skeletal_render_elements,
+            &mut self._skeletal_shadow_render_elements
+        );
+
+        // debug text
+        font_manager.clear_logs();
+        font_manager.log(format!("{:.2}fps / {:.3}ms", time_data._average_fps, time_data._average_frame_time));
+        font_manager.log(format!("StaticMesh: {:?}, Shadow: {:?}", self._static_render_elements.len(), self._static_shadow_render_elements.len()));
+        font_manager.log(format!("SkeletalMesh: {:?}, Shadow: {:?}", self._skeletal_render_elements.len(), self._skeletal_shadow_render_elements.len()));
     }
 }

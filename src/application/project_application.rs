@@ -35,16 +35,32 @@ pub struct ProjectApplication {
 }
 
 impl ProjectApplicationBase for ProjectApplication {
-    fn initialize_project_application(&mut self, engine_application: &EngineApplication) {
+    fn initialize_project_application(&mut self, engine_application: &EngineApplication, window_size: &Vector2<i32>) {
         self._engine_application = engine_application;
         self._audio_manager = engine_application.get_audio_manager();
         self._effect_manager = engine_application.get_effect_manager();
         self._renderer_data = engine_application.get_renderer_context().get_renderer_data();
+
+        self.get_project_scene_manager_mut().initialize_project_scene_manager(
+            engine_application.get_renderer_context(),
+            engine_application.get_effect_manager(),
+            engine_application.get_engine_resources(),
+            window_size,
+        );
         self.get_game_client_mut().initialize_game_client(self);
     }
 
     fn terminate_project_application(&mut self) {
+        // close scene
+        self._project_scene_manager.close_scene_data();
+
+        // destroy managers
         self._game_client.destroy_game_client();
+        self._project_scene_manager.destroy_project_scene_manager();
+    }
+
+    fn resized_window(&self, width: i32, height: i32) {
+        self._project_scene_manager.resized_window(width, height);
     }
 
     fn update_event(&mut self) {
@@ -159,10 +175,14 @@ impl ProjectApplicationBase for ProjectApplication {
     }
 
     fn update_project_application(&mut self) {
-        let application = self as *mut ProjectApplication;
         if self._is_game_mode {
-            self._game_client.update_game_client(application);
+            self._game_client.update_game_client(self);
         }
+
+        let engine_resource = unsafe { &*self._engine_application };
+        let time_data = &engine_resource._time_data;
+        let font_manager = engine_resource.get_font_manager_mut();
+        self._project_scene_manager.update_project_scene_manager(time_data, font_manager);
     }
 }
 

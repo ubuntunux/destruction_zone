@@ -85,7 +85,7 @@ impl GameClient {
         };
     }
 
-    pub fn update_game_client(&mut self, project_application: *mut ProjectApplication) {
+    pub fn update_game_client(&mut self, project_application: *const ProjectApplication) {
         let project_application = unsafe { &(*project_application) };
         let delta_time = project_application.get_engine_application()._time_data._delta_time as f32;
         self._game_controller.update_game_controller(delta_time, project_application);
