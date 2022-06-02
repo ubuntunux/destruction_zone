@@ -164,12 +164,13 @@ impl GameController {
             player_actor.actor_fire(project_application, &fire_dir);
         }
 
-        //actor_transform.get_front().clone() as Vector3<f32>,
-
-        // let main_camera = project_application.get_project_scene_manager().get_main_camera().borrow();
-        // let world_pos = main_camera.convert_screen_to_world(&mouse_move_data._mouse_pos);
-        // let world_pos = world_pos + world_pos.normalize() * 100.0;
-        // player_actor.get_transform_mut()
+        // test
+        // let relative_pos = main_camera.convert_screen_to_relative_world(&mouse_move_data._mouse_pos);
+        // let mut actor_pos = main_camera._transform_object.get_position() + relative_pos.normalize() * self._camera_distance;
+        // let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
+        // let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
+        // actor_pos.y = height_map_data.get_height(&actor_pos, 0);
+        // player_ship_controller.set_position(&actor_pos);
     }
 
     pub fn update_event_for_fps_view_mode(
@@ -247,13 +248,14 @@ impl GameController {
 
         if GameViewMode::TopViewMode == self._game_view_mode {
             // camera pitch
-            let pitch: f32 = math::degree_to_radian(-75.0);
+            let dist_ratio = self.get_camera_distance_ratio();
+            let pitch: f32 = math::degree_to_radian(math::lerp(-25.0, -75.0, dist_ratio));
             main_camera._transform_object.set_pitch(pitch);
             main_camera._transform_object.update_transform_object();
 
             // camera postion
             let mut camera_pos = main_camera._transform_object.get_position().clone_owned();
-            camera_pos.y = height_map_data.get_height(&camera_pos, 4) + self._camera_distance;
+            camera_pos.y = height_map_data.get_height(&camera_pos, 0) + self._camera_distance;
             main_camera._transform_object.set_position(&camera_pos);
 
         } else if GameViewMode::FpsViewMode == self._game_view_mode {

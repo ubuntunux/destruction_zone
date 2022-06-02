@@ -101,10 +101,10 @@ impl PlayerActor {
 
         // update player transform
         let ship_controller = &self._ship._controller;
-        if game_controller._game_view_mode == GameViewMode::TopViewMode {
+        if GameViewMode::TopViewMode == game_controller._game_view_mode {
             transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
             transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
-        } else if game_controller._game_view_mode == GameViewMode::FpsViewMode {
+        } else if GameViewMode::FpsViewMode == game_controller._game_view_mode {
             // apply roll weight to pitch
             let roll_weight: f32 = 0.0;
             let yaw = ship_controller.get_rotation().y - ship_controller.get_rotation().z * roll_weight;
