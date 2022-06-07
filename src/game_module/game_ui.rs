@@ -12,7 +12,6 @@ use rust_engine_3d::renderer::ui::{
     Orientation
 };
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
-
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::actors::actor_data::ActorTrait;
@@ -194,16 +193,15 @@ impl GameUIManager {
         }
 
         // Player Hud
-        {
-            let player_actor = actor_manager.get_player_actor();
-            let ship = player_actor.get_ship();
-            self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(ship.get_hull_point() / 2.0, ship.get_max_hull_point());
-            self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(ship.get_shield_point() / 2.0, ship.get_max_shield_point());
-        }
+        let player_actor = actor_manager.get_player_actor().borrow();
+        let player_ship = player_actor.get_ship();
+        self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(player_ship.get_hull_point() / 2.0, player_ship.get_max_hull_point());
+        self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(player_ship.get_shield_point() / 2.0, player_ship.get_max_shield_point());
 
         // Target Hud
-        let player_actor_pos = actor_manager.get_player_actor().get_transform().get_position();
-        for (_id, actor) in actor_manager._actors.iter() {
+        let player_actor_pos = player_actor.get_transform().get_position();
+        for (_id, rcrefcell_actor) in actor_manager._actors.iter() {
+            let actor = rcrefcell_actor.borrow();
             if false == actor.is_player_actor() {
                 let actor_pos = actor.get_transform().get_position();
                 let distance = (actor_pos - player_actor_pos).norm();

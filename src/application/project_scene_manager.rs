@@ -27,7 +27,7 @@ use rust_engine_3d::resource::resource::{
     EngineResources,
     ProjectResourcesBase,
 };
-use rust_engine_3d::utilities::system::{ self, RcRefCell, new_RcRefCell };
+use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 use crate::game_module::height_map_data::HeightMapData;
@@ -112,12 +112,12 @@ impl ProjectSceneManager {
             ..Default::default()
         };
         let light_probe_cameras = vec![
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera0"), &light_probe_camera_create_info)),
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera1"), &light_probe_camera_create_info)),
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera2"), &light_probe_camera_create_info)),
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera3"), &light_probe_camera_create_info)),
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera4"), &light_probe_camera_create_info)),
-            system::new_RcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera5"), &light_probe_camera_create_info))
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera0"), &light_probe_camera_create_info)),
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera1"), &light_probe_camera_create_info)),
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera2"), &light_probe_camera_create_info)),
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera3"), &light_probe_camera_create_info)),
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera4"), &light_probe_camera_create_info)),
+            system::newRcRefCell(CameraObjectData::create_camera_object_data(&String::from("light_probe_camera5"), &light_probe_camera_create_info))
         ];
         let default_light = DirectionalLightData::create_light_data(&String::from("default_light"), &DirectionalLightCreateInfo::default());
         let capture_height_map = unsafe {
@@ -142,9 +142,9 @@ impl ProjectSceneManager {
             _window_size: default_camera._window_size.into(),
             _scene_name: String::new(),
             _sea_height: 0.0,
-            _main_camera: system::new_RcRefCell(default_camera),
-            _main_light: system::new_RcRefCell(default_light),
-            _capture_height_map: system::new_RcRefCell(capture_height_map),
+            _main_camera: system::newRcRefCell(default_camera),
+            _main_light: system::newRcRefCell(default_light),
+            _capture_height_map: system::newRcRefCell(capture_height_map),
             _light_probe_cameras: light_probe_cameras,
             _camera_object_map: HashMap::new(),
             _directional_light_object_map: HashMap::new(),
@@ -186,13 +186,13 @@ impl ProjectSceneManager {
     pub fn get_sea_height(&self) -> f32 { self._sea_height }
     pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {
         let new_object_name = system::generate_unique_name(&self._camera_object_map, object_name);
-        let camera_object_data = new_RcRefCell(CameraObjectData::create_camera_object_data(&new_object_name, camera_create_info));
+        let camera_object_data = newRcRefCell(CameraObjectData::create_camera_object_data(&new_object_name, camera_create_info));
         self._camera_object_map.insert(new_object_name, camera_object_data.clone());
         camera_object_data
     }
     pub fn add_light_object(&mut self, object_name: &str, light_create_info: &DirectionalLightCreateInfo) -> RcRefCell<DirectionalLightData> {
         let new_object_name = system::generate_unique_name(&self._directional_light_object_map, object_name);
-        let light_object_data = new_RcRefCell(DirectionalLightData::create_light_data(&new_object_name, light_create_info));
+        let light_object_data = newRcRefCell(DirectionalLightData::create_light_data(&new_object_name, light_create_info));
         self._directional_light_object_map.insert(new_object_name, light_object_data.clone());
         light_object_data
     }
@@ -200,7 +200,7 @@ impl ProjectSceneManager {
     pub fn add_static_render_object(&mut self, object_name: &str, render_object_create_info: &RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
         let model_data = self.get_engine_resources().get_model_data(&render_object_create_info._model_data_name);
         let new_object_name = system::generate_unique_name(&self._static_render_object_map, &object_name);
-        let render_object_data = new_RcRefCell(RenderObjectData::create_render_object_data(&new_object_name, &model_data, &render_object_create_info));
+        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, &model_data, &render_object_create_info));
         self._static_render_object_map.insert(new_object_name, render_object_data.clone());
         render_object_data
     }
@@ -208,7 +208,7 @@ impl ProjectSceneManager {
     pub fn add_skeletal_render_object(&mut self, object_name: &str, render_object_create_info: &RenderObjectCreateInfo) -> RcRefCell<RenderObjectData> {
         let model_data = self.get_engine_resources().get_model_data(&render_object_create_info._model_data_name);
         let new_object_name = system::generate_unique_name(&self._skeletal_render_object_map, &object_name);
-        let render_object_data = new_RcRefCell(RenderObjectData::create_render_object_data(&new_object_name, model_data, &render_object_create_info));
+        let render_object_data = newRcRefCell(RenderObjectData::create_render_object_data(&new_object_name, model_data, &render_object_create_info));
         self._skeletal_render_object_map.insert(new_object_name, render_object_data.clone());
         render_object_data
     }

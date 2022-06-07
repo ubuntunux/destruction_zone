@@ -8,8 +8,9 @@ use rust_engine_3d::utilities::bounding_box::BoundingBox;
 use rust_engine_3d::utilities::system::RcRefCell;
 
 use crate::application::project_application::ProjectApplication;
+use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::weapons::bullet::Bullet;
-use crate::game_module::actor_manager::{ActorManager, ActorMap};
+
 
 pub struct WeaponManager {
     pub _id_generator: u64,
@@ -57,9 +58,9 @@ impl WeaponManager {
 
             if bullet._is_alive {
                 let is_player_actor = bullet.get_owner_actor().is_player_actor();
-                let actors_map_ptr: *const ActorMap = &actor_manager._actors;
-                let actors_map: &mut ActorMap = unsafe { &mut *(actors_map_ptr as *mut ActorMap) };
-                for actor in actors_map.values_mut() {
+                for rcrefcell_actor in actor_manager._actors.values() {
+                    let rcrefcell_actor = rcrefcell_actor.clone();
+                    let mut actor = rcrefcell_actor.borrow_mut();
                     if is_player_actor != actor.is_player_actor() {
                         let bullet_transform = bullet.get_transform_object();
                         let intersect = {
@@ -69,7 +70,7 @@ impl WeaponManager {
                         };
 
                         if intersect {
-                            actor_manager.remove_actor(project_application.get_project_scene_manager_mut(), actor.as_mut());
+                            actor_manager.remove_actor(project_application.get_project_scene_manager_mut(), &mut (*actor));
                             bullet._is_alive = false;
                             bullet._is_collided = true;
                             break;

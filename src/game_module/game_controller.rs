@@ -7,7 +7,7 @@ use rust_engine_3d::application::application::TimeData;
 use rust_engine_3d::application::input::{KeyboardInputData, MouseMoveData, MouseInputData};
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::utilities::math;
-use rust_engine_3d::utilities::system::{RcRefCell, WeakRefCell, into_WeakRefCell};
+use rust_engine_3d::utilities::system::{RcRefCell, WeakRefCell, intoWeakRefCell};
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::actors::player_actor::PlayerActor;
@@ -55,7 +55,7 @@ impl GameController {
 
     pub fn initialize_game_controller(&mut self, game_ui_manager: &GameUIManager, main_camera: &RcRefCell<CameraObjectData>) {
         self._game_ui_manager = game_ui_manager;
-        self._main_camera = into_WeakRefCell(main_camera);
+        self._main_camera = intoWeakRefCell(main_camera);
 
         self.change_view_mode(GameViewMode::TopViewMode);
     }
@@ -111,7 +111,7 @@ impl GameController {
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let mut main_camera = self.get_main_camera().borrow_mut();
-        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
+        let mut player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow_mut();
 
         let mut front_xz: Vector3<f32> = main_camera._transform_object.get_front().clone_owned();
         front_xz.y = 0.0;
@@ -192,7 +192,7 @@ impl GameController {
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let mut main_camera = self.get_main_camera().borrow_mut();
-        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
+        let mut player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow_mut();
 
         // fire
         if btn_left {
@@ -297,7 +297,7 @@ impl GameController {
         }
 
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor();
-        self.update_camera(delta_time, height_map_data, player_actor);
+        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow();
+        self.update_camera(delta_time, height_map_data, &player_actor);
     }
 }

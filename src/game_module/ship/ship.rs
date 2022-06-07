@@ -3,7 +3,7 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, new_RcRefCell};
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
@@ -73,7 +73,7 @@ pub struct ShipInstance {
 // Implementation
 impl ShipData {
     pub fn create_ship_data(ship_data_name: &str, ship_data_create_info: &ShipDataCreateInfo, controller_data: &RcRefCell<ShipControllerData>) -> RcRefCell<ShipData> {
-        new_RcRefCell(ShipData {
+        newRcRefCell(ShipData {
             _ship_name: ship_data_name.to_string(),
             _ship_type: ship_data_create_info._ship_type,
             _model_data_name: ship_data_create_info._model_data_name.clone(),

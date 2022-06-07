@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
@@ -85,8 +85,8 @@ impl PlayerActor {
         id: u64,
         ship_data: &RcRefCell<ShipData>,
         render_object: &RcRefCell<RenderObjectData>
-    ) -> Box<PlayerActor> {
-        Box::new(PlayerActor {
+    ) -> RcRefCell<PlayerActor> {
+        newRcRefCell(PlayerActor {
             _id: id,
             _actor_data: ActorData {},
             _ship: ShipInstance::create_ship_instance(ship_data, render_object),

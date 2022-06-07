@@ -4,7 +4,7 @@ use serde::{ Serialize, Deserialize };
 use rust_engine_3d::application::audio_manager::AudioLoop;
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, new_RcRefCell};
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
@@ -106,7 +106,7 @@ pub struct BeamEmitter {
 // Implementation
 impl WeaponData {
     pub fn create_weapon_data(weapon_data_name: &str, weapon_data_create_info: &WeaponDataCreateInfo, bullet_data: &RcRefCell<BulletData>) -> RcRefCell<WeaponData> {
-        new_RcRefCell(WeaponData {
+        newRcRefCell(WeaponData {
             _weapon_data_name: weapon_data_name.to_string(),
             _weapon_type: weapon_data_create_info._weapon_type,
             _rate_of_fire: weapon_data_create_info._rate_of_fire,
