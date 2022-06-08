@@ -167,7 +167,7 @@ impl ProjectSceneManager {
         engine_resources: &EngineResources,
         window_size: &Vector2<i32>,
     ) {
-        self._renderer_data = renderer_context._renderer_data.as_ptr();
+        self._renderer_data = renderer_context.get_renderer_data();
         self._effect_manager = effect_manager;
         self._project_resources = engine_resources._project_resources as *const ProjectResources;
         self.resized_window(window_size.x, window_size.y);
