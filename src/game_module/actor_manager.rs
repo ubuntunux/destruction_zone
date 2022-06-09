@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::rc::{Rc, Weak};
+use std::rc::Rc;
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::utilities::system::{ptr_as_mut, ptr_as_ref};
@@ -16,7 +16,7 @@ pub type ActorMap = HashMap<u64, Rc<dyn ActorTrait>>;
 
 pub struct ActorManager {
     pub _id_generator: u64,
-    pub _player_actor: Weak<PlayerActor>,
+    pub _player_actor: *const PlayerActor,
     pub _actors: ActorMap,
 }
 
@@ -28,7 +28,7 @@ impl ActorManager {
     pub fn create_actor_manager() -> Box<ActorManager> {
         Box::new(ActorManager {
             _id_generator: 0,
-            _player_actor: Weak::new(),
+            _player_actor: std::ptr::null(),
             _actors: HashMap::new(),
         })
     }
@@ -71,7 +71,7 @@ impl ActorManager {
 
         let actor: Rc<dyn ActorTrait> = if is_player_actor {
             let player_actor = PlayerActor::create_player_actor(id, &ship_data, &actor_render_object);
-            self._player_actor = Rc::downgrade(&player_actor);
+            self._player_actor = player_actor.as_ref();
             player_actor
         } else {
             NonPlayerActor::create_actor(id, &ship_data, &actor_render_object)
@@ -87,11 +87,11 @@ impl ActorManager {
     }
 
     pub fn get_player_actor(&self) -> &PlayerActor {
-        ptr_as_ref(self._player_actor.as_ptr())
+        ptr_as_ref(self._player_actor)
     }
 
     pub fn get_player_actor_mut(&self) -> &mut PlayerActor {
-        ptr_as_mut(self._player_actor.as_ptr())
+        ptr_as_mut(self._player_actor)
     }
 
     pub fn update_actor_manager(&mut self, delta_time: f32, project_application: &ProjectApplication, game_controller: &GameController) {
