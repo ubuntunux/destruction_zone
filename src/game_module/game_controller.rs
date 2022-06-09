@@ -111,7 +111,7 @@ impl GameController {
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let mut main_camera = self.get_main_camera().borrow_mut();
-        let mut player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow_mut();
+        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
         let mut front_xz: Vector3<f32> = main_camera._transform_object.get_front().clone_owned();
         front_xz.y = 0.0;
@@ -192,7 +192,7 @@ impl GameController {
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
         let mut main_camera = self.get_main_camera().borrow_mut();
-        let mut player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow_mut();
+        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
 
         // fire
         if btn_left {
@@ -297,7 +297,7 @@ impl GameController {
         }
 
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor().borrow();
+        let player_actor = project_application.get_game_client()._actor_manager.get_player_actor_mut();
         self.update_camera(delta_time, height_map_data, &player_actor);
     }
 }

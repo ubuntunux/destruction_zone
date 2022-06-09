@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::cell::RefCell;
+use std::rc::{Rc, Weak};
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
-use rust_engine_3d::utilities::system::{RcRefCell, WeakRefCell, intoWeakRefCell};
+use rust_engine_3d::utilities::system::{ptr_as_mut, ptr_as_ref};
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
@@ -12,11 +12,11 @@ use crate::game_module::game_controller::GameController;
 use crate::game_module::level_datas::spawn_point::{SpawnPointType, ShipSpawnPointData};
 
 
-pub type ActorMap = HashMap<u64, RcRefCell<dyn ActorTrait>>;
+pub type ActorMap = HashMap<u64, Rc<dyn ActorTrait>>;
 
 pub struct ActorManager {
     pub _id_generator: u64,
-    pub _player_actor: WeakRefCell<PlayerActor>,
+    pub _player_actor: Weak<PlayerActor>,
     pub _actors: ActorMap,
 }
 
@@ -28,7 +28,7 @@ impl ActorManager {
     pub fn create_actor_manager() -> Box<ActorManager> {
         Box::new(ActorManager {
             _id_generator: 0,
-            _player_actor: WeakRefCell::new(),
+            _player_actor: Weak::new(),
             _actors: HashMap::new(),
         })
     }
@@ -69,15 +69,14 @@ impl ActorManager {
             &render_object_create_info
         );
 
-        let actor: RcRefCell<dyn ActorTrait> = if is_player_actor {
+        let actor: Rc<dyn ActorTrait> = if is_player_actor {
             let player_actor = PlayerActor::create_player_actor(id, &ship_data, &actor_render_object);
-            self._player_actor = intoWeakRefCell(&player_actor);
+            self._player_actor = Rc::downgrade(&player_actor);
             player_actor
         } else {
             NonPlayerActor::create_actor(id, &ship_data, &actor_render_object)
         };
-
-        actor.borrow_mut().initialize_actor(project_application.get_project_scene_manager_mut());
+        ptr_as_mut(actor.as_ref()).initialize_actor(project_application.get_project_scene_manager_mut());
 
         self._actors.insert(id, actor);
     }
@@ -87,16 +86,20 @@ impl ActorManager {
         self._actors.remove(&actor.get_actor_id());
     }
 
-    pub fn get_player_actor(&self) -> &RefCell<PlayerActor> {
-        unsafe { &*self._player_actor.as_ptr() }
+    pub fn get_player_actor(&self) -> &PlayerActor {
+        ptr_as_ref(self._player_actor.as_ptr())
+    }
+
+    pub fn get_player_actor_mut(&self) -> &mut PlayerActor {
+        ptr_as_mut(self._player_actor.as_ptr())
     }
 
     pub fn update_actor_manager(&mut self, delta_time: f32, project_application: &ProjectApplication, game_controller: &GameController) {
         let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        self.get_player_actor().borrow_mut().update_player_actor(delta_time, height_map_data, game_controller);
+        self.get_player_actor_mut().update_player_actor(delta_time, height_map_data, game_controller);
 
-        for rcrefcell_actor in self._actors.values() {
-            let mut actor = rcrefcell_actor.borrow_mut();
+        for actor_wrapper in self._actors.values() {
+            let actor = ptr_as_mut(actor_wrapper.as_ref());
             if false == actor.is_player_actor() {
                 let ship_controller = actor.get_ship_mut().get_controller_mut();
                 {

@@ -5,7 +5,7 @@ use nalgebra::Vector3;
 use rust_engine_3d::application::audio_manager::AudioLoop;
 use rust_engine_3d::effect::effect_data::EffectCreateInfo;
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
@@ -58,9 +58,8 @@ impl WeaponManager {
 
             if bullet._is_alive {
                 let is_player_actor = bullet.get_owner_actor().is_player_actor();
-                for rcrefcell_actor in actor_manager._actors.values() {
-                    let rcrefcell_actor = rcrefcell_actor.clone();
-                    let mut actor = rcrefcell_actor.borrow_mut();
+                for actor_wrapper in actor_manager._actors.values() {
+                    let actor = ptr_as_mut(actor_wrapper.as_ref());
                     if is_player_actor != actor.is_player_actor() {
                         let bullet_transform = bullet.get_transform_object();
                         let intersect = {
@@ -70,7 +69,7 @@ impl WeaponManager {
                         };
 
                         if intersect {
-                            actor_manager.remove_actor(project_application.get_project_scene_manager_mut(), &mut (*actor));
+                            actor_manager.remove_actor(project_application.get_project_scene_manager_mut(), actor);
                             bullet._is_alive = false;
                             bullet._is_collided = true;
                             break;
