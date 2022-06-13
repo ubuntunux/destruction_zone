@@ -43,10 +43,10 @@ impl HeightMapData {
             }
         }
         self._min_height_map_data.push(lod_height_map_data);
-        self.generate_lod();
+        self.generate_hiz_min();
     }
 
-    pub fn generate_lod(&mut self) {
+    pub fn generate_hiz_min(&mut self) {
         for _ in 1..self._lod_count {
             let width = *self._width.last().unwrap() as i32;
             let height = *self._height.last().unwrap() as i32;
