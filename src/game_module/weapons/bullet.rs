@@ -1,10 +1,11 @@
+use std::rc::Rc;
+
 use nalgebra::Vector3;
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
-
+use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::height_map_data::HeightMapData;
 
@@ -74,8 +75,8 @@ impl Bullet {
         initial_velocity: &Vector3<f32>,
         bullet_data: *const BulletData,
         bullet_render_object: &RcRefCell<RenderObjectData>,
-    ) -> RcRefCell<Bullet> {
-        newRcRefCell(Bullet {
+    ) -> Rc<Bullet> {
+        Rc::new(Bullet {
             _owner_actor: owner_actor,
             _transform: &bullet_render_object.borrow()._transform_object,
             _initial_position: bullet_render_object.borrow()._transform_object.get_position().clone_owned(),

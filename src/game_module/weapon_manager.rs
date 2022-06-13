@@ -1,12 +1,12 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use nalgebra::Vector3;
 
 use rust_engine_3d::application::audio_manager::AudioLoop;
 use rust_engine_3d::effect::effect_data::EffectCreateInfo;
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
-use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
-
+use rust_engine_3d::utilities::system::ptr_as_mut;
 use crate::application::project_application::ProjectApplication;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::weapons::bullet::Bullet;
@@ -14,7 +14,7 @@ use crate::game_module::weapons::bullet::Bullet;
 
 pub struct WeaponManager {
     pub _id_generator: u64,
-    pub _bullets_array: HashMap<u64, RcRefCell<Bullet>>,
+    pub _bullets_array: HashMap<u64, Rc<Bullet>>,
 }
 
 impl WeaponManager {
@@ -38,7 +38,7 @@ impl WeaponManager {
         id
     }
 
-    pub fn regist_bullets(&mut self, bullet: &RcRefCell<Bullet>) -> u64 {
+    pub fn regist_bullets(&mut self, bullet: &Rc<Bullet>) -> u64 {
         let id = self.generate_id();
         self._bullets_array.insert(id, bullet.clone());
         id
@@ -53,7 +53,7 @@ impl WeaponManager {
 
         let mut dead_bullets: Vec<u64> = Vec::new();
         for (id, bullet) in self._bullets_array.iter() {
-            let bullet = &mut bullet.borrow_mut();
+            let bullet = ptr_as_mut(bullet.as_ref());
             bullet.update_bullet(delta_time, height_map_data);
 
             if bullet._is_alive {

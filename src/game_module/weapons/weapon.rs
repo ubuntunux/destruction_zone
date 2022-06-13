@@ -168,7 +168,8 @@ impl WeaponTrait for BeamEmitter {
             self._owner_actor.clone(),
             self.get_owner_actor().get_velocity(),
             self.get_bullet_data(),
-            &bullet_render_object);
+            &bullet_render_object
+        );
         project_application.get_game_client_mut()._weapon_manager.regist_bullets(&bullet);
     }
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32, _height_map_data: &HeightMapData) {
