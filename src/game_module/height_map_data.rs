@@ -34,6 +34,8 @@ impl HeightMapData {
         let lod_count_x = (width as f32).log2() as i32 + 1;
         let lod_count_y = (height as f32).log2() as i32 + 1;
         self._lod_count = lod_count_x.min(lod_count_y);
+        assert!(2 <= self._lod_count, "lod_count must be greater than 2.");
+
         self._width.push(width);
         self._height.push(height);
         let mut lod_height_map_data: Vec<f32> = Vec::new();
@@ -70,28 +72,111 @@ impl HeightMapData {
         }
     }
 
-    pub fn get_height(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+    pub fn get_height_bilinear(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
         let lod = lod.min(self._lod_count as usize - 1);
-        let width: usize = self._width[lod] as usize;
-        let height: usize = self._height[lod] as usize;
+        let width = self._width[lod];
+        let height = self._height[lod];
         let texcoord_x: f32 = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
         let texcoord_y: f32 = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
         let pixel_pos_x: f32 = 0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32;
         let pixel_pos_y: f32 = 0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32;
         let pixel_pos_x_frac: f32 = pixel_pos_x.fract();
         let pixel_pos_y_frac: f32 = pixel_pos_y.fract();
-        let pixel_pos_x_min: usize = pixel_pos_x as usize;
-        let pixel_pos_y_min: usize = pixel_pos_y as usize * width;
-        let pixel_pos_x_max: usize = pixel_pos_x.ceil() as usize;
-        let pixel_pos_y_max: usize = pixel_pos_y.ceil() as usize * width;
-        let pixel_index_00: usize = pixel_pos_y_min + pixel_pos_x_min;
-        let pixel_index_01: usize = pixel_pos_y_min + pixel_pos_x_max;
-        let pixel_index_10: usize = pixel_pos_y_max + pixel_pos_x_min;
-        let pixel_index_11: usize = pixel_pos_y_max + pixel_pos_x_max;
+        let pixel_pos_x_min: i32 = pixel_pos_x as i32;
+        let pixel_pos_y_min: i32 = pixel_pos_y as i32 * width;
+        let pixel_pos_x_max: i32 = pixel_pos_x.ceil() as i32;
+        let pixel_pos_y_max: i32 = pixel_pos_y.ceil() as i32 * width;
+        let pixel_index_00: usize = (pixel_pos_y_min + pixel_pos_x_min) as usize;
+        let pixel_index_01: usize = (pixel_pos_y_min + pixel_pos_x_max) as usize;
+        let pixel_index_10: usize = (pixel_pos_y_max + pixel_pos_x_min) as usize;
+        let pixel_index_11: usize = (pixel_pos_y_max + pixel_pos_x_max) as usize;
         let height_map_data = &self._min_height_map_data[lod];
         let height_data_0 = lerp(height_map_data[pixel_index_00], height_map_data[pixel_index_01], pixel_pos_x_frac);
         let height_data_1 = lerp(height_map_data[pixel_index_10], height_map_data[pixel_index_11], pixel_pos_x_frac);
         let height = self._bounding_box._min.y + lerp(height_data_0, height_data_1, pixel_pos_y_frac);
-        self._sea_height.max(height)
+        self._sea_height.max(height as f32)
+    }
+
+    pub fn get_height_point(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+        let lod = lod.min(self._lod_count as usize - 1);
+        let width = self._width[lod];
+        let height = self._height[lod];
+        let texcoord_x: f32 = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
+        let texcoord_y: f32 = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
+        let pixel_pos_x: i32 = (0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32) as i32;
+        let pixel_pos_y: i32 = (0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32) as i32;
+        let pixel_index: usize = (pixel_pos_x + pixel_pos_y * width) as usize;
+        let height = self._bounding_box._min.y + self._min_height_map_data[lod][pixel_index];
+        self._sea_height.max(height as f32)
+    }
+
+    pub fn get_collision_point(&self, start_pos: &Vector3<f32>, dir: &Vector3<f32>, limit_dist: f32, collision_point: &mut Vector3<f32>) -> bool {
+        let max_lod: usize = self._lod_count as usize - 2;
+        let mut lod: usize = if limit_dist < 0f32 {
+            max_lod
+        } else {
+            let max_dist: f32 = (dir.x.abs().max(dir.z.abs()) * limit_dist).ceil();
+            let max_size: f32 = self._bounding_box._size.x.max(self._bounding_box._size.z);
+            max_lod.min((max_size / max_dist).ceil().log2().ceil() as usize)
+        };
+
+        let mut pos: Vector3<f32> = start_pos.clone_owned();
+        let goal_pos: Vector3<f32> = start_pos + dir * limit_dist;
+        let step: f32 = 1f32;
+
+        let mut width: i32 = 0;
+        let mut height: i32 = 0;
+        let mut texcoord_x: f32 = 0f32;
+        let mut texcoord_y: f32 = 0f32;
+        let mut pixel_pos_x: i32 = 0;
+        let mut pixel_pos_y: i32 = 0;
+        let mut pixel_index: usize = 0;
+        let mut changed_lod = true;
+        let mut collided = false;
+        while 0 <= lod {
+            if changed_lod {
+                width = self._width[lod];
+                height = self._height[lod];
+                texcoord_x = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
+                texcoord_y = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
+                pixel_pos_x = (0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32) as i32;
+                pixel_pos_y = (0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32) as i32;
+                pixel_index = (pixel_pos_x + pixel_pos_y * width) as usize;
+                changed_lod = false;
+            }
+
+            let height_value = self._sea_height.max( self._bounding_box._min.y + self._min_height_map_data[lod][pixel_index] as f32 );
+            if pos.y <= height_value {
+                collided = true;
+                collision_point.clone_from(&pos);
+                collision_point.y = height_value;
+
+                lod -= 1;
+                changed_lod = true;
+                continue;
+            }
+
+            // next step
+            let pos_x = (self._bounding_box._size.x / width as f32) * (pixel_pos_x + if 0f32 < dir.x { 1 } else { 0 }) as f32;
+            let pos_z = (self._bounding_box._size.z / height as f32) * (pixel_pos_y + if 0f32 < dir.z { 1 } else { 0 }) as f32;
+            let dx: f32 = (pos_x - pos.x).abs();
+            let dz: f32 = (pos_z - pos.z).abs();
+            if (dir.z / dir.x * dx).abs() <= dz {
+                // horizontal step
+                pos = &pos + dir / dir.x * dx;
+                pixel_pos_x += if 0f32 < dir.x { 1 } else { -1 };
+            } else {
+                // vertical step
+                pos = &pos + dir / dir.z * dz;
+                pixel_pos_y += if 0f32 < dir.z { 1 } else { -1 };
+            }
+
+            if pixel_pos_x < 0 || pixel_pos_y < 0 || width <= pixel_pos_x || height <= pixel_pos_y {
+                return collided;
+            }
+
+            pixel_index = (pixel_pos_x + pixel_pos_y * width) as usize;
+        }
+        collided
     }
 }

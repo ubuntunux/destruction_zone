@@ -116,7 +116,7 @@ impl Bullet {
 
             if self._is_alive {
                 // check bullet collide
-                let floating_height = height_map_data.get_height(current_position, 0);
+                let floating_height = height_map_data.get_height_bilinear(current_position, 0);
                 if current_position.y < floating_height {
                     self._is_alive = false;
                     self._is_collided = true;

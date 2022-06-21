@@ -68,7 +68,7 @@ impl ActorTrait for PlayerActor {
         for i in 0..loop_count {
             let check_dist = BULLET_CHECK_STEP * i as f32;
             self._target_position += fire_dir * check_dist;
-            let floating_height = height_map_data.get_height(&self._target_position, 0);
+            let floating_height = height_map_data.get_height_bilinear(&self._target_position, 0);
             if self._target_position.y < floating_height {
                 break;
             }

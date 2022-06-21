@@ -144,7 +144,7 @@ impl ShipController {
         let mut position = &self._position + &self._velocity * delta_time;
         if position != self._position || false == self._on_ground {
             self._on_ground = false;
-            let floating_height = height_map_data.get_height(&position, 0) + self._floating_height;
+            let floating_height = height_map_data.get_height_bilinear(&position, 0) + self._floating_height;
             if position.y < floating_height {
                 position.y = floating_height;
                 self._velocity.y = 0.0;

@@ -255,7 +255,7 @@ impl GameController {
 
             // camera postion
             let mut camera_pos = main_camera._transform_object.get_position().clone_owned();
-            camera_pos.y = height_map_data.get_height(&camera_pos, 0) + self._camera_distance;
+            camera_pos.y = height_map_data.get_height_bilinear(&camera_pos, 0) + self._camera_distance;
             main_camera._transform_object.set_position(&camera_pos);
 
         } else if GameViewMode::FpsViewMode == self._game_view_mode {
@@ -281,7 +281,7 @@ impl GameController {
 
             // camera postion
             let mut camera_pos = player_transform.get_position() + main_camera._transform_object.get_front() * self._camera_distance + cockpit_offset;
-            let floating_height = height_map_data.get_height(&camera_pos, 0) + 1.0;
+            let floating_height = height_map_data.get_height_bilinear(&camera_pos, 0) + 1.0;
             if camera_pos.y < floating_height {
                 camera_pos.y = floating_height;
             }
