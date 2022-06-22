@@ -1,4 +1,4 @@
-use nalgebra::{ Vector3 };
+use nalgebra::{Vector2, Vector3};
 
 use rust_engine_3d::utilities::math::lerp;
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
@@ -72,14 +72,12 @@ impl HeightMapData {
         }
     }
 
-    pub fn get_height_bilinear(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+    pub fn get_height_bilinear_by_texcoord(&self, texcoord: &Vector2<f32>, lod: usize) -> f32 {
         let lod = lod.min(self._lod_count as usize - 1);
         let width = self._width[lod];
         let height = self._height[lod];
-        let texcoord_x: f32 = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
-        let texcoord_y: f32 = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
-        let pixel_pos_x: f32 = 0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32;
-        let pixel_pos_y: f32 = 0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32;
+        let pixel_pos_x: f32 = 0f32.max(1f32.min(texcoord.x)) * (width - 1) as f32;
+        let pixel_pos_y: f32 = 0f32.max(1f32.min(texcoord.y)) * (height - 1) as f32;
         let pixel_pos_x_frac: f32 = pixel_pos_x.fract();
         let pixel_pos_y_frac: f32 = pixel_pos_y.fract();
         let pixel_pos_x_min: i32 = pixel_pos_x as i32;
@@ -97,99 +95,103 @@ impl HeightMapData {
         self._sea_height.max(height as f32)
     }
 
-    pub fn get_height_point(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+    pub fn get_height_bilinear(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+        let texcoord: Vector2<f32> = Vector2::new(
+            (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x,
+            (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z
+        );
+        self.get_height_bilinear_by_texcoord(&texcoord, lod)
+    }
+
+    pub fn get_height_point_by_texcoord(&self, texcoord: &Vector2<f32>, lod: usize) -> f32 {
         let lod = lod.min(self._lod_count as usize - 1);
         let width = self._width[lod];
         let height = self._height[lod];
-        let texcoord_x: f32 = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
-        let texcoord_y: f32 = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
-        let pixel_pos_x: i32 = (0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32) as i32;
-        let pixel_pos_y: i32 = (0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32) as i32;
+        let pixel_pos_x: i32 = (0f32.max(1f32.min(texcoord.x)) * (width - 1) as f32) as i32;
+        let pixel_pos_y: i32 = (0f32.max(1f32.min(texcoord.y)) * (height - 1) as f32) as i32;
         let pixel_index: usize = (pixel_pos_x + pixel_pos_y * width) as usize;
         let height = self._bounding_box._min.y + self._min_height_map_data[lod][pixel_index];
         self._sea_height.max(height as f32)
     }
 
-    pub fn get_collision_point(&self, start_pos: &Vector3<f32>, dir: &Vector3<f32>, limit_dist: f32, collision_point: &mut Vector3<f32>) -> bool {
-        log::info!("========== get_collision_point ===================");
-        log::info!("    start_pos: {:?}, dir: {:?}", start_pos, dir);
+    pub fn get_height_point(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+        let texcoord: Vector2<f32> = Vector2::new(
+            (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x,
+            (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z
+        );
+        self.get_height_point_by_texcoord(&texcoord, lod)
+    }
 
-        let max_lod: i32 = 5;//self._lod_count - 2;
-        let mut lod: i32 = if limit_dist < 0f32 {
-            max_lod
-        } else {
-            let max_dist: f32 = (dir.x.abs().max(dir.z.abs()) * limit_dist).ceil();
-            let max_size: f32 = self._bounding_box._size.x.max(self._bounding_box._size.z);
-            max_lod.min((max_size / max_dist).ceil().log2().ceil() as i32)
-        };
+    pub fn get_collision_point(&self, start_pos: &Vector3<f32>, dir: &Vector3<f32>, mut limit_dist: f32, collision_point: &mut Vector3<f32>) -> bool {
+        let mut loop_count: i32 = 0;
+
+        let max_size: f32 = self._bounding_box._size.x.max(self._bounding_box._size.z);
+        if limit_dist < 0.0 {
+            limit_dist = max_size;
+        }
+        let max_dir: f32 = dir.x.abs().max(dir.z.abs());
+        let max_lod: i32 = self._lod_count - 2;
+        let max_dist: f32 = (max_dir * limit_dist).ceil();
+        let mut lod: i32 = 0.max(max_lod - (max_size / max_dist).ceil().log2().ceil() as i32);
+
+        log::info!("start lod: {:?}", lod);
 
         let mut pos: Vector3<f32> = start_pos.clone_owned();
-        let goal_pos: Vector3<f32> = start_pos + dir * limit_dist;
-        let step: f32 = 1f32;
-
-        let mut width: i32 = 0;
-        let mut height: i32 = 0;
-        let mut texcoord_x: f32 = 0f32;
-        let mut texcoord_y: f32 = 0f32;
-        let mut pixel_pos_x: i32 = 0;
-        let mut pixel_pos_y: i32 = 0;
-        let mut pixel_index: usize = 0;
-        let mut changed_lod = true;
+        let mut texcoord: Vector2<f32> = Vector2::new(
+            (pos.x - self._bounding_box._min.x) / self._bounding_box._size.x,
+            (pos.z - self._bounding_box._min.z) / self._bounding_box._size.z
+        );
+        let goal_texcoord: Vector2<f32> = Vector2::new(
+            texcoord.x + dir.x * limit_dist / self._bounding_box._size.x,
+            texcoord.y + dir.z * limit_dist / self._bounding_box._size.z
+        );
+        let dir_xz: Vector2<f32> = Vector2::new(dir.x, dir.z).normalize();
+        let mut step: f32 = 1.0 / self._width[lod as usize].max(self._height[lod as usize]) as f32;
         let mut collided = false;
+        let mut collided_height_value: f32 = 0.0;
+        let mut arrived: bool = false;
         while 0 <= lod {
-            if changed_lod {
-                log::info!("    changed_lod: {:?}", lod);
-                width = self._width[lod as usize];
-                height = self._height[lod as usize];
-                texcoord_x = (pos.x - &self._bounding_box._min.x) / self._bounding_box._size.x;
-                texcoord_y = (pos.z - &self._bounding_box._min.z) / self._bounding_box._size.z;
-                pixel_pos_x = (0f32.max(1f32.min(texcoord_x)) * (width - 1) as f32) as i32;
-                pixel_pos_y = (0f32.max(1f32.min(texcoord_y)) * (height - 1) as f32) as i32;
-                pixel_index = (pixel_pos_x + pixel_pos_y * width) as usize;
-                changed_lod = false;
-
-                log::info!("    changed_lod: pos: {:?}, width: {:?}, height: {:?}, texcoord_x: {:?}, texcoord_y: {:?}, pixel_pos_x: {:?}, pixel_pos_y: {:?}", pos, width, height, texcoord_x, texcoord_y, pixel_pos_x, pixel_pos_y);
-            }
-
-            let height_value = self._sea_height.max( self._bounding_box._min.y + self._min_height_map_data[lod as usize][pixel_index] as f32 );
+            loop_count += 1;
+            let height_value = self.get_height_bilinear_by_texcoord(&texcoord, lod as usize);
             if pos.y <= height_value {
-                collided = true;
                 collision_point.clone_from(&pos);
-                collision_point.y = height_value;
-
-                log::info!("    collide!!! collision_point: {:?}", collision_point);
-
+                collided_height_value = height_value;
+                collided = true;
+                step *= 0.5;
                 lod -= 1;
-                changed_lod = true;
                 continue;
+            } else if arrived || collided {
+                break;
             }
 
             // next step
-            let pos_x = self._bounding_box._min.x + (self._bounding_box._size.x / width as f32) * (pixel_pos_x + if 0f32 < dir.x { 1 } else { 0 }) as f32;
-            let pos_z = self._bounding_box._min.z + (self._bounding_box._size.z / height as f32) * (pixel_pos_y + if 0f32 < dir.z { 1 } else { 0 }) as f32;
-            let dx: f32 = (pos_x - start_pos.x).abs();
-            let dz: f32 = (pos_z - start_pos.z).abs();
-            if (dir.z / dir.x * dx).abs() <= dz {
-                // horizontal step
-                pos = start_pos + dir / dir.x.abs() * dx;
-                pixel_pos_x += if 0f32 < dir.x { 1 } else { -1 };
-            } else {
-                // vertical step
-                pos = start_pos + dir / dir.z.abs() * dz;
-                pixel_pos_y += if 0f32 < dir.z { 1 } else { -1 };
+            texcoord += &dir_xz * step;
+            if dir_xz.dot(&(&goal_texcoord - &texcoord)) < 0.0 {
+                texcoord.clone_from(&goal_texcoord);
+                arrived = true;
             }
 
-            log::info!("    Step: pos: {:?}, width: {:?}, height: {:?}, texcoord_x: {:?}, texcoord_y: {:?}, pixel_pos_x: {:?}, pixel_pos_y: {:?}", pos, width, height, texcoord_x, texcoord_y, pixel_pos_x, pixel_pos_y);
-
-            if pixel_pos_x < 0 || pixel_pos_y < 0 || width <= pixel_pos_x || height <= pixel_pos_y {
-                log::info!("    out of range: {:?}", collided);
-                return collided;
+            if texcoord.x < 0.0 || texcoord.y < 0.0 || 1.0 < texcoord.x || 1.0 < texcoord.y {
+                break;
             }
 
-            pixel_index = (pixel_pos_x + pixel_pos_y * width) as usize;
+            let ddx: f32 = (((texcoord.x * self._bounding_box._size.x) + self._bounding_box._min.x - start_pos.x) / dir.x).abs();
+            pos = start_pos + dir * ddx;
         }
 
-        log::info!("    end: {:?}", collided);
+        if collided {
+            let ddy: f32 = ((collided_height_value - start_pos.y) / dir.y).abs();
+            collision_point.x = start_pos.x + dir.x * ddy;
+            collision_point.y = start_pos.y + dir.y * ddy;
+            collision_point.z = start_pos.z + dir.z * ddy;
+
+            let height_value = self.get_height_bilinear(&collision_point, 0);
+            if collision_point.y < height_value {
+                collision_point.y = height_value;
+            }
+        }
+
+        log::info!("end, collided: {:?}, lod: {:?}, loop_count: {:?}, dis: {:?}", collided, lod, loop_count, (start_pos.clone_owned() - collision_point.clone_owned()).norm());
         collided
     }
 }

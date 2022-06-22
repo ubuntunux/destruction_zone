@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::time;
 
 use nalgebra::{Vector2, Vector3};
 use winit::event::VirtualKeyCode;
@@ -165,12 +166,18 @@ impl GameController {
         }
 
         // test
-        // let relative_pos = main_camera.convert_screen_to_relative_world(&mouse_move_data._mouse_pos);
-        // let mut actor_pos = main_camera._transform_object.get_position() + relative_pos.normalize() * self._camera_distance;
-        // let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
-        // let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
-        // actor_pos.y = height_map_data.get_height(&actor_pos, 0);
-        // player_ship_controller.set_position(&actor_pos);
+        let relative_pos = main_camera.convert_screen_to_relative_world(&mouse_move_data._mouse_pos);
+        let mut actor_pos = main_camera._transform_object.get_position() + relative_pos.normalize() * self._camera_distance;
+        let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
+        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
+        let time_instance = time::Instant::now();
+        let current_time = time_instance.elapsed().as_secs_f64();
+        if height_map_data.get_collision_point(main_camera._transform_object.get_position(), &relative_pos.normalize(), -1.0, &mut actor_pos) {
+            actor_pos.y += 5.0;
+            player_ship_controller.set_position(&actor_pos);
+        }
+        let current_time2 = time_instance.elapsed().as_secs_f64();
+        log::info!("time: {:.3}ms", (current_time2 - current_time) * 1000.0);
     }
 
     pub fn update_event_for_fps_view_mode(
