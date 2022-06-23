@@ -147,7 +147,8 @@ impl HeightMapData {
         let mut step: f32 = 1.0 / self._width[lod as usize].max(self._height[lod as usize]) as f32;
         let mut collided = false;
         let mut debug_loop_count: i32 = 0;
-        while 0 <= lod {
+        let limit_loop_count: i32 = max_size as i32;
+        while 0 <= lod && debug_loop_count < limit_loop_count {
             debug_loop_count += 1;
             let height_value = self.get_height_point_by_texcoord(&texcoord, lod as usize);
             if collision_point.y <= height_value {
@@ -191,7 +192,7 @@ impl HeightMapData {
             // *collision_point = start_pos + dir * ddy;
         }
 
-        log::info!("\tFinish!! loop_count: {:?}, collided: {:?}, lod: {:?}, collision_point: {:?}, dist: {:?}", debug_loop_count, collided, lod, collision_point, (start_pos - &*collision_point).norm());
+        //log::info!("\tFinish!! loop_count: {:?}, collided: {:?}, lod: {:?}, collision_point: {:?}, dist: {:?}", debug_loop_count, collided, lod, collision_point, (start_pos - &*collision_point).norm());
         collided
     }
 }
