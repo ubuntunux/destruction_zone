@@ -45,10 +45,10 @@ impl HeightMapData {
             }
         }
         self._min_height_map_data.push(lod_height_map_data);
-        self.generate_hiz_min();
+        self.generate_hiz_max();
     }
 
-    pub fn generate_hiz_min(&mut self) {
+    pub fn generate_hiz_max(&mut self) {
         for _ in 1..self._lod_count {
             let width = *self._width.last().unwrap() as i32;
             let height = *self._height.last().unwrap() as i32;
@@ -64,7 +64,7 @@ impl HeightMapData {
                     let height_01 = last_height_map_data[tex_coord_0 + 1];
                     let height_10 = last_height_map_data[tex_coord_1];
                     let height_11 = last_height_map_data[tex_coord_1 + 1];
-                    let min_height = height_00.min(height_01.min(height_10.min(height_11)));
+                    let min_height = height_00.max(height_01.max(height_10.max(height_11)));
                     lod_height_map_data.push(min_height);
                 }
             }
@@ -123,24 +123,22 @@ impl HeightMapData {
     }
 
     pub fn get_collision_point(&self, start_pos: &Vector3<f32>, dir: &Vector3<f32>, mut limit_dist: f32, collision_point: &mut Vector3<f32>) -> bool {
-        let mut loop_count: i32 = 0;
-
         let max_size: f32 = self._bounding_box._size.x.max(self._bounding_box._size.z);
         if limit_dist < 0.0 {
             limit_dist = max_size;
         }
         let max_dir: f32 = dir.x.abs().max(dir.z.abs());
         let max_lod: i32 = self._lod_count - 2;
-        let max_dist: f32 = (max_dir * limit_dist).ceil();
-        let mut lod: i32 = 0.max(max_lod - (max_size / max_dist).ceil().log2().ceil() as i32);
+        let max_dist: f32 = max_dir * limit_dist;
+        let mut lod: i32 = 0.max(max_lod - (max_size / max_dist).log2().ceil() as i32);
 
-        log::info!("start lod: {:?}", lod);
-
-        let mut pos: Vector3<f32> = start_pos.clone_owned();
+        collision_point.clone_from(start_pos);
+        let mut collision_point_prev: Vector3<f32> = start_pos.clone_owned();
         let mut texcoord: Vector2<f32> = Vector2::new(
-            (pos.x - self._bounding_box._min.x) / self._bounding_box._size.x,
-            (pos.z - self._bounding_box._min.z) / self._bounding_box._size.z
+            (collision_point.x - self._bounding_box._min.x) / self._bounding_box._size.x,
+            (collision_point.z - self._bounding_box._min.z) / self._bounding_box._size.z
         );
+        let mut texcoord_prev: Vector2<f32> = texcoord.clone_owned();
         let goal_texcoord: Vector2<f32> = Vector2::new(
             texcoord.x + dir.x * limit_dist / self._bounding_box._size.x,
             texcoord.y + dir.z * limit_dist / self._bounding_box._size.z
@@ -148,50 +146,52 @@ impl HeightMapData {
         let dir_xz: Vector2<f32> = Vector2::new(dir.x, dir.z).normalize();
         let mut step: f32 = 1.0 / self._width[lod as usize].max(self._height[lod as usize]) as f32;
         let mut collided = false;
-        let mut collided_height_value: f32 = 0.0;
-        let mut arrived: bool = false;
+        let mut debug_loop_count: i32 = 0;
         while 0 <= lod {
-            loop_count += 1;
-            let height_value = self.get_height_bilinear_by_texcoord(&texcoord, lod as usize);
-            if pos.y <= height_value {
-                collision_point.clone_from(&pos);
-                collided_height_value = height_value;
+            debug_loop_count += 1;
+            let height_value = self.get_height_point_by_texcoord(&texcoord, lod as usize);
+            if collision_point.y <= height_value {
+                // collided and go to higher lod
+                texcoord.clone_from(&texcoord_prev);
+                collision_point.clone_from(&collision_point_prev);
                 collided = true;
                 step *= 0.5;
                 lod -= 1;
                 continue;
-            } else if arrived || collided {
+            }
+
+            // reset
+            collided = false;
+
+            // next step
+            texcoord_prev.clone_from(&texcoord);
+            texcoord += &dir_xz * step;
+            collision_point_prev.clone_from(&collision_point);
+            let ddx: f32 = (((texcoord.x * self._bounding_box._size.x) + self._bounding_box._min.x - start_pos.x) / dir.x).abs();
+            *collision_point = start_pos + dir * ddx;
+
+            // arrive in goal
+            if dir_xz.dot(&(&goal_texcoord - &texcoord)) < 0.0 {
+                texcoord.clone_from(&goal_texcoord);
                 break;
             }
 
-            // next step
-            texcoord += &dir_xz * step;
-            if dir_xz.dot(&(&goal_texcoord - &texcoord)) < 0.0 {
-                texcoord.clone_from(&goal_texcoord);
-                arrived = true;
-            }
-
+            // out of range
             if texcoord.x < 0.0 || texcoord.y < 0.0 || 1.0 < texcoord.x || 1.0 < texcoord.y {
                 break;
             }
-
-            let ddx: f32 = (((texcoord.x * self._bounding_box._size.x) + self._bounding_box._min.x - start_pos.x) / dir.x).abs();
-            pos = start_pos + dir * ddx;
         }
 
         if collided {
-            let ddy: f32 = ((collided_height_value - start_pos.y) / dir.y).abs();
-            collision_point.x = start_pos.x + dir.x * ddy;
-            collision_point.y = start_pos.y + dir.y * ddy;
-            collision_point.z = start_pos.z + dir.z * ddy;
+            let height_value = self.get_height_bilinear_by_texcoord(&texcoord, 0);
+            collision_point.y = height_value;
 
-            let height_value = self.get_height_bilinear(&collision_point, 0);
-            if collision_point.y < height_value {
-                collision_point.y = height_value;
-            }
+            // NOTE: result is smooth but not correct and position spike.
+            // let ddy: f32 = ((height_value - start_pos.y) / dir.y).abs();
+            // *collision_point = start_pos + dir * ddy;
         }
 
-        log::info!("end, collided: {:?}, lod: {:?}, loop_count: {:?}, dis: {:?}", collided, lod, loop_count, (start_pos.clone_owned() - collision_point.clone_owned()).norm());
+        log::info!("\tFinish!! loop_count: {:?}, collided: {:?}, lod: {:?}, collision_point: {:?}, dist: {:?}", debug_loop_count, collided, lod, collision_point, (start_pos - &*collision_point).norm());
         collided
     }
 }
