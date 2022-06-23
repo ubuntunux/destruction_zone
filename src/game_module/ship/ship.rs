@@ -175,10 +175,10 @@ impl ShipInstance {
     pub fn get_max_shield_point(&self) -> f32 {
         self.get_ship_data()._max_shields
     }
-    pub fn ship_fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
+    pub fn ship_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
         for weapon in self._current_weapons.iter() {
             let weapon: &mut dyn WeaponTrait = unsafe { &mut *(*weapon as *mut dyn WeaponTrait) };
-            weapon.weapon_fire(project_application, target_position);
+            weapon.weapon_fire(project_application, fire_start, fire_dir, target_position);
         }
     }
     pub fn update_ship(&mut self, delta_time: f32, height_map_data: &HeightMapData) {

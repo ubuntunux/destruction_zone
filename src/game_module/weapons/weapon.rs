@@ -90,7 +90,7 @@ pub trait WeaponTrait {
     fn get_weapon_type(&self) -> WeaponType;
     fn get_weapon_data(&self) -> &WeaponData;
     fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData>;
-    fn weapon_fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>);
+    fn weapon_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>);
     fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData);
 }
 
@@ -148,8 +148,11 @@ impl WeaponTrait for BeamEmitter {
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }
     fn get_weapon_data(&self) -> &WeaponData { unsafe { &*self._weapon_data.as_ptr() } }
     fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData> { &self._weapon_render_object }
-    fn weapon_fire(&mut self, project_application: &ProjectApplication, target_position: &Vector3<f32>) {
-        let to_target: Vector3<f32> = (target_position - &self._muzzle_position).normalize();
+    fn weapon_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
+        let d: f32 = fire_dir.dot(&(&self._muzzle_position - fire_start));
+        let new_target_position: Vector3<f32> = &self._muzzle_position + (target_position - fire_start) - fire_dir * d;
+
+        let to_target: Vector3<f32> = (new_target_position - &self._muzzle_position).normalize();
         let muzzle_pitch: f32 = FIRE_PITCH_MIN.max(FIRE_PITCH_MAX.min(-to_target.y.asin()));
         let muzzle_front = self._transform_object.get_front();
         let rotation: Vector3<f32> = Vector3::new(muzzle_pitch, muzzle_front.x.atan2(muzzle_front.z), 0.0);

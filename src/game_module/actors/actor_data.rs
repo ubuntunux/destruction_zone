@@ -4,6 +4,7 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::game_module::game_controller::GameViewMode;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ ShipInstance };
 use crate::game_module::ship::ship_controller::ShipController;
@@ -30,6 +31,6 @@ pub trait ActorTrait {
     fn get_transform(&self) -> &TransformObjectData;
     fn get_transform_mut(&self) -> &mut TransformObjectData;
     fn get_velocity(&self) -> &Vector3<f32>;
-    fn actor_fire(&mut self, project_application: &ProjectApplication, fire_dir: &Vector3<f32>);
+    fn actor_fire(&mut self, project_application: &ProjectApplication, game_view_mode: &GameViewMode);
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData);
 }

@@ -156,7 +156,7 @@ impl HeightMapData {
                 texcoord.clone_from(&texcoord_prev);
                 collision_point.clone_from(&collision_point_prev);
                 collided = true;
-                step *= 0.5;
+                step *= 0.4;
                 lod -= 1;
                 continue;
             }

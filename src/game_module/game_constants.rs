@@ -1,7 +1,6 @@
 pub const GRAVITY: f32 = 9.8;
 
-pub const BULLET_CHECK_STEP: f32 = 1.0;
-pub const BULLET_DISTANCE_MAX: f32 = 100.0;
+pub const CHECK_TARGET_DISTANCE_MAX: f32 = 100.0;
 
 pub const FIRE_PITCH_MIN: f32 = -0.75;
 pub const FIRE_PITCH_MAX: f32 = 0.75;

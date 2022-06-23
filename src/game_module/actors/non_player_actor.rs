@@ -6,6 +6,7 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::game_module::game_controller::GameViewMode;
 use crate::game_module::ship::ship_controller::{ ShipController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::height_map_data::HeightMapData;
@@ -54,7 +55,7 @@ impl ActorTrait for NonPlayerActor {
         self._ship.get_transform_mut()
     }
     fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
-    fn actor_fire(&mut self, _project_application: &ProjectApplication, _fire_dir: &Vector3<f32>) {
+    fn actor_fire(&mut self, _project_application: &ProjectApplication, _game_view_mode: &GameViewMode) {
         unimplemented!()
     }
     fn update_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
