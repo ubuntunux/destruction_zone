@@ -3,15 +3,13 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
-
-use crate::application::project_application::ProjectApplication;
+use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell, ptr_as_ref, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actor_manager::calc_floating_height;
 use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::game_client::GameClient;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
-use crate::game_module::height_map_data::HeightMapData;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -147,19 +145,13 @@ impl ShipInstance {
         }
         self._weapons.clear();
     }
-    pub fn get_ship_data(&self) -> &ShipData {
-        unsafe { &*self._ship_data.as_ptr() }
-    }
+    pub fn get_ship_data(&self) -> &ShipData { ptr_as_ref(self._ship_data.as_ptr()) }
     pub fn get_controller(&self) -> &ShipController {
         &self._controller
     }
     pub fn get_controller_mut(&mut self) -> &mut ShipController { &mut self._controller }
-    pub fn get_transform(&self) -> &TransformObjectData {
-        unsafe { &(*self._transform_object) }
-    }
-    pub fn get_transform_mut(&self) -> &mut TransformObjectData {
-        unsafe { &mut *(self._transform_object as *mut TransformObjectData) }
-    }
+    pub fn get_transform(&self) -> &TransformObjectData { ptr_as_ref(self._transform_object) }
+    pub fn get_transform_mut(&self) -> &mut TransformObjectData { ptr_as_mut(self._transform_object) }
     pub fn get_current_weapons(&self) -> &Vec<*const dyn WeaponTrait> {
         &self._current_weapons
     }
@@ -175,16 +167,16 @@ impl ShipInstance {
     pub fn get_max_shield_point(&self) -> f32 {
         self.get_ship_data()._max_shields
     }
-    pub fn ship_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
+    pub fn ship_fire(&mut self, game_client: &GameClient, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
         for weapon in self._current_weapons.iter() {
             let weapon: &mut dyn WeaponTrait = unsafe { &mut *(*weapon as *mut dyn WeaponTrait) };
-            weapon.weapon_fire(project_application, fire_start, fire_dir, target_position);
+            weapon.weapon_fire(game_client, fire_start, fire_dir, target_position);
         }
     }
-    pub fn update_ship(&mut self, delta_time: f32, height_map_data: &HeightMapData) {
+    pub fn update_ship(&mut self, delta_time: f32) {
         let ship_transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
         for weapon in self._weapons.iter_mut() {
-            weapon.update_weapon(ship_transform, delta_time, height_map_data);
+            weapon.update_weapon(ship_transform, delta_time);
         }
     }
 }

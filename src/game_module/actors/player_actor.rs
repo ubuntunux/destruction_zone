@@ -5,12 +5,11 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
-use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
+use crate::game_module::game_client::GameClient;
 use crate::game_module::game_controller::{ GameViewMode, GameController };
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
-use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
 
@@ -56,12 +55,13 @@ impl ActorTrait for PlayerActor {
         self._ship.get_transform_mut()
     }
     fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
-    fn actor_fire(&mut self, project_application: &ProjectApplication, game_view_mode: &GameViewMode) {
+    fn actor_fire(&mut self, game_client: &GameClient, game_view_mode: &GameViewMode) {
+        let project_scene_manager = game_client.get_project_scene_manager();
         let mut fire_start: Vector3<f32> = Vector3::zeros();
         let mut fire_dir: Vector3<f32> = Vector3::zeros();
         match game_view_mode {
             GameViewMode::FpsViewMode => {
-                let main_camera = unsafe { &*project_application.get_project_scene_manager().get_main_camera().as_ptr() };
+                let main_camera = project_scene_manager.get_main_camera().borrow();
                 fire_start.clone_from(main_camera.get_camera_position());
                 fire_dir = -main_camera.get_camera_front() as Vector3<f32>;
             },
@@ -71,14 +71,16 @@ impl ActorTrait for PlayerActor {
             },
             _ => assert!(false, "Not implemented."),
         };
-        let height_map_data = project_application.get_project_scene_manager().get_height_map_data();
         let mut target_position: Vector3<f32> = &fire_start + &fire_dir * CHECK_TARGET_DISTANCE_MAX;
-        height_map_data.get_collision_point(&fire_start, &fire_dir, CHECK_TARGET_DISTANCE_MAX, &mut target_position);
+        project_scene_manager.get_height_map_collision_point(&fire_start, &fire_dir, CHECK_TARGET_DISTANCE_MAX, &mut target_position);
 
-        self._ship.ship_fire(project_application, &fire_start, &fire_dir, &target_position);
+        self._ship.ship_fire(game_client, &fire_start, &fire_dir, &target_position);
     }
 
-    fn update_actor(&mut self, _delta_time: f32, _height_map_data: &HeightMapData) {
+    fn actor_move(&mut self, _target_position: &Vector3<f32>) {
+    }
+
+    fn update_actor(&mut self, _delta_time: f32, _project_scene_manager: &ProjectSceneManager) {
         unimplemented!()
     }
 }
@@ -96,10 +98,10 @@ impl PlayerActor {
         })
     }
 
-    pub fn update_player_actor(&mut self, delta_time: f32, height_map_data: &HeightMapData, game_controller: &GameController) {
+    pub fn update_player_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
         let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
 
-        self._ship._controller.update_controller(delta_time, transform, height_map_data);
+        self._ship._controller.update_controller(delta_time, transform, project_scene_manager);
 
         // update player transform
         let ship_controller = &self._ship._controller;
@@ -119,6 +121,6 @@ impl PlayerActor {
         transform.update_matrix();
 
         // update ship
-        self.get_ship_mut().update_ship(delta_time, height_map_data);
+        self.get_ship_mut().update_ship(delta_time);
     }
 }

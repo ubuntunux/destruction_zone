@@ -12,14 +12,15 @@ use rust_engine_3d::renderer::ui::{
     Orientation
 };
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
-use crate::application::project_application::ProjectApplication;
-use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::game_client::GameClient;
 use crate::game_module::ui_widgets::hit_point_widgets::{ HullPointWidget, ShieldPointWidget };
 use crate::renderer::project_ui::ProjectUIManager;
+use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 
 
 pub struct GameUIManager {
+    pub _game_client: *const GameClient,
     pub _project_ui_manager: *const ProjectUIManager,
     pub _crosshair_widget: *const WidgetDefault,
     pub _crosshair_pos: Vector2<i32>,
@@ -36,6 +37,7 @@ pub struct GameUIManager {
 impl GameUIManager {
     pub fn create_game_ui_manager() -> Box<GameUIManager> {
         Box::new(GameUIManager {
+            _game_client: std::ptr::null(),
             _project_ui_manager: std::ptr::null(),
             _crosshair_widget: std::ptr::null(),
             _crosshair_pos: Vector2::zeros(),
@@ -50,20 +52,17 @@ impl GameUIManager {
         })
     }
 
-    pub fn get_project_ui_manager(&self) -> &ProjectUIManager {
-        unsafe { &*self._project_ui_manager }
-    }
+    pub fn get_project_ui_manager(&self) -> &ProjectUIManager { ptr_as_ref(self._project_ui_manager) }
+    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager { ptr_as_mut(self._project_ui_manager) }
+    pub fn get_game_client(&self) -> &GameClient { ptr_as_ref(self._game_client) }
+    pub fn get_game_client_mut(&self) -> &mut GameClient { ptr_as_mut(self._game_client) }
 
-    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
-        unsafe { &mut *(self._project_ui_manager as *mut ProjectUIManager) }
-    }
+    pub fn initialize_game_ui_manager(&mut self, game_client: &GameClient) {
+        self._game_client = game_client;
+        self._project_ui_manager = game_client.get_project_ui_manager();
 
-    pub fn initialize_game_ui_manager(&mut self, project_application: &ProjectApplication) {
-        let project_resources = project_application.get_project_resources();
-        self._project_ui_manager = project_application.get_project_ui_manager();
-
-        let project_ui_manager = unsafe { &mut *(self._project_ui_manager as *mut ProjectUIManager) };
-        let root_widget = project_ui_manager.get_root_widget_mut();
+        let project_resources = game_client.get_project_resources();
+        let root_widget = game_client.get_project_ui_manager().get_root_widget_mut();
 
         static TOUCH_DOWN: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
             // println!("touch_down");
@@ -75,7 +74,7 @@ impl GameUIManager {
             // println!("touch_up");
         };
 
-        let window_size = &project_application.get_engine_application()._window_size;
+        let window_size = &game_client.get_project_application().get_engine_application()._window_size;
         let window_center = Vector2::<f32>::new(window_size.x as f32 * 0.5, window_size.y as f32 * 0.5,);
 
         //
@@ -171,9 +170,9 @@ impl GameUIManager {
         self._crosshair_pos.clone_from(pos);
     }
 
-    pub fn update_game_ui(&mut self, _delta_time: f32, project_application: &ProjectApplication, actor_manager: &ActorManager) {
-        let main_camera = &mut project_application.get_project_scene_manager()._main_camera.borrow_mut();
-        let window_size = &project_application.get_engine_application()._window_size;
+    pub fn update_game_ui(&mut self, _delta_time: f32) {
+        let main_camera = &mut self.get_game_client().get_project_scene_manager()._main_camera.borrow_mut();
+        let window_size = &self.get_game_client().get_project_application().get_engine_application()._window_size;
 
         // Cross Hair
         let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
@@ -193,6 +192,7 @@ impl GameUIManager {
         }
 
         // Player Hud
+        let actor_manager = self.get_game_client().get_actor_manager();
         let player_actor = actor_manager.get_player_actor();
         let player_ship = player_actor.get_ship();
         self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(player_ship.get_hull_point() / 2.0, player_ship.get_max_hull_point());

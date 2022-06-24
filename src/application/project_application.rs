@@ -1,4 +1,5 @@
 use log::LevelFilter;
+use nalgebra::Vector2;
 
 use ash::vk;
 use winit::event::VirtualKeyCode;
@@ -13,14 +14,12 @@ use rust_engine_3d::application::application::{
 use rust_engine_3d::application::audio_manager::AudioManager;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::renderer::renderer_data::RendererData;
-
+use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::game_module::game_client::GameClient;
 use crate::renderer::project_ui::ProjectUIManager;
 use crate::resource::project_resource::ProjectResources;
-use crate::game_module::game_client::GameClient;
-use nalgebra::Vector2;
-
 
 pub struct ProjectApplication {
     pub _engine_application: *const EngineApplication,
@@ -64,16 +63,15 @@ impl ProjectApplicationBase for ProjectApplication {
     }
 
     fn update_event(&mut self) {
-        if self._is_game_mode {
-            self.get_game_client_mut().update_event(self);
-        }
-
         if self.get_engine_application()._keyboard_input_data.get_key_pressed(VirtualKeyCode::Tab) {
             self.toggle_game_mode();
         }
 
-        // EditorMode
-        if false == self._is_game_mode {
+        if self._is_game_mode {
+            // game mode
+            self.get_game_client_mut().update_event();
+        } else {
+            // editor mode
             let engine_application = self.get_engine_application();
             let time_data = &engine_application._time_data;
             let mouse_move_data = &engine_application._mouse_move_data;
@@ -176,7 +174,7 @@ impl ProjectApplicationBase for ProjectApplication {
 
     fn update_project_application(&mut self) {
         if self._is_game_mode {
-            self._game_client.update_game_client(self);
+            self._game_client.update_game_client();
         }
 
         let engine_application = unsafe { &*self._engine_application };
@@ -185,59 +183,23 @@ impl ProjectApplicationBase for ProjectApplication {
 }
 
 impl ProjectApplication {
-    pub fn get_engine_application(&self) -> &EngineApplication {
-        unsafe { &*self._engine_application }
-    }
-    pub fn get_engine_application_mut(&self) -> &mut EngineApplication {
-        unsafe { &mut *(self._engine_application as *mut EngineApplication) }
-    }
-    pub fn get_effect_manager(&self) -> &EffectManager {
-        unsafe { &*self._effect_manager }
-    }
-    pub fn get_effect_manager_mut(&self) -> &mut EffectManager {
-        unsafe { &mut *(self._effect_manager as *mut EffectManager) }
-    }
-    pub fn get_project_resources(&self) -> &ProjectResources {
-        &self._project_resources
-    }
-    pub fn get_project_resources_mut(&self) -> &mut ProjectResources {
-        unsafe { &mut *((self._project_resources.as_ref() as *const ProjectResources) as *mut ProjectResources) }
-    }
-    pub fn get_project_scene_manager(&self) -> &ProjectSceneManager {
-        &self._project_scene_manager
-    }
-    pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager {
-        unsafe { &mut *((self._project_scene_manager.as_ref() as *const ProjectSceneManager) as *mut ProjectSceneManager) }
-    }
-    pub fn get_renderer_data(&self) -> &RendererData {
-        unsafe { &*self._renderer_data }
-    }
-    pub fn get_renderer_data_mut(&self) -> &mut RendererData {
-        unsafe { &mut *(self._renderer_data as *mut RendererData) }
-    }
-    pub fn get_project_ui_manager(&self) -> &ProjectUIManager {
-        &self._project_ui_manager
-    }
-    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager {
-        unsafe { &mut *((self._project_ui_manager.as_ref() as *const ProjectUIManager) as *mut ProjectUIManager) }
-    }
-    pub fn get_audio_manager(&self) -> &AudioManager {
-        unsafe { &*self._audio_manager }
-    }
-    pub fn get_audio_manager_mut(&self) -> &mut AudioManager {
-        unsafe { &mut *(self._audio_manager as *mut AudioManager) }
-    }
-    pub fn get_game_client(&self) -> &GameClient {
-        &self._game_client
-    }
-    pub fn get_game_client_mut(&self) -> &mut GameClient {
-        unsafe { &mut *((self._game_client.as_ref() as *const GameClient) as *mut GameClient) }
-    }
-
-    pub fn toggle_game_mode(&mut self) {
-        self.set_game_mode(!self._is_game_mode);
-    }
-
+    pub fn get_engine_application(&self) -> &EngineApplication { ptr_as_ref(self._engine_application) }
+    pub fn get_engine_application_mut(&self) -> &mut EngineApplication { ptr_as_mut(self._engine_application) }
+    pub fn get_effect_manager(&self) -> &EffectManager { ptr_as_ref(self._effect_manager) }
+    pub fn get_effect_manager_mut(&self) -> &mut EffectManager { ptr_as_mut(self._effect_manager) }
+    pub fn get_project_resources(&self) -> &ProjectResources { ptr_as_ref(self._project_resources.as_ref()) }
+    pub fn get_project_resources_mut(&self) -> &mut ProjectResources { ptr_as_mut(self._project_resources.as_ref()) }
+    pub fn get_project_scene_manager(&self) -> &ProjectSceneManager { ptr_as_ref(self._project_scene_manager.as_ref()) }
+    pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager { ptr_as_mut(self._project_scene_manager.as_ref()) }
+    pub fn get_renderer_data(&self) -> &RendererData { ptr_as_ref(self._renderer_data) }
+    pub fn get_renderer_data_mut(&self) -> &mut RendererData { ptr_as_mut(self._renderer_data) }
+    pub fn get_project_ui_manager(&self) -> &ProjectUIManager { ptr_as_ref(self._project_ui_manager.as_ref()) }
+    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager { ptr_as_mut(self._project_ui_manager.as_ref()) }
+    pub fn get_audio_manager(&self) -> &AudioManager { ptr_as_ref(self._audio_manager) }
+    pub fn get_audio_manager_mut(&self) -> &mut AudioManager { ptr_as_mut(self._audio_manager) }
+    pub fn get_game_client(&self) -> &GameClient { ptr_as_ref(self._game_client.as_ref()) }
+    pub fn get_game_client_mut(&self) -> &mut GameClient { ptr_as_mut(self._game_client.as_ref()) }
+    pub fn toggle_game_mode(&mut self) { self.set_game_mode(!self._is_game_mode); }
     pub fn set_game_mode(&mut self, is_game_mode: bool) {
         self._is_game_mode = is_game_mode;
         self.get_engine_application_mut().set_grab_mode(is_game_mode);
@@ -310,13 +272,11 @@ pub fn run_project_application() {
         constants::MAX_PARTICLE_COUNT = 262144;
     }
 
-    // create
+    // create project application & managers
     let project_resources = ProjectResources::create_project_resources();
     let project_scene_manager = ProjectSceneManager::create_project_scene_manager();
     let project_ui_manager = ProjectUIManager::create_project_ui_manager();
     let game_client = GameClient::create_game_client();
-
-    // initialize
     let application = ProjectApplication {
         _engine_application: std::ptr::null(),
         _renderer_data: std::ptr::null(),
@@ -329,6 +289,7 @@ pub fn run_project_application() {
         _is_game_mode: false,
     };
 
+    // run
     application::run_application(
         app_name,
         app_version,

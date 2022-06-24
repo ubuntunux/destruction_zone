@@ -1,17 +1,15 @@
 use nalgebra::Vector3;
 use serde::{ Serialize, Deserialize };
 
-use rust_engine_3d::application::audio_manager::AudioLoop;
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
-
-use crate::application::project_application::ProjectApplication;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::height_map_data::HeightMapData;
-use crate::game_module::weapons::bullet::{Bullet, BulletType, BulletData};
+use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::{FIRE_PITCH_MIN, FIRE_PITCH_MAX};
+use crate::game_module::weapons::bullet::{BulletType, BulletData};
+
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum WeaponType {
@@ -90,8 +88,8 @@ pub trait WeaponTrait {
     fn get_weapon_type(&self) -> WeaponType;
     fn get_weapon_data(&self) -> &WeaponData;
     fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData>;
-    fn weapon_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>);
-    fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, delta_time: f32, height_map_data: &HeightMapData);
+    fn weapon_fire(&mut self, game_client: &GameClient, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>);
+    fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, delta_time: f32);
 }
 
 pub struct BeamEmitter {
@@ -148,10 +146,9 @@ impl WeaponTrait for BeamEmitter {
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }
     fn get_weapon_data(&self) -> &WeaponData { unsafe { &*self._weapon_data.as_ptr() } }
     fn get_weapon_render_object(&self) -> &RcRefCell<RenderObjectData> { &self._weapon_render_object }
-    fn weapon_fire(&mut self, project_application: &ProjectApplication, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
+    fn weapon_fire(&mut self, game_client: &GameClient, fire_start: &Vector3<f32>, fire_dir: &Vector3<f32>, target_position: &Vector3<f32>) {
         let d: f32 = fire_dir.dot(&(&self._muzzle_position - fire_start));
         let new_target_position: Vector3<f32> = &self._muzzle_position + (target_position - fire_start) - fire_dir * d;
-
         let to_target: Vector3<f32> = (new_target_position - &self._muzzle_position).normalize();
         let muzzle_pitch: f32 = FIRE_PITCH_MIN.max(FIRE_PITCH_MAX.min(-to_target.y.asin()));
         let muzzle_front = self._transform_object.get_front();
@@ -163,21 +160,11 @@ impl WeaponTrait for BeamEmitter {
             ..Default::default()
         };
 
-        let bullet_render_object = project_application.get_project_scene_manager_mut().add_static_render_object("bullet", &render_object_create_info);
-        project_application.get_audio_manager_mut().create_audio_instance("assaultrifle1", AudioLoop::ONCE);
-
-        // create bullet
-        let bullet = Bullet::create_bullet(
-            self._owner_actor.clone(),
-            self.get_owner_actor().get_velocity(),
-            self.get_bullet_data(),
-            &bullet_render_object
-        );
-        project_application.get_game_client_mut()._weapon_manager.regist_bullets(&bullet);
+        game_client.get_weapon_manager_mut().fire_bullet(self, &render_object_create_info);
     }
-    fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32, _height_map_data: &HeightMapData) {
-        let matrix = &ship_transform_object._matrix * &self._weapon_slot_transform._matrix;
-        self._transform_object.set_position_rotation_scale(&matrix);
+    fn update_weapon(&mut self, ship_transform_object: &TransformObjectData, _delta_time: f32) {
+        let weapon_world_matrix = &ship_transform_object._matrix * &self._weapon_slot_transform._matrix;
+        self._transform_object.set_position_rotation_scale(&weapon_world_matrix);
         if self._transform_object.update_transform_object() {
             let muzzle_position = &self.get_weapon_data()._muzzle_position;
             self._muzzle_position =
@@ -186,6 +173,6 @@ impl WeaponTrait for BeamEmitter {
                 self._transform_object.get_front() * muzzle_position.z +
                 self._transform_object.get_position();
         }
-        self._weapon_render_object.borrow_mut()._transform_object.set_position_rotation_scale(&matrix);
+        self._weapon_render_object.borrow_mut()._transform_object.set_position_rotation_scale(&weapon_world_matrix);
     }
 }

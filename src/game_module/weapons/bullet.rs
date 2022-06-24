@@ -6,8 +6,8 @@ use serde::{ Serialize, Deserialize };
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::height_map_data::HeightMapData;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum BulletType {
@@ -96,27 +96,27 @@ impl Bullet {
     pub fn get_bullet_data(&self) -> &BulletData { unsafe { &*self._bullet_data } }
     pub fn get_transform_object(&self) -> &TransformObjectData { unsafe { &*self._transform } }
     pub fn get_transform_object_mut(&self) -> &mut TransformObjectData { unsafe { &mut *(self._transform as *mut TransformObjectData) } }
-    pub fn update_bullet(&mut self, delta_time: f32, height_map_data: &HeightMapData) -> bool {
+    pub fn update_bullet(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager) -> bool {
         if self._is_alive {
             let bullet_data = unsafe { &*self._bullet_data };
 
+            // move bullet
             let transform = unsafe { &mut *(self._transform as *mut TransformObjectData) };
             let velocity = (&self._initial_velocity + transform.get_front() * bullet_data._bullet_speed) * delta_time;
             transform.move_position(&velocity);
 
             let current_position = transform.get_position();
-
+            // check bullet range
             if self._is_alive {
-                // check bullet range
                 let move_distance = (current_position - &self._initial_position).norm();
                 if bullet_data._bullet_life_time < self._elapsed_time || bullet_data._bullet_range < move_distance {
                     self._is_alive = false;
                 }
             }
 
+            // check bullet collision
             if self._is_alive {
-                // check bullet collide
-                let floating_height = height_map_data.get_height_bilinear(current_position, 0);
+                let floating_height = project_scene_manager.get_height_bilinear(current_position, 0);
                 if current_position.y < floating_height {
                     self._is_alive = false;
                     self._is_collided = true;

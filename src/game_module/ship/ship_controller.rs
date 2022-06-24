@@ -3,9 +3,8 @@ use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
-
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::game_constants::GRAVITY;
-use crate::game_module::height_map_data::HeightMapData;
 
 // Declare
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -103,7 +102,7 @@ impl ShipController {
     pub fn set_position(&mut self, position: &Vector3<f32>) { self._position.clone_from(position); }
     pub fn get_rotation(&self) -> &Vector3<f32> { &self._rotation }
     pub fn set_rotation(&mut self, rotation: &Vector3<f32>) { self._rotation.clone_from(rotation); }
-    pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, height_map_data: &HeightMapData) {
+    pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, project_scene_manager: &ProjectSceneManager) {
         let mut goal_roll = 0.0;
 
         let controller_data = self._controller_data.borrow();
@@ -144,7 +143,7 @@ impl ShipController {
         let mut position = &self._position + &self._velocity * delta_time;
         if position != self._position || false == self._on_ground {
             self._on_ground = false;
-            let floating_height = height_map_data.get_height_bilinear(&position, 0) + self._floating_height;
+            let floating_height = project_scene_manager.get_height_bilinear(&position, 0) + self._floating_height;
             if position.y < floating_height {
                 position.y = floating_height;
                 self._velocity.y = 0.0;

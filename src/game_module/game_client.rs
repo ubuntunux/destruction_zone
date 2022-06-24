@@ -1,16 +1,27 @@
 use nalgebra::Vector2;
 use winit::event::VirtualKeyCode;
 
-use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
-
+use rust_engine_3d::application::audio_manager::AudioManager;
+use rust_engine_3d::effect::effect_manager::EffectManager;
+use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 use crate::application::project_application::ProjectApplication;
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actor_manager::ActorManager;
 use crate::game_module::game_constants::SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED;
 use crate::game_module::game_controller::{GameViewMode, GameController};
 use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;
+use crate::resource::project_resource::ProjectResources;
+use crate::renderer::project_ui::ProjectUIManager;
+
 
 pub struct GameClient {
+    pub _project_application: *const ProjectApplication,
+    pub _project_scene_manager: *const ProjectSceneManager,
+    pub _project_resources: *const ProjectResources,
+    pub _project_ui_manager: *const ProjectUIManager,
+    pub _audio_manager: *const AudioManager,
+    pub _effect_manager: *const EffectManager,
     pub _actor_manager: Box<ActorManager>,
     pub _game_controller: Box<GameController>,
     pub _game_ui_manager: Box<GameUIManager>,
@@ -20,6 +31,12 @@ pub struct GameClient {
 impl GameClient {
     pub fn create_game_client() -> Box<GameClient> {
         Box::new(GameClient {
+            _project_application: std::ptr::null(),
+            _project_scene_manager: std::ptr::null(),
+            _project_resources: std::ptr::null(),
+            _project_ui_manager: std::ptr::null(),
+            _audio_manager: std::ptr::null(),
+            _effect_manager: std::ptr::null(),
             _actor_manager: ActorManager::create_actor_manager(),
             _game_controller: GameController::create_game_controller(),
             _game_ui_manager: GameUIManager::create_game_ui_manager(),
@@ -28,15 +45,25 @@ impl GameClient {
     }
 
     pub fn initialize_game_client(&mut self, project_application: &ProjectApplication) {
-        // open scene
-        project_application.get_project_scene_manager_mut().open_scene_data("default");
-
         // initialize game clients
-        let main_camera = project_application.get_project_scene_manager().get_main_camera();
-        self._game_ui_manager.initialize_game_ui_manager(project_application);
-        self._game_controller.initialize_game_controller(&self._game_ui_manager, main_camera);
-        self._actor_manager.initialize_actor_manager(project_application);
-        self._weapon_manager.initialize_weapon_manager(project_application);
+        let game_client = project_application.get_game_client();
+        self._project_application = project_application;
+        self._project_scene_manager = project_application.get_project_scene_manager();
+        self._project_resources = project_application.get_project_resources();
+        self._project_ui_manager = project_application.get_project_ui_manager();
+        self._audio_manager = project_application.get_audio_manager();
+        self._effect_manager = project_application.get_effect_manager();
+        self._game_ui_manager.initialize_game_ui_manager(game_client);
+        self._game_controller.initialize_game_controller(game_client);
+        self._actor_manager.initialize_actor_manager(game_client);
+        self._weapon_manager.initialize_weapon_manager(game_client);
+
+        // start game
+        {
+            // open scene
+            self.get_project_scene_manager_mut().open_scene_data("default");
+            self.get_actor_manager_mut().spawn_actors();
+        }
     }
 
     pub fn destroy_game_client(&mut self) {
@@ -45,7 +72,29 @@ impl GameClient {
         self._game_ui_manager.destroy_game_ui_manager();
     }
 
-    pub fn update_event(&mut self, project_application: &ProjectApplication) {
+    pub fn get_project_application(&self) -> &ProjectApplication { ptr_as_ref(self._project_application) }
+    pub fn get_project_application_mut(&self) -> &mut ProjectApplication { ptr_as_mut(self._project_application) }
+    pub fn get_project_scene_manager(&self) -> &ProjectSceneManager { ptr_as_ref(self._project_scene_manager) }
+    pub fn get_project_scene_manager_mut(&self) -> &mut ProjectSceneManager { ptr_as_mut(self._project_scene_manager) }
+    pub fn get_project_resources(&self) -> &ProjectResources { ptr_as_ref(self._project_resources) }
+    pub fn get_project_resources_mut(&self) -> &mut ProjectResources { ptr_as_mut(self._project_resources) }
+    pub fn get_project_ui_manager(&self) -> &ProjectUIManager { ptr_as_ref(self._project_ui_manager) }
+    pub fn get_project_ui_manager_mut(&self) -> &mut ProjectUIManager { ptr_as_mut(self._project_ui_manager) }
+    pub fn get_audio_manager(&self) -> &AudioManager { ptr_as_ref(self._audio_manager) }
+    pub fn get_audio_manager_mut(&self) -> &mut AudioManager { ptr_as_mut(self._audio_manager) }
+    pub fn get_effect_manager(&self) -> &EffectManager { ptr_as_ref(self._effect_manager) }
+    pub fn get_effect_manager_mut(&self) -> &mut EffectManager { ptr_as_mut(self._effect_manager) }
+    pub fn get_actor_manager(&self) -> &ActorManager { ptr_as_ref(self._actor_manager.as_ref()) }
+    pub fn get_actor_manager_mut(&self) -> &mut ActorManager { ptr_as_mut(self._actor_manager.as_ref()) }
+    pub fn get_game_controller(&self) -> &GameController { ptr_as_ref(self._game_controller.as_ref()) }
+    pub fn get_game_controller_mut(&self) -> &mut GameController { ptr_as_mut(self._game_controller.as_ref()) }
+    pub fn get_game_ui_manager(&self) -> &GameUIManager { ptr_as_ref(self._game_ui_manager.as_ref()) }
+    pub fn get_game_ui_manager_mut(&self) -> &mut GameUIManager { ptr_as_mut(self._game_ui_manager.as_ref()) }
+    pub fn get_weapon_manager(&self) -> &WeaponManager { ptr_as_ref(self._weapon_manager.as_ref()) }
+    pub fn get_weapon_manager_mut(&self) -> &mut WeaponManager { ptr_as_mut(self._weapon_manager.as_ref()) }
+
+    pub fn update_event(&mut self) {
+        let project_application = ptr_as_ref(self._project_application);
         let engine_application = project_application.get_engine_application();
         let time_data = &engine_application._time_data;
         let mouse_move_data = &engine_application._mouse_move_data;
@@ -70,27 +119,24 @@ impl GameClient {
                 &keyboard_input_data,
                 &mouse_move_data,
                 &mouse_input_data,
-                &mouse_delta,
-                project_application
+                &mouse_delta
             ),
             GameViewMode::FpsViewMode => self._game_controller.update_event_for_fps_view_mode(
                 time_data,
                 &keyboard_input_data,
                 &mouse_move_data,
                 &mouse_input_data,
-                &mouse_delta,
-                project_application
+                &mouse_delta
             ),
             _ => assert!(false, "Not implemented."),
         };
     }
 
-    pub fn update_game_client(&mut self, project_application: *const ProjectApplication) {
-        let project_application = unsafe { &(*project_application) };
-        let delta_time = project_application.get_engine_application()._time_data._delta_time as f32;
-        self._game_controller.update_game_controller(delta_time, project_application);
-        self._actor_manager.update_actor_manager(delta_time, project_application, self._game_controller.as_ref());
-        self._weapon_manager.update_weapon_manager(delta_time, project_application, self._actor_manager.as_mut());
-        self._game_ui_manager.update_game_ui(delta_time, project_application, self._actor_manager.as_ref());
+    pub fn update_game_client(&mut self) {
+        let delta_time = self.get_project_application().get_engine_application()._time_data._delta_time as f32;
+        self._game_controller.update_game_controller(delta_time);
+        self._actor_manager.update_actor_manager(delta_time);
+        self._weapon_manager.update_weapon_manager(delta_time);
+        self._game_ui_manager.update_game_ui(delta_time);
     }
 }

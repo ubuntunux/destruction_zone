@@ -175,6 +175,15 @@ impl ProjectSceneManager {
     pub fn get_project_resources(&self) -> &ProjectResources { unsafe { &*self._project_resources } }
     pub fn get_project_resources_mut(&self) -> &mut ProjectResources { unsafe { &mut *(self._project_resources as *mut ProjectResources) } }
     pub fn get_height_map_data(&self) -> &HeightMapData { &self._height_map_data }
+    pub fn get_height_map_collision_point(&self, start_pos: &Vector3<f32>, dir: &Vector3<f32>, limit_dist: f32, collision_point: &mut Vector3<f32>) -> bool {
+        self._height_map_data.get_collision_point(start_pos, dir, limit_dist, collision_point)
+    }
+    pub fn get_height_bilinear(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+        return self._height_map_data.get_height_bilinear(pos, lod);
+    }
+    pub fn get_height_point(&self, pos: &Vector3<f32>, lod: usize) -> f32 {
+        self._height_map_data.get_height_point(pos, lod)
+    }
     pub fn get_level_data(&self) -> &LevelData { &self._level_data }
     pub fn get_renderer_data(&self) -> &RendererData { unsafe { &*self._renderer_data } }
     pub fn get_renderer_data_mut(&self) -> &mut RendererData { unsafe { &mut *(self._renderer_data as *mut RendererData) } }
