@@ -12,6 +12,7 @@ use rust_engine_3d::application::application::{
     WindowMode
 };
 use rust_engine_3d::application::audio_manager::AudioManager;
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::renderer::renderer_data::RendererData;
 use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
@@ -103,7 +104,7 @@ impl ProjectApplicationBase for ProjectApplication {
             let released_key_equals = keyboard_input_data.get_key_released(VirtualKeyCode::Equals);
             let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
 
-            let mut main_camera = self.get_project_scene_manager()._main_camera.borrow_mut();
+            let main_camera = self.get_project_scene_manager().get_main_camera_mut();
             let mut main_light = self.get_project_scene_manager()._main_light.borrow_mut();
             let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
             let move_speed: f32 = application_constants::CAMERA_MOVE_SPEED * camera_move_speed_multiplier * delta_time as f32;

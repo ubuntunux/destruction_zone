@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::{ PathBuf };
+use std::rc::Rc;
 
 use nalgebra::{
     Vector2,
@@ -27,15 +28,14 @@ use rust_engine_3d::resource::resource::{
     EngineResources,
     ProjectResourcesBase,
 };
-use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
+use rust_engine_3d::utilities::system::{self, RcRefCell, newRcRefCell, ptr_as_mut};
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
-
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::level_datas::level_data::LevelData;
 use crate::resource::project_resource::ProjectResources;
 
 
-type CameraObjectMap = HashMap<String, RcRefCell<CameraObjectData>>;
+type CameraObjectMap = HashMap<String, Rc<CameraObjectData>>;
 type DirectionalLightObjectMap = HashMap<String, RcRefCell<DirectionalLightData>>;
 type EffectIDMap = HashMap<String, i64>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
@@ -73,7 +73,7 @@ pub struct ProjectSceneManager {
     pub _window_size: Vector2<i32>,
     pub _scene_name: String,
     pub _sea_height: f32,
-    pub _main_camera: RcRefCell<CameraObjectData>,
+    pub _main_camera: Rc<CameraObjectData>,
     pub _main_light: RcRefCell<DirectionalLightData>,
     pub _capture_height_map: RcRefCell<DirectionalLightData>,
     pub _light_probe_cameras: Vec<RcRefCell<CameraObjectData>>,
@@ -92,7 +92,8 @@ pub struct ProjectSceneManager {
 
 
 impl ProjectSceneManagerBase for ProjectSceneManager {
-    fn get_main_camera(&self) -> &RcRefCell<CameraObjectData> { &self._main_camera }
+    fn get_main_camera(&self) -> &CameraObjectData { self._main_camera.as_ref() }
+    fn get_main_camera_mut(&self) -> &mut CameraObjectData { ptr_as_mut(self._main_camera.as_ref()) }
     fn get_main_light(&self) -> &RcRefCell<DirectionalLightData> { &self._main_light }
     fn get_light_probe_camera(&self, index: usize) -> &RcRefCell<CameraObjectData> { &self._light_probe_cameras[index] }
     fn get_capture_height_map(&self) -> &RcRefCell<DirectionalLightData> { &self._capture_height_map }
@@ -142,7 +143,7 @@ impl ProjectSceneManager {
             _window_size: default_camera._window_size.into(),
             _scene_name: String::new(),
             _sea_height: 0.0,
-            _main_camera: system::newRcRefCell(default_camera),
+            _main_camera: Rc::new(default_camera),
             _main_light: system::newRcRefCell(default_light),
             _capture_height_map: system::newRcRefCell(capture_height_map),
             _light_probe_cameras: light_probe_cameras,
@@ -193,9 +194,9 @@ impl ProjectSceneManager {
     pub fn get_effect_manager_mut(&self) -> &mut EffectManager { unsafe { &mut *(self._effect_manager as *mut EffectManager) } }
     pub fn set_effect_manager(&mut self, effect_manager: *const EffectManager) { self._effect_manager = effect_manager; }
     pub fn get_sea_height(&self) -> f32 { self._sea_height }
-    pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> RcRefCell<CameraObjectData> {
+    pub fn add_camera_object(&mut self, object_name: &str, camera_create_info: &CameraCreateInfo) -> Rc<CameraObjectData> {
         let new_object_name = system::generate_unique_name(&self._camera_object_map, object_name);
-        let camera_object_data = newRcRefCell(CameraObjectData::create_camera_object_data(&new_object_name, camera_create_info));
+        let camera_object_data = Rc::new(CameraObjectData::create_camera_object_data(&new_object_name, camera_create_info));
         self._camera_object_map.insert(new_object_name, camera_object_data.clone());
         camera_object_data
     }
@@ -326,7 +327,7 @@ impl ProjectSceneManager {
     }
 
     pub fn resized_window(&self, width: i32, height: i32) {
-        self._main_camera.borrow_mut().set_aspect(width, height);
+        self.get_main_camera_mut().set_aspect(width, height);
     }
 
     pub fn create_default_scene_data(&self, scene_data_name: &str) {
@@ -545,8 +546,7 @@ impl ProjectSceneManager {
         };
 
         // cameras
-        for camera_object in self._camera_object_map.values() {
-            let camera = camera_object.borrow();
+        for camera in self._camera_object_map.values() {
             let camera_create_info = CameraCreateInfo {
                 fov: camera._fov,
                 near: camera._near,
@@ -612,7 +612,7 @@ impl ProjectSceneManager {
         let font_manager = engine_application.get_font_manager_mut();
         let delta_time: f64 = time_data._delta_time;
 
-        let mut main_camera = self._main_camera.borrow_mut();
+        let main_camera = ptr_as_mut(self.get_main_camera());
         main_camera.update_camera_object_data();
         let camera_position = &main_camera.get_camera_position();
 

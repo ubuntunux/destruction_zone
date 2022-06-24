@@ -60,10 +60,10 @@ impl GameController {
     pub fn get_game_ui_manager(&self) -> &GameUIManager { ptr_as_ref(self._game_ui_manager) }
     pub fn get_game_ui_manager_mut(&self) -> &mut GameUIManager { ptr_as_mut(self._game_ui_manager) }
     pub fn get_main_camera(&self) -> &CameraObjectData {
-        ptr_as_ref(self.get_game_client().get_project_scene_manager().get_main_camera().as_ptr())
+        self.get_game_client().get_project_scene_manager().get_main_camera()
     }
     pub fn get_main_camera_mut(&self) -> &mut CameraObjectData {
-        ptr_as_mut(self.get_game_client().get_project_scene_manager().get_main_camera().as_ptr())
+        self.get_game_client().get_project_scene_manager().get_main_camera_mut()
     }
     pub fn is_view_mode(&self, target_view_mode: GameViewMode) -> bool {
         if target_view_mode == self._game_view_mode { true } else { false }

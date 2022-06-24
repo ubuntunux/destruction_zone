@@ -1,6 +1,6 @@
 use nalgebra::{ Vector2 };
 
-use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::ui::{
     ProjectUIManagerBase,
     UIManager, Widget,
@@ -12,11 +12,12 @@ use rust_engine_3d::renderer::ui::{
     Orientation
 };
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
+use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
+use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::ui_widgets::hit_point_widgets::{ HullPointWidget, ShieldPointWidget };
 use crate::renderer::project_ui::ProjectUIManager;
-use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 
 
 pub struct GameUIManager {
@@ -171,7 +172,7 @@ impl GameUIManager {
     }
 
     pub fn update_game_ui(&mut self, _delta_time: f32) {
-        let main_camera = &mut self.get_game_client().get_project_scene_manager()._main_camera.borrow_mut();
+        let main_camera = &mut self.get_game_client().get_project_scene_manager().get_main_camera();
         let window_size = &self.get_game_client().get_project_application().get_engine_application()._window_size;
 
         // Cross Hair

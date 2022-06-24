@@ -61,7 +61,7 @@ impl ActorTrait for PlayerActor {
         let mut fire_dir: Vector3<f32> = Vector3::zeros();
         match game_view_mode {
             GameViewMode::FpsViewMode => {
-                let main_camera = project_scene_manager.get_main_camera().borrow();
+                let main_camera = project_scene_manager.get_main_camera();
                 fire_start.clone_from(main_camera.get_camera_position());
                 fire_dir = -main_camera.get_camera_front() as Vector3<f32>;
             },
