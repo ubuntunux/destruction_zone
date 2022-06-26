@@ -17,22 +17,15 @@ use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::ui_widgets::hit_point_widgets::{ HullPointWidget, ShieldPointWidget };
+use crate::game_module::ui_widgets::hud::{CrossHair, TargetHud, PlayerHud};
 use crate::renderer::project_ui::ProjectUIManager;
-
 
 pub struct GameUIManager {
     pub _game_client: *const GameClient,
     pub _project_ui_manager: *const ProjectUIManager,
-    pub _crosshair_widget: *const WidgetDefault,
-    pub _crosshair_pos: Vector2<i32>,
-    pub _crosshair_tracking_mouse: bool,
-    pub _target_hud_layer: *mut WidgetDefault,
-    pub _target_distance: *mut WidgetDefault,
-    pub _target_hull_point_widget: Option<HullPointWidget>,
-    pub _target_shield_point_widget: Option<ShieldPointWidget>,
-    pub _player_hud_layer: *mut WidgetDefault,
-    pub _player_hull_point_widget: Option<HullPointWidget>,
-    pub _player_shield_point_widget: Option<ShieldPointWidget>,
+    pub _crosshair: CrossHair,
+    pub _target_hud: TargetHud,
+    pub _player_hud: PlayerHud,
 }
 
 impl GameUIManager {
@@ -40,16 +33,22 @@ impl GameUIManager {
         Box::new(GameUIManager {
             _game_client: std::ptr::null(),
             _project_ui_manager: std::ptr::null(),
-            _crosshair_widget: std::ptr::null(),
-            _crosshair_pos: Vector2::zeros(),
-            _crosshair_tracking_mouse: true,
-            _target_hud_layer: std::ptr::null_mut(),
-            _target_distance: std::ptr::null_mut(),
-            _target_hull_point_widget: None,
-            _target_shield_point_widget: None,
-            _player_hud_layer: std::ptr::null_mut(),
-            _player_hull_point_widget: None,
-            _player_shield_point_widget: None,
+            _crosshair: CrossHair {
+                _widget: std::ptr::null(),
+                _pos: Vector2::zeros(),
+                _tracking_mouse: true,
+            },
+            _target_hud: TargetHud {
+                _widget: std::ptr::null_mut(),
+                _distance: std::ptr::null_mut(),
+                _hull_point_widget: None,
+                _shield_point_widget: None,
+            },
+            _player_hud: PlayerHud {
+                _widget: std::ptr::null_mut(),
+                _hull_point_widget: None,
+                _shield_point_widget: None,
+            }
         })
     }
 
@@ -89,7 +88,7 @@ impl GameUIManager {
         ui_component._callback_touch_up = Some(&TOUCH_UP);
         ui_component._callback_touch_move = Some(&TOUCH_MOVE);
         root_widget.add_widget(crosshair_widget);
-        self._crosshair_widget = crosshair_widget;
+        self._crosshair._widget = crosshair_widget;
 
         let hud_layer_width: f32 = 100.0;
         let hud_layer_height: f32 = 100.0;
@@ -100,8 +99,8 @@ impl GameUIManager {
         let hud_ui_padding: f32 = 4.0;
 
         // Target Hud
-        let target_hud_layer = unsafe { &mut *(UIManager::create_widget("target_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = target_hud_layer.get_ui_component_mut();
+        let target_widget = unsafe { &mut *(UIManager::create_widget("target_widget", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = target_widget.get_ui_component_mut();
         ui_component.set_size(hud_layer_width, hud_layer_height);
         ui_component.set_center(window_center.x, window_center.y);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
@@ -112,8 +111,8 @@ impl GameUIManager {
         ui_component.set_padding(hud_layer_padding);
         ui_component.set_color(get_color32(255, 255, 255, 10));
         ui_component.set_opacity(0.5);
-        root_widget.add_widget(target_hud_layer);
-        self._target_hud_layer = target_hud_layer;
+        root_widget.add_widget(target_widget);
+        self._target_hud._widget = target_widget;
 
         let target_distance = unsafe { &mut *(UIManager::create_widget("target_distance", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = target_distance.get_ui_component_mut();
@@ -126,15 +125,14 @@ impl GameUIManager {
         ui_component.set_margine(hud_ui_margine);
         ui_component.set_padding(hud_ui_padding);
         ui_component.set_expandable(true);
-        target_hud_layer.add_widget(target_distance);
-        self._target_distance = target_distance;
-
-        self._target_hull_point_widget = Some(HullPointWidget::create_hull_point_widget(target_hud_layer));
-        self._target_shield_point_widget = Some(ShieldPointWidget::create_shield_point_widget(target_hud_layer));
+        target_widget.add_widget(target_distance);
+        self._target_hud._distance = target_distance;
+        self._target_hud._hull_point_widget = Some(HullPointWidget::create_hull_point_widget(target_widget));
+        self._target_hud._shield_point_widget = Some(ShieldPointWidget::create_shield_point_widget(target_widget));
 
         // Player Hud
-        let player_hud_layer = unsafe { &mut *(UIManager::create_widget("player_hud_layer", UIWidgetTypes::Default) as *mut WidgetDefault) };
-        let ui_component = player_hud_layer.get_ui_component_mut();
+        let player_widget = unsafe { &mut *(UIManager::create_widget("player_widget", UIWidgetTypes::Default) as *mut WidgetDefault) };
+        let ui_component = player_widget.get_ui_component_mut();
         ui_component.set_size(hud_layer_width, hud_layer_height);
         ui_component.set_pos(window_size.x as f32 - 200.0, window_center.y);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
@@ -144,18 +142,17 @@ impl GameUIManager {
         ui_component.set_expandable(true);
         ui_component.set_padding(hud_layer_padding);
         ui_component.set_color(get_color32(255, 255, 255, 10));
-        root_widget.add_widget(player_hud_layer);
-        self._player_hud_layer = player_hud_layer;
-
-        self._player_hull_point_widget = Some(HullPointWidget::create_hull_point_widget(player_hud_layer));
-        self._player_shield_point_widget = Some(ShieldPointWidget::create_shield_point_widget(player_hud_layer));
+        root_widget.add_widget(player_widget);
+        self._player_hud._widget = player_widget;
+        self._player_hud._hull_point_widget = Some(HullPointWidget::create_hull_point_widget(player_widget));
+        self._player_hud._shield_point_widget = Some(ShieldPointWidget::create_shield_point_widget(player_widget));
     }
 
     pub fn destroy_game_ui_manager(&mut self) {
     }
 
     pub fn get_crosshair_mut(&mut self) -> &mut WidgetDefault {
-        unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) }
+        ptr_as_mut(self._crosshair._widget)
     }
 
     pub fn show_crosshair(&mut self, show: bool) {
@@ -164,11 +161,11 @@ impl GameUIManager {
     }
 
     pub fn set_crosshair_tracking_mouse(&mut self, tracking: bool) {
-        self._crosshair_tracking_mouse = tracking;
+        self._crosshair._tracking_mouse = tracking;
     }
 
     pub fn set_crosshair_pos(&mut self, pos: &Vector2<i32>) {
-        self._crosshair_pos.clone_from(pos);
+        self._crosshair._pos.clone_from(pos);
     }
 
     pub fn update_game_ui(&mut self, _delta_time: f32) {
@@ -176,14 +173,14 @@ impl GameUIManager {
         let window_size = &self.get_game_client().get_project_application().get_engine_application()._window_size;
 
         // Cross Hair
-        let crosshair_widget = unsafe { &mut *(self._crosshair_widget as *mut WidgetDefault) };
+        let crosshair_widget = ptr_as_mut(self._crosshair._widget);
         if crosshair_widget._ui_component.get_visible() {
             let crosshair_pos_x: i32;
             let crosshair_pos_y: i32;
 
-            if self._crosshair_tracking_mouse {
-                crosshair_pos_x = self._crosshair_pos.x;
-                crosshair_pos_y = self._crosshair_pos.y;
+            if self._crosshair._tracking_mouse {
+                crosshair_pos_x = self._crosshair._pos.x;
+                crosshair_pos_y = self._crosshair._pos.y;
             } else {
                 crosshair_pos_x = window_size.x / 2;
                 crosshair_pos_y = window_size.y / 2;
@@ -196,8 +193,8 @@ impl GameUIManager {
         let actor_manager = self.get_game_client().get_actor_manager();
         let player_actor = actor_manager.get_player_actor();
         let player_ship = player_actor.get_ship();
-        self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(player_ship.get_hull_point() / 2.0, player_ship.get_max_hull_point());
-        self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(player_ship.get_shield_point() / 2.0, player_ship.get_max_shield_point());
+        self._target_hud._hull_point_widget.as_ref().unwrap().update_hull_point_widget(player_ship.get_hull_point() / 2.0, player_ship.get_max_hull_point());
+        self._target_hud._shield_point_widget.as_ref().unwrap().update_shield_point_widget(player_ship.get_shield_point() / 2.0, player_ship.get_max_shield_point());
 
         // Target Hud
         let player_actor_pos = player_actor.get_transform().get_position();
@@ -208,14 +205,14 @@ impl GameUIManager {
                 let ship = actor.get_ship();
                 let clamp: bool = true;
                 let screen_pos: Vector2<f32> = main_camera.convert_world_to_screen(actor_pos, clamp);
-                let target_hud_layer = unsafe { self._target_hud_layer.as_mut().unwrap().get_ui_component_mut() };
-                target_hud_layer.set_center(screen_pos.x, screen_pos.y);
+                let target_widget = unsafe { self._target_hud._widget.as_mut().unwrap().get_ui_component_mut() };
+                target_widget.set_center(screen_pos.x, screen_pos.y);
 
-                let target_distance = unsafe { self._target_distance.as_mut().unwrap().get_ui_component_mut() };
+                let target_distance = unsafe { self._target_hud._distance.as_mut().unwrap().get_ui_component_mut() };
                 target_distance.set_text(&format!("{}m", distance as i32));
 
-                self._target_hull_point_widget.as_ref().unwrap().update_hull_point_widget(ship.get_hull_point() / 2.0, ship.get_max_hull_point());
-                self._target_shield_point_widget.as_ref().unwrap().update_shield_point_widget(ship.get_shield_point() / 2.0, ship.get_max_shield_point());
+                self._target_hud._hull_point_widget.as_ref().unwrap().update_hull_point_widget(ship.get_hull_point() / 2.0, ship.get_max_hull_point());
+                self._target_hud._shield_point_widget.as_ref().unwrap().update_shield_point_widget(ship.get_shield_point() / 2.0, ship.get_max_shield_point());
                 break;
             }
         }
