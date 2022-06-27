@@ -165,7 +165,7 @@ impl SelectionArea {
         let widget = unsafe { &mut *(UIManager::create_widget("selection_area_widget", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = widget.get_ui_component_mut();
         ui_component.set_size(300.0, 300.0);
-        ui_component.set_pos(0.0, 0.0);
+        ui_component.set_pos(100.0, 100.0);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
         ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::CENTER);
@@ -175,6 +175,7 @@ impl SelectionArea {
         ui_component.set_border(2.0);
         ui_component.set_resizable(true);
         ui_component.set_touchable(true);
+        ui_component.set_dragable(true);
 
         static TOUCH_DOWN: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
             println!("CrossHair::touch_down");
@@ -186,9 +187,9 @@ impl SelectionArea {
             println!("CrossHair::touch_up");
         };
 
-        ui_component.set_callback_touch_down(&TOUCH_DOWN);
-        ui_component.set_callback_touch_up(&TOUCH_UP);
-        ui_component.set_callback_touch_move(&TOUCH_MOVE);
+        // ui_component.set_callback_touch_down(&TOUCH_DOWN);
+        // ui_component.set_callback_touch_up(&TOUCH_UP);
+        // ui_component.set_callback_touch_move(&TOUCH_MOVE);
         root_widget.add_widget(widget);
         self._widget = widget;
     }

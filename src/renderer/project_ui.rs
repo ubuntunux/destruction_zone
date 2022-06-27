@@ -47,6 +47,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
+            ui_component.set_resizable(true);
             ui_component.set_text("btn0\nbtn0 Child Test");
             ui_component.set_material_instance(&engine_resources.get_material_instance_data("ui/render_ui_test"));
             root.add_widget(btn0);
@@ -64,6 +65,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
+            ui_component.set_resizable(true);
             ui_component.set_text("btn0_0\nbtn0_0 Test");
             btn0.as_mut().unwrap().add_widget(btn0_0);
 
@@ -80,6 +82,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
+            ui_component.set_resizable(true);
             ui_component.set_text("btn0_0_0\nbtn0_0_0 Test");
             btn0_0.as_mut().unwrap().add_widget(btn0_0_0);
 
@@ -101,6 +104,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
+            ui_component.set_resizable(true);
             ui_component.set_text("btn0_1\nbtn0_1 Test");
             btn0.as_mut().unwrap().add_widget(btn0_1);
 
@@ -117,6 +121,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
             ui_component.set_dragable(true);
             ui_component.set_touchable(true);
             ui_component.set_expandable(true);
+            ui_component.set_resizable(true);
             ui_component.set_text("btn0_1_0\nbtn0_1_0 Test");
             btn0_1.as_mut().unwrap().add_widget(btn0_1_0);
 
