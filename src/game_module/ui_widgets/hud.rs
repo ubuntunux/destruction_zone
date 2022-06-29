@@ -1,6 +1,6 @@
 use nalgebra::Vector2;
 
-use rust_engine_3d::renderer::ui::{WidgetDefault, Widget, UIWidgetTypes, UIManager, UILayoutType, HorizontalAlign, VerticalAlign, Orientation};
+use rust_engine_3d::renderer::ui::*;
 use rust_engine_3d::resource::resource::ProjectResourcesBase;
 use rust_engine_3d::vulkan_context::vulkan_context::get_color32;
 use crate::game_module::ui_widgets::hit_point_widgets::{ShieldPointWidget, HullPointWidget};
@@ -173,24 +173,33 @@ impl SelectionArea {
         ui_component.set_border_color(get_color32(255, 255, 0, 255));
         ui_component.set_round(5.0);
         ui_component.set_border(2.0);
-        ui_component.set_resizable(true);
+        // ui_component.set_resizable(true);
         ui_component.set_touchable(true);
         ui_component.set_dragable(true);
 
-        static TOUCH_DOWN: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
-            println!("CrossHair::touch_down");
-        };
-        static TOUCH_MOVE: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
-            println!("CrossHair::touch_move");
-        };
-        static TOUCH_UP: fn(widget: *const dyn Widget) = |_widget: *const dyn Widget| {
-            println!("CrossHair::touch_up");
-        };
+        static TOUCH_DOWN: CallbackTouchEvent = SelectionArea::touch_down;
+        static TOUCH_MOVE: CallbackTouchEvent = SelectionArea::touch_move;
+        static TOUCH_UP: CallbackTouchEvent = SelectionArea::touch_up;
 
-        // ui_component.set_callback_touch_down(&TOUCH_DOWN);
-        // ui_component.set_callback_touch_up(&TOUCH_UP);
-        // ui_component.set_callback_touch_move(&TOUCH_MOVE);
+        ui_component.set_callback_touch_down(&TOUCH_DOWN);
+        ui_component.set_callback_touch_move(&TOUCH_MOVE);
+        ui_component.set_callback_touch_up(&TOUCH_UP);
         root_widget.add_widget(widget);
         self._widget = widget;
+    }
+
+    pub fn touch_down(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+
+    }
+
+    pub fn touch_move(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+        let size: Vector2<f32> = ui_component.get_touch_start_pos() - touched_pos;
+        ui_component.set_pos_x(ui_component.get_touch_start_pos().x - 0f32.max(size.x));
+        ui_component.set_pos_y(ui_component.get_touch_start_pos().y - 0f32.max(size.y));
+        ui_component.set_size(size.x.abs(), size.y.abs());
+    }
+
+    pub fn touch_up(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+
     }
 }
