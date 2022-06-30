@@ -164,8 +164,8 @@ impl SelectionArea {
     pub fn initialize_selection_area(&mut self, root_widget: &mut dyn Widget) {
         let widget = unsafe { &mut *(UIManager::create_widget("selection_area_widget", UIWidgetTypes::Default) as *mut WidgetDefault) };
         let ui_component = widget.get_ui_component_mut();
-        ui_component.set_size(300.0, 300.0);
-        ui_component.set_pos(100.0, 100.0);
+        ui_component.set_size(1000.0, 1000.0);
+        ui_component.set_pos(0.0, 0.0);
         ui_component.set_layout_type(UILayoutType::BoxLayout);
         ui_component.set_halign(HorizontalAlign::CENTER);
         ui_component.set_valign(VerticalAlign::CENTER);
@@ -188,18 +188,20 @@ impl SelectionArea {
         self._widget = widget;
     }
 
-    pub fn touch_down(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+    pub fn touch_down(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, _touched_pos_delta: &Vector2<f32>) {
         ui_component.set_visible(true);
+        ui_component.set_pos(touched_pos.x, touched_pos.y);
+        ui_component.set_size(0f32, 0f32);
     }
 
-    pub fn touch_move(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+    pub fn touch_move(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, _touched_pos_delta: &Vector2<f32>) {
         let size: Vector2<f32> = ui_component.get_touch_start_pos() - touched_pos;
         ui_component.set_pos_x(ui_component.get_touch_start_pos().x - 0f32.max(size.x));
         ui_component.set_pos_y(ui_component.get_touch_start_pos().y - 0f32.max(size.y));
         ui_component.set_size(size.x.abs(), size.y.abs());
     }
 
-    pub fn touch_up(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
+    pub fn touch_up(ui_component: &mut UIComponentInstance, _touched_pos: &Vector2<f32>, _touched_pos_delta: &Vector2<f32>) {
         ui_component.set_visible(false);
     }
 }
