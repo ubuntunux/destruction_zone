@@ -173,9 +173,8 @@ impl SelectionArea {
         ui_component.set_border_color(get_color32(255, 255, 0, 255));
         ui_component.set_round(5.0);
         ui_component.set_border(2.0);
-        // ui_component.set_resizable(true);
+        ui_component.set_resizable(true);
         ui_component.set_touchable(true);
-        ui_component.set_dragable(true);
 
         static TOUCH_DOWN: CallbackTouchEvent = SelectionArea::touch_down;
         static TOUCH_MOVE: CallbackTouchEvent = SelectionArea::touch_move;
@@ -184,12 +183,13 @@ impl SelectionArea {
         ui_component.set_callback_touch_down(&TOUCH_DOWN);
         ui_component.set_callback_touch_move(&TOUCH_MOVE);
         ui_component.set_callback_touch_up(&TOUCH_UP);
+        ui_component.set_visible(false);
         root_widget.add_widget(widget);
         self._widget = widget;
     }
 
     pub fn touch_down(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
-
+        ui_component.set_visible(true);
     }
 
     pub fn touch_move(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
@@ -200,6 +200,6 @@ impl SelectionArea {
     }
 
     pub fn touch_up(ui_component: &mut UIComponentInstance, touched_pos: &Vector2<f32>, touched_pos_delta: &Vector2<f32>) {
-
+        ui_component.set_visible(false);
     }
 }
