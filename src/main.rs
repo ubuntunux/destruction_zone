@@ -3,6 +3,7 @@ extern crate ash;
 extern crate nalgebra;
 extern crate winit;
 extern crate log;
+extern crate cgmath;
 
 pub mod application;
 pub mod application_constants;

@@ -35,7 +35,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
     fn build_ui(&mut self, _renderer_context: &RendererContext, engine_resources: &EngineResources) {
         let root = self.get_root_widget_mut();
         let btn0 = UIManager::create_widget("btn0", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0.as_ref()).get_ui_component_mut();
         ui_component.set_pos(25.0,255.0);
         ui_component.set_size(200.0, 100.0);
         ui_component.set_color(get_color32(255, 255, 255, 255));
@@ -50,10 +50,10 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_resizable(true);
         ui_component.set_text("btn0\nbtn0 Child Test");
         ui_component.set_material_instance(&engine_resources.get_material_instance_data("ui/render_ui_test"));
-        root.add_widget(btn0);
+        root.add_widget(&btn0);
 
         let btn0_0 = UIManager::create_widget("btn0_0", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0_0).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0_0.as_ref()).get_ui_component_mut();
         ui_component.set_pos(0.0, 5.0);
         ui_component.set_size(100.0, 50.0);
         ui_component.set_color(get_color32(255, 128, 128, 255));
@@ -67,10 +67,10 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_expandable(true);
         ui_component.set_resizable(true);
         ui_component.set_text("btn0_0\nbtn0_0 Test");
-        ptr_as_mut(btn0).add_widget(btn0_0);
+        ptr_as_mut(btn0.as_ref()).add_widget(&btn0_0);
 
         let btn0_0_0 = UIManager::create_widget("btn0_0_0", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0_0_0).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0_0_0.as_ref()).get_ui_component_mut();
         ui_component.set_pos(0.0, 5.0);
         ui_component.set_size(200.0, 100.0);
         ui_component.set_color(get_color32(128, 128, 255, 255));
@@ -84,11 +84,11 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_expandable(true);
         ui_component.set_resizable(true);
         ui_component.set_text("btn0_0_0\nbtn0_0_0 Test");
-        ptr_as_mut(btn0_0).add_widget(btn0_0_0);
+        ptr_as_mut(btn0_0.as_ref()).add_widget(&btn0_0_0);
 
         //
         let btn0_1 = UIManager::create_widget("btn0_1", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0_1).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0_1.as_ref()).get_ui_component_mut();
         ui_component.set_layout_type(UILayoutType::BoxLayout);
         ui_component.set_layout_orientation(Orientation::VERTICAL);
         ui_component.set_halign(HorizontalAlign::RIGHT);
@@ -106,10 +106,10 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_expandable(true);
         ui_component.set_resizable(true);
         ui_component.set_text("btn0_1\nbtn0_1 Test");
-        ptr_as_mut(btn0).add_widget(btn0_1);
+        ptr_as_mut(btn0.as_ref()).add_widget(&btn0_1);
 
         let btn0_1_0 = UIManager::create_widget("btn0_1_0", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0_1_0).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0_1_0.as_ref()).get_ui_component_mut();
         ui_component.set_pos(0.0, 5.0);
         ui_component.set_size(50.0, 75.0);
         ui_component.set_color(get_color32(255, 128, 255, 255));
@@ -123,10 +123,10 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_expandable(true);
         ui_component.set_resizable(true);
         ui_component.set_text("btn0_1_0\nbtn0_1_0 Test");
-        ptr_as_mut(btn0_1).add_widget(btn0_1_0);
+        ptr_as_mut(btn0_1.as_ref()).add_widget(&btn0_1_0);
 
         let btn0_1_1 = UIManager::create_widget("btn0_1_1", UIWidgetTypes::Default);
-        let ui_component = ptr_as_mut(btn0_1_1).get_ui_component_mut();
+        let ui_component = ptr_as_mut(btn0_1_1.as_ref()).get_ui_component_mut();
         ui_component.set_halign(HorizontalAlign::RIGHT);
         ui_component.set_valign(VerticalAlign::BOTTOM);
         ui_component.set_pos(0.0, 5.0);
@@ -143,7 +143,7 @@ impl ProjectUIManagerBase for ProjectUIManager {
         ui_component.set_touchable(true);
         ui_component.set_resizable(true);
         ui_component.set_text("btn0_1_1\nbtn0_1_1 Test");
-        ptr_as_mut(btn0_1).add_widget(btn0_1_1);
+        ptr_as_mut(btn0_1.as_ref()).add_widget(&btn0_1_1);
     }
 }
 
