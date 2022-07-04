@@ -14,7 +14,7 @@ pub struct GameUIManager {
     pub _crosshair: Option<CrossHair>,
     pub _target_hud: Option<TargetHud>,
     pub _player_hud: Option<PlayerHud>,
-    pub _selection_area: Option<SelectionArea>
+    pub _selection_area: Option<Box<SelectionArea>>
 }
 
 impl GameUIManager {
@@ -45,7 +45,7 @@ impl GameUIManager {
         self._crosshair = Some(CrossHair::create_crosshair(project_resources, root_widget, &window_center));
         self._target_hud = Some(TargetHud::create_target_hud(root_widget, &window_center));
         self._player_hud = Some(PlayerHud::create_player_hud(root_widget, &Vector2::new(window_size.x as f32 - 200.0, window_center.y as f32)));
-        self._selection_area = Some(SelectionArea::create_selection_area(root_widget));
+        self._selection_area = Some(SelectionArea::create_selection_area(root_widget, window_size));
     }
 
     pub fn destroy_game_ui_manager(&mut self) {
