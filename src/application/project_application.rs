@@ -48,6 +48,9 @@ impl ProjectApplicationBase for ProjectApplication {
             window_size,
         );
         self.get_game_client_mut().initialize_game_client(self);
+
+        // start game
+        self.get_game_client_mut().start_game();
     }
 
     fn terminate_project_application(&mut self) {

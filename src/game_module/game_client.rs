@@ -57,13 +57,6 @@ impl GameClient {
         self._game_controller.initialize_game_controller(game_client);
         self._actor_manager.initialize_actor_manager(game_client);
         self._weapon_manager.initialize_weapon_manager(game_client);
-
-        // start game
-        {
-            // open scene
-            self.get_project_scene_manager_mut().open_scene_data("default");
-            self.get_actor_manager_mut().spawn_actors();
-        }
     }
 
     pub fn destroy_game_client(&mut self) {
@@ -92,6 +85,11 @@ impl GameClient {
     pub fn get_game_ui_manager_mut(&self) -> &mut GameUIManager { ptr_as_mut(self._game_ui_manager.as_ref()) }
     pub fn get_weapon_manager(&self) -> &WeaponManager { ptr_as_ref(self._weapon_manager.as_ref()) }
     pub fn get_weapon_manager_mut(&self) -> &mut WeaponManager { ptr_as_mut(self._weapon_manager.as_ref()) }
+
+    pub fn start_game(&mut self) {
+        self.get_project_scene_manager_mut().open_scene_data("default");
+        self.get_actor_manager_mut().spawn_actors();
+    }
 
     pub fn update_event(&mut self) {
         let project_application = ptr_as_ref(self._project_application);
