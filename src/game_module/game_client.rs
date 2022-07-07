@@ -13,6 +13,7 @@ use crate::game_module::game_ui::GameUIManager;
 use crate::game_module::weapon_manager::WeaponManager;
 use crate::resource::project_resource::ProjectResources;
 use crate::renderer::project_ui::ProjectUIManager;
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 
 pub struct GameClient {
@@ -94,6 +95,7 @@ impl GameClient {
     pub fn update_event(&mut self) {
         let project_application = ptr_as_ref(self._project_application);
         let engine_application = project_application.get_engine_application();
+        let project_scene_manager = ptr_as_ref(self._project_scene_manager);
         let time_data = &engine_application._time_data;
         let mouse_move_data = &engine_application._mouse_move_data;
         let mouse_input_data = &engine_application._mouse_input_data;
@@ -102,6 +104,13 @@ impl GameClient {
         let mouse_delta: Vector2<f32> = Vector2::new(mouse_move_data._mouse_pos_delta.x as f32 / mouse_speed_ratio, mouse_move_data._mouse_pos_delta.y as f32 / mouse_speed_ratio);
         let scroll_delta = &mouse_move_data._scroll_delta;
         let pressed_key_c = keyboard_input_data.get_key_pressed(VirtualKeyCode::C);
+
+        let main_camera = project_scene_manager.get_main_camera_mut();
+        let player_actor = ptr_as_mut(self.get_actor_manager().get_player_actor());
+
+        if 0 != mouse_move_data._mouse_pos_delta.x || 0 != mouse_move_data._mouse_pos_delta.y || 0 != scroll_delta.y {
+            self._game_controller.update_target_position(project_scene_manager, main_camera, &mouse_move_data._mouse_pos);
+        }
 
         if 0 != scroll_delta.y {
             self._game_controller.update_camera_distance(-scroll_delta.y as f32 * SCROLL_DELTA_TO_CAMERA_DISTANCE_SPEED);
@@ -117,14 +126,18 @@ impl GameClient {
                 &keyboard_input_data,
                 &mouse_move_data,
                 &mouse_input_data,
-                &mouse_delta
+                &mouse_delta,
+                main_camera,
+                player_actor
             ),
             GameViewMode::FpsViewMode => self._game_controller.update_event_for_fps_view_mode(
                 time_data,
                 &keyboard_input_data,
                 &mouse_move_data,
                 &mouse_input_data,
-                &mouse_delta
+                &mouse_delta,
+                main_camera,
+                player_actor
             ),
             _ => assert!(false, "Not implemented."),
         };

@@ -31,6 +31,7 @@ pub struct CrossHair {
 }
 
 pub struct SelectionArea {
+    pub _selection_area_layout: Rc<dyn Widget>,
     pub _selection_widget: Rc<dyn Widget>,
     pub _drag_mouse: bool,
 }
@@ -133,8 +134,8 @@ impl PlayerHud {
 // Selection Area
 impl SelectionArea {
     pub fn create_selection_area(root_widget: &mut dyn Widget, window_size: &Vector2<i32>) -> Box<SelectionArea> {
-        let layout = UIManager::create_widget("selection_area_layout", UIWidgetTypes::Default);
-        let layout_ui_component = ptr_as_mut(layout.as_ref()).get_ui_component_mut();
+        let selection_area_layout = UIManager::create_widget("selection_area_layout", UIWidgetTypes::Default);
+        let layout_ui_component = ptr_as_mut(selection_area_layout.as_ref()).get_ui_component_mut();
         layout_ui_component.set_size(window_size.x as f32 - 200.0, window_size.y as f32 - 200.0);
         layout_ui_component.set_pos(0.0, 0.0);
         layout_ui_component.set_color(get_color32(0, 0, 0, 0));
@@ -147,7 +148,7 @@ impl SelectionArea {
         layout_ui_component.set_callback_touch_down(&TOUCH_DOWN);
         layout_ui_component.set_callback_touch_move(&TOUCH_MOVE);
         layout_ui_component.set_callback_touch_up(&TOUCH_UP);
-        root_widget.add_widget(&layout);
+        root_widget.add_widget(&selection_area_layout);
 
         let selection_widget = UIManager::create_widget("selection_area_widget", UIWidgetTypes::Default);
         let ui_component = ptr_as_mut(selection_widget.as_ref()).get_ui_component_mut();
@@ -157,9 +158,10 @@ impl SelectionArea {
         ui_component.set_round(5.0);
         ui_component.set_border(2.0);
         ui_component.set_visible(false);
-        ptr_as_mut(layout.as_ref()).add_widget(&selection_widget);
+        ptr_as_mut(selection_area_layout.as_ref()).add_widget(&selection_widget);
 
         let selection_area = Box::new(SelectionArea {
+            _selection_area_layout: selection_area_layout,
             _selection_widget: selection_widget,
             _drag_mouse: false,
         });

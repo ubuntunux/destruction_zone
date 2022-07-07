@@ -93,11 +93,13 @@ impl ShipController {
     pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
     pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
     pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
+    pub fn set_acceleration(&mut self, acceleration: &Vector3<f32>) { self._acceleration.clone_from(acceleration); }
     pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = acceleration; }
     pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = acceleration; }
     pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
     pub fn get_velocity(&self) -> &Vector3<f32> { &self._velocity }
+    pub fn set_velocity(&mut self, velocity: &Vector3<f32>) { self._velocity.clone_from(velocity); }
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
     pub fn set_position(&mut self, position: &Vector3<f32>) { self._position.clone_from(position); }
     pub fn get_rotation(&self) -> &Vector3<f32> { &self._rotation }

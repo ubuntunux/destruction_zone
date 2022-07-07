@@ -3,10 +3,13 @@ use winit::event::VirtualKeyCode;
 
 use rust_engine_3d::application::application::TimeData;
 use rust_engine_3d::application::input::{KeyboardInputData, MouseMoveData, MouseInputData};
+use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::utilities::math;
 use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
+use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::actors::player_actor::PlayerActor;
 use crate::game_module::game_constants::{
     CAMERA_DISTANCE_MIN,
     CAMERA_DISTANCE_MAX,
@@ -19,7 +22,6 @@ use crate::game_module::game_constants::{
 };
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_ui::GameUIManager;
-use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 
 
 #[repr(i32)]
@@ -35,6 +37,9 @@ pub struct GameController {
     pub _game_ui_manager: *const GameUIManager,
     pub _camera_distance: f32,
     pub _camera_goal_distance: f32,
+    pub _target_position: Vector3<f32>,
+    pub _target_direction: Vector3<f32>,
+    pub _relative_target_position: Vector3<f32>,
     pub _game_view_mode: GameViewMode,
 }
 
@@ -46,6 +51,9 @@ impl GameController {
             _game_ui_manager: std::ptr::null(),
             _camera_distance: default_camera_distance,
             _camera_goal_distance: default_camera_distance,
+            _target_position: Vector3::zeros(),
+            _target_direction: Vector3::zeros(),
+            _relative_target_position: Vector3::zeros(),
             _game_view_mode: GameViewMode::TopViewMode,
         })
     }
@@ -69,6 +77,7 @@ impl GameController {
         if target_view_mode == self._game_view_mode { true } else { false }
     }
     pub fn change_view_mode(&mut self, view_mode: GameViewMode) {
+        self.get_game_ui_manager_mut().show_selection_area(GameViewMode::TopViewMode == view_mode);
         self.get_game_ui_manager_mut().set_crosshair_tracking_mouse(GameViewMode::TopViewMode == view_mode);
         self._game_view_mode = view_mode;
     }
@@ -87,24 +96,35 @@ impl GameController {
             self._camera_goal_distance = CAMERA_DISTANCE_MAX;
         }
     }
+    pub fn update_target_position(&mut self, project_scene_manager: &ProjectSceneManager, main_camera: &CameraObjectData, mouse_pos: &Vector2<i32>) {
+        // _target_position: Vector3::zeros(),
+        // _target_direction: Vector3::zeros(),
+        // _relative_target_position: Vector3::zeros(),
+
+        let relative_pos = main_camera.convert_screen_to_relative_world(mouse_pos);
+        if project_scene_manager.get_height_map_collision_point(main_camera._transform_object.get_position(), &relative_pos.normalize(), -1.0, &mut self._target_position) {
+            self._target_direction = self._target_position.normalize();
+            self._relative_target_position = self._target_position - main_camera._transform_object.get_position();
+        }
+    }
     pub fn update_event_for_top_view_mode(
         &mut self,
         time_data: &TimeData,
         keyboard_input_data: &KeyboardInputData,
         mouse_move_data: &MouseMoveData,
         mouse_input_data: &MouseInputData,
-        mouse_delta: &Vector2<f32>
+        mouse_delta: &Vector2<f32>,
+        main_camera: &mut CameraObjectData,
+        player_actor: &mut PlayerActor
     ) {
-        let btn_left: bool = mouse_input_data._btn_l_pressed;
+        let _btn_left: bool = mouse_input_data._btn_l_pressed;
+        let _btn_right: bool = mouse_input_data._btn_r_pressed;
         let btn_right_hold: bool = mouse_input_data._btn_r_hold;
         let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
         let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
         let pressed_key_w = keyboard_input_data.get_key_hold(VirtualKeyCode::W);
         let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
-
-        let main_camera = self.get_main_camera_mut();
-        let player_actor = self.get_game_client().get_actor_manager().get_player_actor_mut();
 
         let mut front_xz: Vector3<f32> = main_camera._transform_object.get_front().clone_owned();
         front_xz.y = 0.0;
@@ -152,8 +172,19 @@ impl GameController {
         self.get_game_ui_manager_mut().set_crosshair_pos(&mouse_move_data._mouse_pos);
 
         // fire
-        if btn_left {
-            player_actor.actor_fire(self.get_game_client(), &self._game_view_mode);
+        // if btn_left {
+        //     player_actor.actor_fire(self.get_game_client(), &self._game_view_mode);
+        // }
+
+        if btn_right_hold {
+             //player_actor.actor_move();
+            let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
+            let mut actor_pos = self._target_position.clone_owned();
+            actor_pos.y += 5.0;
+
+            let acceleration = (&self._target_position - player_ship_controller.get_position()).normalize();
+            player_ship_controller.set_acceleration(&acceleration);
+            //player_ship_controller.set_position();
         }
 
         // player ship project to height map
@@ -176,7 +207,9 @@ impl GameController {
         keyboard_input_data: &KeyboardInputData,
         _mouse_move_data: &MouseMoveData,
         mouse_input_data: &MouseInputData,
-        mouse_delta: &Vector2<f32>
+        mouse_delta: &Vector2<f32>,
+        main_camera: &mut CameraObjectData,
+        player_actor: &mut PlayerActor
     ) {
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let hold_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
@@ -186,9 +219,6 @@ impl GameController {
         let hold_key_q = keyboard_input_data.get_key_hold(VirtualKeyCode::Q);
         let hold_key_e = keyboard_input_data.get_key_hold(VirtualKeyCode::E);
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
-
-        let main_camera = self.get_main_camera_mut();
-        let player_actor = self.get_game_client().get_actor_manager().get_player_actor_mut();
 
         // fire
         if btn_left {
@@ -232,7 +262,11 @@ impl GameController {
         }
     }
 
-    pub fn update_camera(&mut self, _delta_time: f32) {
+    pub fn update_camera(&mut self, delta_time: f32) {
+        if self._camera_goal_distance != self._camera_distance {
+            self._camera_distance = math::lerp(self._camera_distance, self._camera_goal_distance, 1.0f32.min(delta_time * CAMERA_DISTANCE_SPEED));
+        }
+
         let project_scene_manager = self.get_game_client().get_project_scene_manager();
         let player_actor = self.get_game_client().get_actor_manager().get_player_actor();
         let main_camera = self.get_main_camera_mut();
@@ -284,9 +318,6 @@ impl GameController {
     }
 
     pub fn update_game_controller(&mut self, delta_time: f32) {
-        if self._camera_goal_distance != self._camera_distance {
-            self._camera_distance = math::lerp(self._camera_distance, self._camera_goal_distance, 1.0f32.min(delta_time * CAMERA_DISTANCE_SPEED));
-        }
         self.update_camera(delta_time);
     }
 }

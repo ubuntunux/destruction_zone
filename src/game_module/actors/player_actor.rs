@@ -4,7 +4,7 @@ use nalgebra::Vector3;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::game_client::GameClient;
@@ -99,7 +99,7 @@ impl PlayerActor {
     }
 
     pub fn update_player_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
-        let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
+        let transform = ptr_as_mut(self._ship._transform_object);
 
         self._ship._controller.update_controller(delta_time, transform, project_scene_manager);
 

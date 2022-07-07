@@ -55,6 +55,12 @@ impl GameUIManager {
         ptr_as_mut(self._crosshair.as_ref().unwrap()._widget)
     }
 
+    pub fn show_selection_area(&mut self, show: bool) {
+        let selection_area_widget = self._selection_area.as_ref().unwrap()._selection_area_layout.as_ref();
+        let ui_component = ptr_as_mut(selection_area_widget.get_ui_component());
+        ui_component.set_visible(show);
+    }
+
     pub fn show_crosshair(&mut self, show: bool) {
         let ui_component = self.get_crosshair_widget_mut().get_ui_component_mut();
         ui_component.set_visible(show);
