@@ -3,10 +3,10 @@ use nalgebra::Vector3;
 
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::RcRefCell;
+use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::game_client::GameClient;
-use crate::game_module::game_controller::GameViewMode;
+use crate::game_module::game_controller::{GameViewMode, GameController};
 use crate::game_module::ship::ship_controller::{ ShipController };
 use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
@@ -60,8 +60,8 @@ impl ActorTrait for NonPlayerActor {
     fn actor_move(&mut self, _target_position: &Vector3<f32>) {
         unimplemented!()
     }
-    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager) {
-        let transform = unsafe { &mut *(self._ship._transform_object as *mut TransformObjectData) };
+    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, _game_controller: &GameController) {
+        let transform = ptr_as_mut(self._ship._transform_object);
 
         // update actor controller
         let ship_controller = &mut self._ship._controller;

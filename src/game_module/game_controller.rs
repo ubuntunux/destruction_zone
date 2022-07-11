@@ -118,7 +118,7 @@ impl GameController {
         player_actor: &mut PlayerActor
     ) {
         let _btn_left: bool = mouse_input_data._btn_l_pressed;
-        let _btn_right: bool = mouse_input_data._btn_r_pressed;
+        let btn_right: bool = mouse_input_data._btn_r_pressed;
         let btn_right_hold: bool = mouse_input_data._btn_r_hold;
         let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
         let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);
@@ -171,20 +171,8 @@ impl GameController {
 
         self.get_game_ui_manager_mut().set_crosshair_pos(&mouse_move_data._mouse_pos);
 
-        // fire
-        // if btn_left {
-        //     player_actor.actor_fire(self.get_game_client(), &self._game_view_mode);
-        // }
-
-        if btn_right_hold {
-             //player_actor.actor_move();
-            let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
-            let mut actor_pos = self._target_position.clone_owned();
-            actor_pos.y += 5.0;
-
-            let acceleration = (&self._target_position - player_ship_controller.get_position()).normalize();
-            player_ship_controller.set_acceleration(&acceleration);
-            //player_ship_controller.set_position();
+        if btn_right {
+            player_actor.actor_move(&self._target_position);
         }
 
         // player ship project to height map

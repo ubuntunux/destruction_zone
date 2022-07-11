@@ -16,7 +16,8 @@ use crate::game_module::ship::ship_controller::{ ShipController };
 pub struct PlayerActor {
     pub _id: u64,
     pub _actor_data: ActorData,
-    pub _ship: ShipInstance
+    pub _ship: ShipInstance,
+    pub _target_position: Vector3<f32>,
 }
 
 impl ActorTrait for PlayerActor {
@@ -77,11 +78,45 @@ impl ActorTrait for PlayerActor {
         self._ship.ship_fire(game_client, &fire_start, &fire_dir, &target_position);
     }
 
-    fn actor_move(&mut self, _target_position: &Vector3<f32>) {
+    fn actor_move(&mut self, target_position: &Vector3<f32>) {
+        self._target_position.clone_from(target_position);
     }
 
-    fn update_actor(&mut self, _delta_time: f32, _project_scene_manager: &ProjectSceneManager) {
-        unimplemented!()
+    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
+        let transform = ptr_as_mut(self._ship._transform_object);
+        let ship_controller = ptr_as_mut(&self._ship._controller);
+
+        // move to target
+        let acceleration = &self._target_position - ship_controller.get_position();
+        if acceleration.x != 0f32 && acceleration.y != 0f32 && acceleration.z != 0f32 {
+            ship_controller.acceleration_forward();
+            let yaw: f32 = acceleration.x.atan2(acceleration.z);
+            ship_controller.set_yaw(yaw);
+        }
+
+        ship_controller.update_controller(delta_time, transform, project_scene_manager);
+
+        // update player transform
+        if GameViewMode::TopViewMode == game_controller._game_view_mode {
+            // transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
+            // transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
+            let roll_weight: f32 = 0.0;
+            let yaw = ship_controller.get_yaw() - ship_controller.get_roll() * roll_weight;
+            transform.set_yaw(yaw);
+        } else if GameViewMode::FpsViewMode == game_controller._game_view_mode {
+            // apply roll weight to pitch
+            let roll_weight: f32 = 0.0;
+            let yaw = ship_controller.get_yaw() - ship_controller.get_roll() * roll_weight;
+            transform.set_yaw(yaw);
+        } else {
+            assert!(false, "Not implemented.");
+        }
+        transform.set_roll(ship_controller.get_rotation().z);
+        transform.set_position(ship_controller.get_position());
+        transform.update_matrix();
+
+        // update ship
+        self.get_ship_mut().update_ship(delta_time);
     }
 }
 
@@ -94,33 +129,8 @@ impl PlayerActor {
         Rc::new(PlayerActor {
             _id: id,
             _actor_data: ActorData {},
-            _ship: ShipInstance::create_ship_instance(ship_data, render_object)
+            _ship: ShipInstance::create_ship_instance(ship_data, render_object),
+            _target_position: Vector3::zeros(),
         })
-    }
-
-    pub fn update_player_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
-        let transform = ptr_as_mut(self._ship._transform_object);
-
-        self._ship._controller.update_controller(delta_time, transform, project_scene_manager);
-
-        // update player transform
-        let ship_controller = &self._ship._controller;
-        if GameViewMode::TopViewMode == game_controller._game_view_mode {
-            transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
-            transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
-        } else if GameViewMode::FpsViewMode == game_controller._game_view_mode {
-            // apply roll weight to pitch
-            let roll_weight: f32 = 0.0;
-            let yaw = ship_controller.get_rotation().y - ship_controller.get_rotation().z * roll_weight;
-            transform.set_yaw(yaw);
-        } else {
-            assert!(false, "Not implemented.");
-        }
-        transform.set_roll(ship_controller.get_rotation().z);
-        transform.set_position(ship_controller.get_position());
-        transform.update_matrix();
-
-        // update ship
-        self.get_ship_mut().update_ship(delta_time);
     }
 }

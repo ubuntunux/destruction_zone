@@ -97,13 +97,21 @@ impl ShipController {
     pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = acceleration; }
     pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = acceleration; }
     pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
+    pub fn set_velocity_pitch(&mut self, pitch: f32) { self._rotation_velocity.x = pitch; }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
+    pub fn set_velocity_yaw(&mut self, yaw: f32) { self._rotation_velocity.y = yaw; }
     pub fn get_velocity(&self) -> &Vector3<f32> { &self._velocity }
     pub fn set_velocity(&mut self, velocity: &Vector3<f32>) { self._velocity.clone_from(velocity); }
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
     pub fn set_position(&mut self, position: &Vector3<f32>) { self._position.clone_from(position); }
     pub fn get_rotation(&self) -> &Vector3<f32> { &self._rotation }
+    pub fn get_pitch(&self) -> f32 { self._rotation.x }
+    pub fn get_yaw(&self) -> f32 { self._rotation.y }
+    pub fn get_roll(&self) -> f32 { self._rotation.z }
     pub fn set_rotation(&mut self, rotation: &Vector3<f32>) { self._rotation.clone_from(rotation); }
+    pub fn set_pitch(&mut self, pitch: f32) { self._rotation.x = pitch; }
+    pub fn set_yaw(&mut self, yaw: f32) { self._rotation.y = yaw; }
+    pub fn set_roll(&mut self, roll: f32) { self._rotation.z = roll; }
     pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, project_scene_manager: &ProjectSceneManager) {
         let mut goal_roll = 0.0;
 

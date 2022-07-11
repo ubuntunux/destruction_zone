@@ -3,10 +3,10 @@ use nalgebra::Vector3;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::game_controller::GameViewMode;
+use crate::game_module::game_client::GameClient;
+use crate::game_module::game_controller::{GameViewMode, GameController};
 use crate::game_module::ship::ship::{ ShipInstance };
 use crate::game_module::ship::ship_controller::ShipController;
-use crate::game_module::game_client::GameClient;
 
 pub struct ActorCreateInfo {
 
@@ -32,5 +32,5 @@ pub trait ActorTrait {
     fn get_velocity(&self) -> &Vector3<f32>;
     fn actor_fire(&mut self, game_client: &GameClient, game_view_mode: &GameViewMode);
     fn actor_move(&mut self, target_position: &Vector3<f32>);
-    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager);
+    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController);
 }

@@ -103,7 +103,7 @@ impl ActorManager {
     pub fn update_actor_manager(&mut self, delta_time: f32) {
         let project_scene_manager = self.get_game_client().get_project_scene_manager();
         let game_controller = &self.get_game_client().get_game_controller();
-        self.get_player_actor_mut().update_player_actor(delta_time, project_scene_manager, game_controller);
+        self.get_player_actor_mut().update_actor(delta_time, project_scene_manager, game_controller);
 
         for actor_wrapper in self._actors.values() {
             let actor = ptr_as_mut(actor_wrapper.as_ref());
@@ -115,7 +115,7 @@ impl ActorManager {
                     ship_controller.acceleration_forward();
                     ship_controller.acceleration_right();
                 }
-                actor.update_actor(delta_time, project_scene_manager);
+                actor.update_actor(delta_time, project_scene_manager, game_controller);
             }
         }
     }
