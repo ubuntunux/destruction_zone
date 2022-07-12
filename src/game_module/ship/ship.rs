@@ -174,7 +174,7 @@ impl ShipInstance {
         }
     }
     pub fn update_ship(&mut self, delta_time: f32) {
-        let ship_transform = unsafe { &mut *(self._transform_object as *mut TransformObjectData) };
+        let ship_transform = ptr_as_mut(self._transform_object);
         for weapon in self._weapons.iter_mut() {
             weapon.update_weapon(ship_transform, delta_time);
         }

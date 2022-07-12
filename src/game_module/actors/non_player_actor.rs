@@ -62,15 +62,12 @@ impl ActorTrait for NonPlayerActor {
     }
     fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, _game_controller: &GameController) {
         let transform = ptr_as_mut(self._ship._transform_object);
+        let ship_controller = ptr_as_mut(&self._ship._controller);
 
-        // update actor controller
-        let ship_controller = &mut self._ship._controller;
         ship_controller.update_controller(delta_time, transform, project_scene_manager);
 
         // update transform
-        transform.rotation_pitch(ship_controller.get_velocity_pitch() * delta_time);
-        transform.rotation_yaw(ship_controller.get_velocity_yaw() * delta_time);
-        transform.set_roll(ship_controller.get_rotation().z);
+        transform.set_rotation(ship_controller.get_rotation());
         transform.set_position(ship_controller.get_position());
         transform.update_matrix();
 
