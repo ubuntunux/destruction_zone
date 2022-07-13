@@ -3,12 +3,12 @@ use nalgebra::Vector3;
 
 use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
+use rust_engine_3d::utilities::system::{RcRefCell};
 use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::game_module::actors::actor_data::{ ActorData, ActorTrait, ActorBase };
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_controller::{GameViewMode, GameController};
 use crate::game_module::ship::ship_controller::{ ShipController };
-use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 
 
@@ -60,19 +60,8 @@ impl ActorTrait for NonPlayerActor {
     fn actor_move(&mut self, _target_position: &Vector3<f32>) {
         unimplemented!()
     }
-    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, _game_controller: &GameController) {
-        let transform = ptr_as_mut(self._ship._transform_object);
-        let ship_controller = ptr_as_mut(&self._ship._controller);
-
-        ship_controller.update_controller(delta_time, transform, project_scene_manager);
-
-        // update transform
-        transform.set_rotation(ship_controller.get_rotation());
-        transform.set_position(ship_controller.get_position());
-        transform.update_matrix();
-
-        // update ship
-        self._ship.update_ship(delta_time);
+    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
+        self.update_actor_base(delta_time, project_scene_manager, game_controller);
     }
 }
 

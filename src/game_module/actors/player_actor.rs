@@ -6,7 +6,7 @@ use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::{ ActorData, ActorTrait };
+use crate::game_module::actors::actor_data::{ ActorData, ActorTrait, ActorBase };
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_controller::{ GameViewMode, GameController };
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
@@ -83,8 +83,7 @@ impl ActorTrait for PlayerActor {
     }
 
     fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
-        let transform = ptr_as_mut(self._ship._transform_object);
-        let ship_controller = ptr_as_mut(&self._ship._controller);
+        let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
         // move to target
         if GameViewMode::TopViewMode == game_controller._game_view_mode {
@@ -96,14 +95,7 @@ impl ActorTrait for PlayerActor {
             }
         }
 
-        ship_controller.update_controller(delta_time, transform, project_scene_manager);
-
-        transform.set_rotation(ship_controller.get_rotation());
-        transform.set_position(ship_controller.get_position());
-        transform.update_matrix();
-
-        // update ship
-        self._ship.update_ship(delta_time);
+        self.update_actor_base(delta_time, project_scene_manager, game_controller);
     }
 }
 
