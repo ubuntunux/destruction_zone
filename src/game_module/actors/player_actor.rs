@@ -86,12 +86,40 @@ impl ActorTrait for PlayerActor {
         let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
         // move to target
-        if GameViewMode::TopViewMode == game_controller._game_view_mode {
-            let acceleration = &self._target_position - ship_controller.get_position();
-            if acceleration.x != 0f32 && acceleration.y != 0f32 && acceleration.z != 0f32 {
+        let to_target = &self._target_position - ship_controller.get_position();
+        if to_target.x != 0f32 && to_target.z != 0f32 {
+            let l = (to_target.x * to_target.x + to_target.z * to_target.z).sqrt();
+            let move_vector = ship_controller.get_velocity() * delta_time;
+            let move_delta = (move_vector.x * move_vector.x + move_vector.z * move_vector.z).sqrt();
+            if move_delta < l {
                 ship_controller.acceleration_forward();
-                let yaw: f32 = acceleration.x.atan2(acceleration.z);
-                ship_controller.set_yaw(yaw);
+            } else {
+                ship_controller.set_velocity(&Vector3::zeros());
+                let mut position = ship_controller.get_position().clone_owned();
+                position.x = self._target_position.x;
+                position.z = self._target_position.z;
+                ship_controller.set_position(&position);
+            }
+
+            let mut front_xz = self.get_ship().get_transform().get_front().clone_owned();
+            front_xz.y = 0.0;
+            front_xz.normalize_mut();
+            let mut to_target_xz = to_target.clone_owned();
+            to_target_xz.y = 0.0;
+            to_target_xz.normalize_mut();
+            let mut left_xz = self.get_ship().get_transform().get_left().clone_owned();
+            left_xz.y = 0.0;
+            left_xz.normalize_mut();
+            let accel_yaw = if 0.0 < left_xz.dot(&to_target_xz) { 1.0 } else { -1.0 };
+            let yaw_delta = ship_controller.get_velocity_yaw() * delta_time;
+            let yaw_diff = (front_xz.dot(&to_target_xz) * -0.5 + 0.5) * std::f32::consts::PI;
+            if yaw_delta < yaw_diff {
+                ship_controller.acceleration_yaw(accel_yaw);
+            } else {
+                ship_controller.acceleration_yaw(0.0);
+                ship_controller.set_velocity_yaw(0.0);
+                let goal_yaw: f32 = to_target.x.atan2(to_target.z);
+                ship_controller.set_yaw(goal_yaw);
             }
         }
 

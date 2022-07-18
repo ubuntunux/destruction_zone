@@ -42,8 +42,8 @@ impl Default for ShipControllerData {
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
             _max_rotation_speed: 10.0,
-            _rotation_acceleration: 0.5,
-            _rotation_damping: 0.1,
+            _rotation_acceleration: 100.0,
+            _rotation_damping: 10.0,
         }
     }
 }
@@ -94,8 +94,8 @@ impl ShipController {
     pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
     pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
     pub fn set_acceleration(&mut self, acceleration: &Vector3<f32>) { self._acceleration.clone_from(acceleration); }
-    pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = acceleration; }
-    pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = acceleration; }
+    pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = (-1f32).max(1f32.min(acceleration)); }
+    pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = (-1f32).max(1f32.min(acceleration)); }
     pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
     pub fn set_velocity_pitch(&mut self, pitch: f32) { self._rotation_velocity.x = pitch; }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
@@ -162,15 +162,18 @@ impl ShipController {
             self._position = position;
         }
 
-        // rotation speed
+        // rotation acceleration
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
-            self._rotation_velocity = &self._rotation_acceleration * controller_data._rotation_acceleration;
-            let rotation_velocity = self._rotation_velocity.norm();
-            if controller_data._max_rotation_speed < rotation_velocity {
-                self._rotation_velocity = &self._rotation_velocity / rotation_velocity * controller_data._max_rotation_speed;
-            }
-        } else {
-            self._rotation_velocity = Vector2::zeros();
+            self._rotation_velocity += &self._rotation_acceleration * controller_data._rotation_acceleration * delta_time;
+        }
+
+        // rotation speed
+        if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
+            let mut rotation_speed: f32 = self._rotation_velocity.norm();
+            self._rotation_velocity /= rotation_speed;
+            let rotation_damping = controller_data._rotation_damping * delta_time;
+            rotation_speed = controller_data._max_rotation_speed.min(0.0f32.max(rotation_speed - rotation_damping));
+            self._rotation_velocity *= rotation_speed;
         }
 
         // roll

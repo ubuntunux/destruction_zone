@@ -216,7 +216,7 @@ impl GameController {
         // move
         let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
         if 0.0 != mouse_delta.x {
-            player_ship_controller.acceleration_yaw(-mouse_delta.x);
+            player_ship_controller.set_velocity_yaw(-mouse_delta.x * 0.1);
         }
 
         if 0.0 != mouse_delta.y {
