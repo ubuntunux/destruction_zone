@@ -18,6 +18,8 @@ pub struct PlayerActor {
     pub _actor_data: ActorData,
     pub _ship: ShipInstance,
     pub _target_position: Vector3<f32>,
+    pub _command_move_to_target: bool,
+    pub _command_rotate_to_target: bool,
 }
 
 impl ActorTrait for PlayerActor {
@@ -78,51 +80,79 @@ impl ActorTrait for PlayerActor {
         self._ship.ship_fire(game_client, &fire_start, &fire_dir, &target_position);
     }
 
+    fn cancle_actor_move(&mut self) {
+        self._command_move_to_target = false;
+        self._command_rotate_to_target = false;
+    }
+
     fn actor_move(&mut self, target_position: &Vector3<f32>) {
         self._target_position.clone_from(target_position);
+        self._command_move_to_target = true;
+        self._command_rotate_to_target = true;
     }
 
     fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
         let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
-        // move to target
-        let to_target = &self._target_position - ship_controller.get_position();
-        if to_target.x != 0f32 && to_target.z != 0f32 {
-            let l = (to_target.x * to_target.x + to_target.z * to_target.z).sqrt();
-            let move_vector = ship_controller.get_velocity() * delta_time;
-            let move_delta = (move_vector.x * move_vector.x + move_vector.z * move_vector.z).sqrt();
-            if move_delta < l {
-                ship_controller.acceleration_forward();
-            } else {
-                ship_controller.set_velocity(&Vector3::zeros());
-                let mut position = ship_controller.get_position().clone_owned();
-                position.x = self._target_position.x;
-                position.z = self._target_position.z;
-                ship_controller.set_position(&position);
+        // trace target
+        if self._command_move_to_target || self._command_rotate_to_target {
+            let mut to_target = &self._target_position - ship_controller.get_position();
+            to_target.y = 0.0;
+            let distance = to_target.norm();
+            if 0.0 < distance {
+                to_target /= distance;
             }
 
-            let mut front_xz = self.get_ship().get_transform().get_front().clone_owned();
-            front_xz.y = 0.0;
-            front_xz.normalize_mut();
-            let mut to_target_xz = to_target.clone_owned();
-            to_target_xz.y = 0.0;
-            to_target_xz.normalize_mut();
-            let mut left_xz = self.get_ship().get_transform().get_left().clone_owned();
-            left_xz.y = 0.0;
-            left_xz.normalize_mut();
-            let accel_yaw = if 0.0 < left_xz.dot(&to_target_xz) { 1.0 } else { -1.0 };
-            let yaw_delta = ship_controller.get_velocity_yaw() * delta_time;
-            let yaw_diff = (front_xz.dot(&to_target_xz) * -0.5 + 0.5) * std::f32::consts::PI;
-            if yaw_delta < yaw_diff {
-                ship_controller.acceleration_yaw(accel_yaw);
-            } else {
-                ship_controller.acceleration_yaw(0.0);
-                ship_controller.set_velocity_yaw(0.0);
-                let goal_yaw: f32 = to_target.x.atan2(to_target.z);
-                ship_controller.set_yaw(goal_yaw);
+            let mut front = self.get_ship().get_transform().get_front().clone_owned();
+            front.y = 0.0;
+            front.normalize_mut();
+
+            let front_dot_target = front.dot(&to_target);
+
+            // rotate to target
+            if self._command_rotate_to_target {
+                let velocity_yaw = ship_controller.get_velocity_yaw();
+                let yaw_delta = velocity_yaw * delta_time;
+                let yaw_diff = (0.5 - front_dot_target * 0.5) * std::f32::consts::PI;
+                if yaw_delta < yaw_diff {
+                    let braking_time = velocity_yaw / ship_controller._controller_data.borrow()._rotation_damping;
+                    let braking_distance = velocity_yaw * 0.5 * braking_time;
+                    if braking_distance < yaw_diff {
+                        let mut left = self.get_ship().get_transform().get_left().clone_owned();
+                        left.y = 0.0;
+                        left.normalize_mut();
+                        let accel_yaw = if 0.0 <= left.dot(&to_target) { 1.0 } else { -1.0 };
+                        ship_controller.acceleration_yaw(accel_yaw);
+                    }
+                } else {
+                    let goal_yaw: f32 = to_target.x.atan2(to_target.z);
+                    ship_controller.set_yaw(goal_yaw);
+                    ship_controller.set_velocity_yaw(0.0);
+                    self._command_rotate_to_target = false;
+                }
+            }
+
+            // move to target
+            if self._command_move_to_target && false == self._command_rotate_to_target {
+                let velocity = ship_controller.get_velocity();
+                let ground_speed = (velocity.x * velocity.x + velocity.z * velocity.z).sqrt();
+                let move_delta = ground_speed * delta_time;
+                if move_delta < distance {
+                    let braking_time = ground_speed / ship_controller._controller_data.borrow()._damping;
+                    let braking_distance = ground_speed * 0.5 * braking_time;
+                    if braking_distance < distance && 0.0 < front_dot_target {
+                        ship_controller.acceleration_forward();
+                    }
+                } else {
+                    ship_controller.set_velocity(&Vector3::zeros());
+                    let mut position = ship_controller.get_position().clone_owned();
+                    position.x = self._target_position.x;
+                    position.z = self._target_position.z;
+                    ship_controller.set_position(&position);
+                    self._command_move_to_target = false;
+                }
             }
         }
-
         self.update_actor_base(delta_time, project_scene_manager, game_controller);
     }
 }
@@ -138,6 +168,8 @@ impl PlayerActor {
             _actor_data: ActorData {},
             _ship: ShipInstance::create_ship_instance(ship_data, render_object),
             _target_position: Vector3::zeros(),
+            _command_move_to_target: false,
+            _command_rotate_to_target: false,
         })
     }
 }

@@ -169,10 +169,16 @@ impl GameController {
             main_camera._transform_object.set_yaw(yaw);
         }
 
+        // update cross hair
         self.get_game_ui_manager_mut().set_crosshair_pos(&mouse_move_data._mouse_pos);
 
+        // player controll
         if btn_right {
             player_actor.actor_move(&self._target_position);
+        }
+
+        if modifier_keys_shift {
+            player_actor.get_ship_mut().get_controller_mut().boost_on();
         }
 
         // player ship project to height map
@@ -191,7 +197,7 @@ impl GameController {
 
     pub fn update_event_for_fps_view_mode(
         &mut self,
-        _time_data: &TimeData,
+        time_data: &TimeData,
         keyboard_input_data: &KeyboardInputData,
         _mouse_move_data: &MouseMoveData,
         mouse_input_data: &MouseInputData,
@@ -213,40 +219,59 @@ impl GameController {
             player_actor.actor_fire(self.get_game_client(), &self._game_view_mode);
         }
 
-        // move
+        let can_controll = player_actor._command_move_to_target == false && player_actor._command_rotate_to_target == false;
+
+        // set yaw
         let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
         if 0.0 != mouse_delta.x {
-            player_ship_controller.set_velocity_yaw(-mouse_delta.x * 0.1);
+            if can_controll {
+                player_ship_controller.set_velocity_yaw(-mouse_delta.x * 0.1);
+            } else {
+                main_camera._transform_object.rotation_yaw(-mouse_delta.x * 0.1 * time_data._delta_time as f32);
+            }
         }
 
+        // set pitch
         if 0.0 != mouse_delta.y {
             let pitch = MOUSE_PITCH_MIN.max(MOUSE_PITCH_MAX.min(main_camera._transform_object.get_pitch() - mouse_delta.y * MOUSE_ROTATION_SPEED));
             main_camera._transform_object.set_pitch(pitch);
         }
 
+        // player move
         if modifier_keys_shift {
             player_ship_controller.boost_on();
         }
 
+        let mut cancle_move = false;
         if hold_key_w {
             player_ship_controller.acceleration_forward();
+            cancle_move = true;
         }
         else if hold_key_s {
             player_ship_controller.acceleration_backward();
+            cancle_move = true;
         }
 
         if hold_key_a {
             player_ship_controller.acceleration_left();
+            cancle_move = true;
         }
         else if hold_key_d {
             player_ship_controller.acceleration_right();
+            cancle_move = true;
         }
 
         if hold_key_q {
             player_ship_controller.acceleration_down();
+            cancle_move = true;
         }
         else if hold_key_e {
             player_ship_controller.acceleration_up();
+            cancle_move = true;
+        }
+
+        if cancle_move {
+            player_actor.cancle_actor_move();
         }
     }
 
@@ -273,10 +298,14 @@ impl GameController {
             main_camera._transform_object.set_position(&camera_pos);
 
         } else if GameViewMode::FpsViewMode == self._game_view_mode {
+            let can_controll = player_actor._command_move_to_target == false && player_actor._command_rotate_to_target == false;
+
             // camera yaw
-            let yaw = player_transform.get_yaw() + std::f32::consts::PI;
-            main_camera._transform_object.set_yaw(yaw);
-            main_camera._transform_object.update_transform_object();
+            if can_controll {
+                let yaw = player_transform.get_yaw() + std::f32::consts::PI;
+                main_camera._transform_object.set_yaw(yaw);
+                main_camera._transform_object.update_transform_object();
+            }
 
             // camera offset
             let mut cockpit_offset = main_camera._transform_object.get_front().clone();

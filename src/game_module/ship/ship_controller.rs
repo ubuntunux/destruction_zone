@@ -2,6 +2,7 @@ use nalgebra::{ Vector2, Vector3 };
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
+use rust_engine_3d::utilities::math::TWO_PI;
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::game_constants::GRAVITY;
@@ -187,12 +188,12 @@ impl ShipController {
             } else {
                 roll += roll_speed * roll_diff.abs() / controller_data._side_step_roll;
             }
-            self._rotation.z = roll;
+            self._rotation.z = roll % TWO_PI;
         }
 
         // pitch, yaw
-        self._rotation.x += self.get_velocity_pitch() * delta_time;
-        self._rotation.y += self.get_velocity_yaw() * delta_time;
+        self._rotation.x = (self._rotation.x + self.get_velocity_pitch() * delta_time) % TWO_PI;
+        self._rotation.y = (self._rotation.y + self.get_velocity_yaw() * delta_time) % TWO_PI;
 
         // reset
         self._prev_velocity.clone_from(&self._velocity);

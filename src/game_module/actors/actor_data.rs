@@ -32,6 +32,7 @@ pub trait ActorTrait {
     fn get_velocity(&self) -> &Vector3<f32>;
     fn actor_fire(&mut self, game_client: &GameClient, game_view_mode: &GameViewMode);
     fn actor_move(&mut self, target_position: &Vector3<f32>);
+    fn cancle_actor_move(&mut self);
     fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController);
 }
 

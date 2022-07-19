@@ -57,6 +57,9 @@ impl ActorTrait for NonPlayerActor {
     fn actor_fire(&mut self, _game_client: &GameClient, _game_view_mode: &GameViewMode) {
         unimplemented!()
     }
+    fn cancle_actor_move(&mut self) {
+        unimplemented!()
+    }
     fn actor_move(&mut self, _target_position: &Vector3<f32>) {
         unimplemented!()
     }
