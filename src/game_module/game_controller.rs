@@ -304,8 +304,8 @@ impl GameController {
             if can_controll {
                 let yaw = player_transform.get_yaw() + std::f32::consts::PI;
                 main_camera._transform_object.set_yaw(yaw);
-                main_camera._transform_object.update_transform_object();
             }
+            main_camera._transform_object.update_transform_object();
 
             // camera offset
             let mut cockpit_offset = main_camera._transform_object.get_front().clone();
