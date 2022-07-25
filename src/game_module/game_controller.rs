@@ -8,8 +8,7 @@ use rust_engine_3d::renderer::camera::CameraObjectData;
 use rust_engine_3d::utilities::math;
 use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::actors::player_actor::PlayerActor;
+use crate::game_module::actors::actor::ActorController;
 use crate::game_module::game_constants::{
     CAMERA_DISTANCE_MIN,
     CAMERA_DISTANCE_MAX,
@@ -115,7 +114,7 @@ impl GameController {
         mouse_input_data: &MouseInputData,
         mouse_delta: &Vector2<f32>,
         main_camera: &mut CameraObjectData,
-        player_actor: &mut PlayerActor
+        player_actor: &mut ActorController
     ) {
         let _btn_left: bool = mouse_input_data._btn_l_pressed;
         let btn_right: bool = mouse_input_data._btn_r_pressed;
@@ -203,7 +202,7 @@ impl GameController {
         mouse_input_data: &MouseInputData,
         mouse_delta: &Vector2<f32>,
         main_camera: &mut CameraObjectData,
-        player_actor: &mut PlayerActor
+        player_actor: &mut ActorController
     ) {
         let btn_left: bool = mouse_input_data._btn_l_pressed;
         let hold_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);

@@ -5,7 +5,7 @@ use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCrea
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::actors::actor::ActorController;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::{FIRE_PITCH_MIN, FIRE_PITCH_MAX};
 use crate::game_module::weapons::bullet::{BulletType, BulletData};
@@ -82,7 +82,7 @@ pub struct WeaponData {
 pub trait WeaponTrait {
     fn initialize_weapon(&mut self);
     fn remove_weapon(&mut self, project_scene_manager: &mut ProjectSceneManager);
-    fn get_owner_actor(&self) -> &dyn ActorTrait;
+    fn get_owner_actor(&self) -> &ActorController;
     fn get_bullet_type(&self) -> BulletType;
     fn get_bullet_data(&self) -> &BulletData;
     fn get_weapon_type(&self) -> WeaponType;
@@ -93,7 +93,7 @@ pub trait WeaponTrait {
 }
 
 pub struct BeamEmitter {
-    pub _owner_actor: *const dyn ActorTrait,
+    pub _owner_actor: *const ActorController,
     pub _weapon_data: RcRefCell<WeaponData>,
     pub _weapon_slot_transform: TransformObjectData,
     pub _transform_object: TransformObjectData,
@@ -118,7 +118,7 @@ impl WeaponData {
 
 impl BeamEmitter {
     pub fn create_beam_emitter(
-        owner_actor: *const dyn ActorTrait,
+        owner_actor: *const ActorController,
         weapon_data: &RcRefCell<WeaponData>,
         weapon_slot_transform: &TransformObjectData,
         weapon_render_object: &RcRefCell<RenderObjectData>,
@@ -140,7 +140,7 @@ impl WeaponTrait for BeamEmitter {
     fn remove_weapon(&mut self, project_scene_manager: &mut ProjectSceneManager) {
         project_scene_manager.remove_skeletal_render_object(&self._weapon_render_object.borrow()._render_object_name);
     }
-    fn get_owner_actor(&self) -> &dyn ActorTrait { unsafe { &*self._owner_actor } }
+    fn get_owner_actor(&self) -> &ActorController { unsafe { &*self._owner_actor } }
     fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
     fn get_bullet_data(&self) -> &BulletData { unsafe { &*self.get_weapon_data()._bullet_data.as_ptr() } }
     fn get_weapon_type(&self) -> WeaponType { self.get_weapon_data()._weapon_type }

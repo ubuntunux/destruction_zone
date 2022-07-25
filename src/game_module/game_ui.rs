@@ -3,7 +3,6 @@ use nalgebra::{ Vector2 };
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::ui::{ProjectUIManagerBase, Widget, WidgetDefault};
 use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
-use crate::game_module::actors::actor_data::ActorTrait;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::ui_widgets::hud::{CrossHair, TargetHud, PlayerHud, SelectionArea};
 use crate::renderer::project_ui::ProjectUIManager;

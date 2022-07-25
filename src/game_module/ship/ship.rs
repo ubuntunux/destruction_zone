@@ -6,7 +6,7 @@ use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, newRcRefCell, ptr_as_ref, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actor_manager::calc_floating_height;
-use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::actors::actor::ActorController;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
@@ -109,7 +109,7 @@ impl ShipInstance {
         }
     }
 
-    pub fn initialize_ship_instance(&mut self, owner_actor: *const dyn ActorTrait, project_scene_manager: &mut ProjectSceneManager) {
+    pub fn initialize_ship_instance(&mut self, owner_actor: *const ActorController, project_scene_manager: &mut ProjectSceneManager) {
         let ship_data = unsafe { &*self._ship_data.as_ptr() };
         self._hull = ship_data._max_hull;
         self._shields = ship_data._max_shields;

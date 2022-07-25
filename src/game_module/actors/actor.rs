@@ -6,59 +6,78 @@ use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::{ ActorData, ActorTrait, ActorBase };
+use crate::game_module::actors::actor_data::ActorData;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_controller::{ GameViewMode, GameController };
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
 
-pub struct PlayerActor {
+// ActorController
+pub struct ActorController {
     pub _id: u64,
     pub _actor_data: ActorData,
     pub _ship: ShipInstance,
     pub _target_position: Vector3<f32>,
     pub _command_move_to_target: bool,
     pub _command_rotate_to_target: bool,
+    pub _is_player_actor: bool,
 }
 
-impl ActorTrait for PlayerActor {
-    fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+impl ActorController {
+    pub fn create_actor_controller(
+        id: u64,
+        ship_data: &RcRefCell<ShipData>,
+        render_object: &RcRefCell<RenderObjectData>,
+        is_player_actor: bool
+    ) -> Rc<ActorController> {
+        Rc::new(ActorController {
+            _id: id,
+            _actor_data: ActorData {},
+            _ship: ShipInstance::create_ship_instance(ship_data, render_object),
+            _target_position: Vector3::zeros(),
+            _command_move_to_target: false,
+            _command_rotate_to_target: false,
+            _is_player_actor: is_player_actor,
+        })
+    }
+
+    pub fn initialize_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
         self._ship.initialize_ship_instance(self, project_scene_manager);
     }
-    fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
+    pub fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager) {
         self._ship.remove_ship_instance(project_scene_manager);
     }
-    fn get_actor_id(&self) -> u64 {
+    pub fn get_actor_id(&self) -> u64 {
         self._id
     }
-    fn is_player_actor(&self) -> bool {
-        true
+    pub fn is_player_actor(&self) -> bool {
+        self._is_player_actor
     }
-    fn get_actor_data(&self) -> &ActorData {
+    pub fn get_actor_data(&self) -> &ActorData {
         &self._actor_data
     }
-    fn get_actor_data_mut(&mut self) -> &mut ActorData {
+    pub fn get_actor_data_mut(&mut self) -> &mut ActorData {
         &mut self._actor_data
     }
-    fn get_ship(&self) -> &ShipInstance {
+    pub fn get_ship(&self) -> &ShipInstance {
         &self._ship
     }
-    fn get_ship_mut(&mut self) -> &mut ShipInstance {
+    pub fn get_ship_mut(&mut self) -> &mut ShipInstance {
         &mut self._ship
     }
-    fn get_controller(&self) -> &ShipController {
+    pub fn get_controller(&self) -> &ShipController {
         &self._ship._controller
     }
-    fn get_controller_mut(&mut self) -> &mut ShipController {
+    pub fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
-    fn get_transform(&self) -> &TransformObjectData { self._ship.get_transform() }
-    fn get_transform_mut(&self) -> &mut TransformObjectData {
+    pub fn get_transform(&self) -> &TransformObjectData { self._ship.get_transform() }
+    pub fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
-    fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
-    fn actor_fire(&mut self, game_client: &GameClient, game_view_mode: &GameViewMode) {
+    pub fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
+    pub fn actor_fire(&mut self, game_client: &GameClient, game_view_mode: &GameViewMode) {
         let project_scene_manager = game_client.get_project_scene_manager();
         let mut fire_start: Vector3<f32> = Vector3::zeros();
         let mut fire_dir: Vector3<f32> = Vector3::zeros();
@@ -79,28 +98,27 @@ impl ActorTrait for PlayerActor {
 
         self._ship.ship_fire(game_client, &fire_start, &fire_dir, &target_position);
     }
-
-    fn cancle_actor_move(&mut self) {
-        self._command_move_to_target = false;
-        self._command_rotate_to_target = false;
-    }
-
-    fn actor_move(&mut self, target_position: &Vector3<f32>) {
+    pub fn actor_move(&mut self, target_position: &Vector3<f32>) {
         self._target_position.clone_from(target_position);
         self._command_move_to_target = true;
         self._command_rotate_to_target = true;
     }
-
-    fn update_actor(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
-        let ship_controller = ptr_as_mut(&self.get_ship()._controller);
-
-        // trace target
+    pub fn cancle_actor_move(&mut self) {
+        self._command_move_to_target = false;
+        self._command_rotate_to_target = false;
+    }
+    pub fn update_actor_move(&mut self, delta_time: f32, _project_scene_manager: &ProjectSceneManager, _game_controller: &GameController) {
         if self._command_move_to_target || self._command_rotate_to_target {
+            let ship_controller = ptr_as_mut(&self.get_ship()._controller);
             let mut to_target = &self._target_position - ship_controller.get_position();
             to_target.y = 0.0;
             let distance = to_target.norm();
             if 0.0 < distance {
                 to_target /= distance;
+            } else {
+                self._command_move_to_target = true;
+                self._command_rotate_to_target = true;
+                return;
             }
 
             let mut front = self.get_ship().get_transform().get_front().clone_owned();
@@ -153,23 +171,23 @@ impl ActorTrait for PlayerActor {
                 }
             }
         }
-        self.update_actor_base(delta_time, project_scene_manager, game_controller);
     }
-}
 
-impl PlayerActor {
-    pub fn create_player_actor(
-        id: u64,
-        ship_data: &RcRefCell<ShipData>,
-        render_object: &RcRefCell<RenderObjectData>
-    ) -> Rc<PlayerActor> {
-        Rc::new(PlayerActor {
-            _id: id,
-            _actor_data: ActorData {},
-            _ship: ShipInstance::create_ship_instance(ship_data, render_object),
-            _target_position: Vector3::zeros(),
-            _command_move_to_target: false,
-            _command_rotate_to_target: false,
-        })
+    pub fn update_actor_controller(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
+        if self._is_player_actor {
+            self.update_actor_move(delta_time, project_scene_manager, game_controller);
+        }
+
+        let transform = ptr_as_mut(self.get_ship()._transform_object);
+        let ship_controller = ptr_as_mut(&self.get_ship()._controller);
+
+        ship_controller.update_controller(delta_time, transform, project_scene_manager);
+
+        transform.set_rotation(ship_controller.get_rotation());
+        transform.set_position(ship_controller.get_position());
+        transform.update_matrix();
+
+        // update ship
+        self.get_ship_mut().update_ship(delta_time);
     }
 }

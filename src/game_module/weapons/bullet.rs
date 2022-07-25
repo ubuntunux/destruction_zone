@@ -7,7 +7,7 @@ use rust_engine_3d::renderer::render_object::RenderObjectData;
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::ActorTrait;
+use crate::game_module::actors::actor::ActorController;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash, Debug, Copy)]
 pub enum BulletType {
@@ -57,7 +57,7 @@ impl Default for BulletData {
 
 pub struct Bullet {
     pub _bullet_data: *const BulletData,
-    pub _owner_actor: *const dyn ActorTrait,
+    pub _owner_actor: *const ActorController,
     pub _is_alive: bool,
     pub _is_collided: bool,
     pub _elapsed_time: f32,
@@ -71,7 +71,7 @@ pub struct Bullet {
 // Implementation
 impl Bullet {
     pub fn create_bullet(
-        owner_actor: *const dyn ActorTrait,
+        owner_actor: *const ActorController,
         initial_velocity: &Vector3<f32>,
         bullet_data: *const BulletData,
         bullet_render_object: &RcRefCell<RenderObjectData>,
@@ -88,10 +88,10 @@ impl Bullet {
             _bullet_render_object: bullet_render_object.clone(),
         })
     }
-    pub fn get_owner_actor(&self) -> &dyn ActorTrait {
+    pub fn get_owner_actor(&self) -> &ActorController {
         unsafe { &*self._owner_actor }
     }
-    pub fn get_owner_actor_mut(&self) -> &mut dyn ActorTrait { unsafe { &mut *(self._owner_actor as *mut dyn ActorTrait) } }
+    pub fn get_owner_actor_mut(&self) -> &mut ActorController { unsafe { &mut *(self._owner_actor as *mut ActorController) } }
     pub fn get_bullet_type(&self) -> BulletType { self.get_bullet_data()._bullet_type }
     pub fn get_bullet_data(&self) -> &BulletData { unsafe { &*self._bullet_data } }
     pub fn get_transform_object(&self) -> &TransformObjectData { unsafe { &*self._transform } }

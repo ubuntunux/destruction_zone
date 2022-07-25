@@ -4,19 +4,17 @@ use std::rc::Rc;
 use rust_engine_3d::renderer::render_object::{RenderObjectData, RenderObjectCreateInfo};
 use rust_engine_3d::utilities::system::{ptr_as_mut, ptr_as_ref};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::ActorTrait;
-use crate::game_module::actors::player_actor::PlayerActor;
-use crate::game_module::actors::non_player_actor::NonPlayerActor;
+use crate::game_module::actors::actor::ActorController;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::level_datas::spawn_point::{SpawnPointType, ShipSpawnPointData};
 
 
-pub type ActorMap = HashMap<u64, Rc<dyn ActorTrait>>;
+pub type ActorMap = HashMap<u64, Rc<ActorController>>;
 
 pub struct ActorManager {
     pub _game_client: *const GameClient,
     pub _id_generator: u64,
-    pub _player_actor: *const PlayerActor,
+    pub _player_actor: *const ActorController,
     pub _actors: ActorMap,
 }
 
@@ -68,26 +66,23 @@ impl ActorManager {
         );
 
         // create actor
-        let actor: Rc<dyn ActorTrait> = if is_player_actor {
-            let player_actor = PlayerActor::create_player_actor(id, &ship_data, &actor_render_object);
-            self._player_actor = player_actor.as_ref();
-            player_actor
-        } else {
-            NonPlayerActor::create_actor(id, &ship_data, &actor_render_object)
+        let actor = ActorController::create_actor_controller(id, &ship_data, &actor_render_object, is_player_actor);
+        if is_player_actor {
+            self._player_actor = actor.as_ref();
         };
         ptr_as_mut(actor.as_ref()).initialize_actor(project_scene_manager);
 
         // regist actor
         self._actors.insert(id, actor);
     }
-    pub fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager, actor: &mut dyn ActorTrait) {
+    pub fn remove_actor(&mut self, project_scene_manager: &mut ProjectSceneManager, actor: &mut ActorController) {
         actor.remove_actor(project_scene_manager);
         self._actors.remove(&actor.get_actor_id());
     }
-    pub fn get_player_actor(&self) -> &PlayerActor {
+    pub fn get_player_actor(&self) -> &ActorController {
         ptr_as_ref(self._player_actor)
     }
-    pub fn get_player_actor_mut(&self) -> &mut PlayerActor { ptr_as_mut(self._player_actor) }
+    pub fn get_player_actor_mut(&self) -> &mut ActorController { ptr_as_mut(self._player_actor) }
     pub fn spawn_actors(&mut self) {
         let game_client = ptr_as_ref(self._game_client);
         let level_data = game_client.get_project_scene_manager().get_level_data();
@@ -103,7 +98,7 @@ impl ActorManager {
     pub fn update_actor_manager(&mut self, delta_time: f32) {
         let project_scene_manager = self.get_game_client().get_project_scene_manager();
         let game_controller = &self.get_game_client().get_game_controller();
-        self.get_player_actor_mut().update_actor(delta_time, project_scene_manager, game_controller);
+        self.get_player_actor_mut().update_actor_controller(delta_time, project_scene_manager, game_controller);
 
         for actor_wrapper in self._actors.values() {
             let actor = ptr_as_mut(actor_wrapper.as_ref());
@@ -115,7 +110,7 @@ impl ActorManager {
                     ship_controller.acceleration_forward();
                     ship_controller.acceleration_right();
                 }
-                actor.update_actor(delta_time, project_scene_manager, game_controller);
+                actor.update_actor_controller(delta_time, project_scene_manager, game_controller);
             }
         }
     }
