@@ -124,6 +124,7 @@ impl GameController {
         let pressed_key_w = keyboard_input_data.get_key_hold(VirtualKeyCode::W);
         let pressed_key_s = keyboard_input_data.get_key_hold(VirtualKeyCode::S);
         let modifier_keys_shift = keyboard_input_data.get_key_hold(VirtualKeyCode::LShift);
+        let modifier_keys_ctrl = keyboard_input_data.get_key_hold(VirtualKeyCode::LControl);
 
         let mut front_xz: Vector3<f32> = main_camera._transform_object.get_front().clone_owned();
         front_xz.y = 0.0;
@@ -173,7 +174,11 @@ impl GameController {
 
         // player controll
         if btn_right {
-            player_actor.actor_move(&self._target_position);
+            if modifier_keys_ctrl {
+                player_actor.set_command_actor_attack(&self._target_position);
+            } else {
+                player_actor.set_command_actor_move(&self._target_position);
+            }
         }
 
         if modifier_keys_shift {
@@ -215,10 +220,10 @@ impl GameController {
 
         // fire
         if btn_left {
-            player_actor.actor_fire(self.get_game_client(), &self._game_view_mode);
+            player_actor.manual_actor_attack(self.get_game_client());
         }
 
-        let can_controll = player_actor._command_move_to_target == false && player_actor._command_rotate_to_target == false;
+        let can_controll = player_actor.can_manual_controll();
 
         // set yaw
         let player_ship_controller = player_actor.get_ship_mut().get_controller_mut();
@@ -270,7 +275,7 @@ impl GameController {
         }
 
         if cancle_move {
-            player_actor.cancle_actor_move();
+            player_actor.cancle_command_of_actor();
         }
     }
 
@@ -297,7 +302,7 @@ impl GameController {
             main_camera._transform_object.set_position(&camera_pos);
 
         } else if GameViewMode::FpsViewMode == self._game_view_mode {
-            let can_controll = player_actor._command_move_to_target == false && player_actor._command_rotate_to_target == false;
+            let can_controll = player_actor.can_manual_controll();
 
             // camera yaw
             if can_controll {
