@@ -177,25 +177,19 @@ impl GameController {
             if modifier_keys_ctrl {
                 player_actor.set_command_actor_attack(&self._target_position);
             } else {
-                for target in ptr_as_ref(self.get_game_client()).get_actor_manager()._actors.values() {
-                    let actor = target.as_ref();
-                    if false == actor.is_player_actor() {
-                        let target_position = actor.get_transform().get_position().clone_owned();
-                        player_actor.set_command_actor_move(&target_position);
-                        break;
-                    }
-                }
+                player_actor.set_command_actor_move(&self._target_position);
             }
         }
 
-        for target in ptr_as_ref(self.get_game_client()).get_actor_manager()._actors.values() {
-            let actor = target.as_ref();
-            if false == actor.is_player_actor() {
-                let target_position = actor.get_transform().get_position().clone_owned();
-                player_actor.set_command_actor_move(&target_position);
-                break;
-            }
-        }
+        // TestCode : Trace
+        // for target in ptr_as_ref(self.get_game_client()).get_actor_manager()._actors.values() {
+        //     let actor = target.as_ref();
+        //     if false == actor.is_player_actor() {
+        //         let target_position = actor.get_transform().get_position().clone_owned();
+        //         player_actor.set_command_actor_move(&target_position);
+        //         break;
+        //     }
+        // }
 
         if modifier_keys_shift {
             player_actor.get_ship_mut().get_controller_mut().boost_on();

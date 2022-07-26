@@ -196,7 +196,7 @@ impl ActorController {
                 }
             }
 
-            if self._command_move  {
+            if self._command_move && false == self._command_rotate {
                 if ActorController::move_to_target(ship_controller, &self._target_position, &to_target, distance, &front, delta_time) {
                     self._command_rotate = false;
                 }
