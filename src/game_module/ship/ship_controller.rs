@@ -4,7 +4,7 @@ use serde::{ Serialize, Deserialize };
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::math::TWO_PI;
 use rust_engine_3d::utilities::system::RcRefCell;
-use crate::application::project_scene_manager::ProjectSceneManager;
+use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::GRAVITY;
 
 // Declare
@@ -113,7 +113,7 @@ impl ShipController {
     pub fn set_pitch(&mut self, pitch: f32) { self._rotation.x = pitch; }
     pub fn set_yaw(&mut self, yaw: f32) { self._rotation.y = yaw; }
     pub fn set_roll(&mut self, roll: f32) { self._rotation.z = roll; }
-    pub fn update_controller(&mut self, transform: &TransformObjectData, project_scene_manager: &ProjectSceneManager, delta_time: f32) {
+    pub fn update_controller(&mut self, game_client: &GameClient, transform: &TransformObjectData, delta_time: f32) {
         let mut goal_roll = 0.0;
 
         let controller_data = self._controller_data.borrow();
@@ -139,8 +139,11 @@ impl ShipController {
             let mut ground_speed: f32 = (self._velocity.x * self._velocity.x + self._velocity.z * self._velocity.z).sqrt();
             self._velocity.x /= ground_speed;
             self._velocity.z /= ground_speed;
-            let damping = controller_data._damping * delta_time;
+
+            // friction
+            let mut damping = controller_data._damping * delta_time;
             ground_speed = controller_data._max_ground_speed.min(0.0f32.max(ground_speed - damping));
+
             self._velocity.x *= ground_speed;
             self._velocity.z *= ground_speed;
         }
@@ -154,6 +157,7 @@ impl ShipController {
         let mut position = &self._position + &self._velocity * delta_time;
         if position != self._position || false == self._on_ground {
             self._on_ground = false;
+            let project_scene_manager = game_client.get_project_scene_manager();
             let floating_height = project_scene_manager.get_height_bilinear(&position, 0) + self._floating_height;
             if position.y < floating_height {
                 position.y = floating_height;

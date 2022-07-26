@@ -96,22 +96,10 @@ impl ActorManager {
     }
 
     pub fn update_actor_manager(&mut self, delta_time: f32) {
-        let project_scene_manager = self.get_game_client().get_project_scene_manager();
-        let game_controller = &self.get_game_client().get_game_controller();
-        self.get_player_actor_mut().update_actor_controller(project_scene_manager, game_controller, delta_time);
-
-        for actor_wrapper in self._actors.values() {
-            let actor = ptr_as_mut(actor_wrapper.as_ref());
-            if false == actor.is_player_actor() {
-                let ship_controller = actor.get_ship_mut().get_controller_mut();
-                {
-                    // TEST CODE
-                    ship_controller.acceleration_yaw(1000.0 * delta_time);
-                    ship_controller.acceleration_forward();
-                    ship_controller.acceleration_right();
-                }
-                actor.update_actor_controller(project_scene_manager, game_controller, delta_time);
-            }
+        let game_client = ptr_as_ref(self._game_client);
+        for actor_ref in self._actors.values() {
+            let actor = ptr_as_mut(actor_ref.as_ref());
+            actor.update_actor_controller(game_client, delta_time);
         }
     }
 }

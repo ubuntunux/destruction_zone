@@ -8,7 +8,6 @@ use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::actors::actor_data::ActorData;
 use crate::game_module::game_client::GameClient;
-use crate::game_module::game_controller::{ GameController };
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
@@ -197,7 +196,7 @@ impl ActorController {
                 }
             }
 
-            if self._command_move && false == self._command_rotate {
+            if self._command_move  {
                 if ActorController::move_to_target(ship_controller, &self._target_position, &to_target, distance, &front, delta_time) {
                     self._command_rotate = false;
                 }
@@ -205,7 +204,7 @@ impl ActorController {
         }
     }
 
-    pub fn update_command_actor_attack(&mut self, delta_time: f32, game_controller: &GameController) {
+    pub fn update_command_actor_attack(&mut self, delta_time: f32, game_client: &GameClient) {
         if self._command_attack || self._command_rotate {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
@@ -233,7 +232,6 @@ impl ActorController {
 
             if self._command_attack && false == self._command_rotate {
                 // fire
-                let game_client = game_controller.get_game_client();
                 let fire_start = self.get_transform().get_position().clone_owned();
                 let fire_dir = (&self._target_position - ship_controller.get_position()).normalize();
                 let target_position: Vector3<f32> = &fire_start + &fire_dir * CHECK_TARGET_DISTANCE_MAX;
@@ -245,14 +243,18 @@ impl ActorController {
         }
     }
 
-    pub fn update_actor_controller(&mut self, project_scene_manager: &ProjectSceneManager, game_controller: &GameController, delta_time: f32) {
+    pub fn update_actor_controller(&mut self, game_client: &GameClient, delta_time: f32) {
         if ActorControllerState::Move == self._actor_controller_state {
             self.update_command_actor_move(delta_time);
         } else if ActorControllerState::Attack == self._actor_controller_state {
-            self.update_command_actor_attack(delta_time, game_controller);
+            self.update_command_actor_attack(delta_time, game_client);
+        } else if false == self._is_player_actor {
+            let ship_controller = ptr_as_mut(&self.get_ship()._controller);
+            ship_controller.set_velocity_yaw(1.0);
+            ship_controller.acceleration_forward();
         }
 
         // update ship
-        self.get_ship_mut().update_ship(delta_time, project_scene_manager);
+        self.get_ship_mut().update_ship(game_client, delta_time);
     }
 }
