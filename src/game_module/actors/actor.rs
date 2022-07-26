@@ -245,25 +245,14 @@ impl ActorController {
         }
     }
 
-    pub fn update_actor_controller(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager, game_controller: &GameController) {
-        if self._is_player_actor {
-            if ActorControllerState::Move == self._actor_controller_state {
-                self.update_command_actor_move(delta_time);
-            } else if ActorControllerState::Attack == self._actor_controller_state {
-                self.update_command_actor_attack(delta_time, game_controller);
-            }
+    pub fn update_actor_controller(&mut self, project_scene_manager: &ProjectSceneManager, game_controller: &GameController, delta_time: f32) {
+        if ActorControllerState::Move == self._actor_controller_state {
+            self.update_command_actor_move(delta_time);
+        } else if ActorControllerState::Attack == self._actor_controller_state {
+            self.update_command_actor_attack(delta_time, game_controller);
         }
 
-        let transform = ptr_as_mut(self.get_ship()._transform_object);
-        let ship_controller = ptr_as_mut(&self.get_ship()._controller);
-
-        ship_controller.update_controller(delta_time, transform, project_scene_manager);
-
-        transform.set_rotation(ship_controller.get_rotation());
-        transform.set_position(ship_controller.get_position());
-        transform.update_matrix();
-
         // update ship
-        self.get_ship_mut().update_ship(delta_time);
+        self.get_ship_mut().update_ship(delta_time, project_scene_manager);
     }
 }

@@ -173,8 +173,15 @@ impl ShipInstance {
             weapon.weapon_fire(game_client, fire_start, fire_dir, target_position);
         }
     }
-    pub fn update_ship(&mut self, delta_time: f32) {
+    pub fn update_ship(&mut self, delta_time: f32, project_scene_manager: &ProjectSceneManager) {
         let ship_transform = ptr_as_mut(self._transform_object);
+
+        self._controller.update_controller(ship_transform, project_scene_manager, delta_time);
+
+        ship_transform.set_rotation(self._controller.get_rotation());
+        ship_transform.set_position(self._controller.get_position());
+        ship_transform.update_matrix();
+
         for weapon in self._weapons.iter_mut() {
             weapon.update_weapon(ship_transform, delta_time);
         }

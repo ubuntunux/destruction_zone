@@ -113,7 +113,7 @@ impl ShipController {
     pub fn set_pitch(&mut self, pitch: f32) { self._rotation.x = pitch; }
     pub fn set_yaw(&mut self, yaw: f32) { self._rotation.y = yaw; }
     pub fn set_roll(&mut self, roll: f32) { self._rotation.z = roll; }
-    pub fn update_controller(&mut self, delta_time: f32, transform: &TransformObjectData, project_scene_manager: &ProjectSceneManager) {
+    pub fn update_controller(&mut self, transform: &TransformObjectData, project_scene_manager: &ProjectSceneManager, delta_time: f32) {
         let mut goal_roll = 0.0;
 
         let controller_data = self._controller_data.borrow();
