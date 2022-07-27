@@ -421,6 +421,7 @@ resources/externals/meshes/ships/trident.blend
 resources/externals/meshes/ships/tank.dae
 resources/externals/meshes/Plane00.blend
 resources/externals/meshes/Plane00.dae
+resources/shaders/render_ship.frag
 resources/sound_banks/bullet_metal.meta
 resources/sound_banks/bullet_metal.bank
 resources/game_datas/weapons/beam_emitter.data
@@ -433,6 +434,14 @@ resources/game_datas/ships/default.data
 resources/game_datas/ships/tank.data
 resources/game_datas/bullets/beam.data
 resources/game_datas/bullets/default.data
+resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
+resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
+resources/shader_caches/common/render_object_RenderMode1_RenderObjectType1.frag.spirv
+resources/shader_caches/common/render_object_RenderMode1_RenderObjectType0.frag.spirv
+resources/shader_caches/common/render_object_RenderMode0_RenderObjectType0.frag.spirv
+resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.frag.spirv
+resources/shader_caches/common/render_object_RenderMode0_RenderObjectType1.frag.spirv
+resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
 resources/effects/bullet_destroy.effect
 resources/scenes/sponza.scene
 resources/scenes/default.scene

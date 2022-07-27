@@ -141,7 +141,7 @@ impl ShipController {
             self._velocity.z /= ground_speed;
 
             // friction
-            let mut damping = controller_data._damping * delta_time;
+            let damping = controller_data._damping * delta_time;
             ground_speed = controller_data._max_ground_speed.min(0.0f32.max(ground_speed - damping));
 
             self._velocity.x *= ground_speed;

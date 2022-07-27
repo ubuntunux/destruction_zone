@@ -1,6 +1,9 @@
+extern crate rust_engine_3d;
+
 pub mod application_constants;
 pub mod application;
 pub mod game_module;
+pub mod render_pass;
 pub mod renderer;
 pub mod resource;
 
