@@ -253,7 +253,7 @@ impl ActorController {
         } else if false == self._is_player_actor {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
             ship_controller.set_velocity_yaw(1.0);
-            ship_controller._acceleration_forward();
+            ship_controller.acceleration_forward();
         }
 
         // update ship
