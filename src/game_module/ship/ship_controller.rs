@@ -2,7 +2,7 @@ use nalgebra::{ Vector2, Vector3 };
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::math::{ TWO_PI, lerp };
+use rust_engine_3d::utilities::math::{ TWO_PI };
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::GRAVITY;
@@ -136,21 +136,36 @@ impl ShipController {
 
         // ground speed
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
-            let ground_speed: f32 = (self._velocity.x * self._velocity.x + self._velocity.z * self._velocity.z).sqrt();
-            let dir_velocity_xz = Vector3::new(self._velocity.x / ground_speed, 0.0, self._velocity.z / ground_speed);
+            let mut velocity_xz = Vector3::new(self._velocity.x, 0.0, self._velocity.z);
 
-            // friction
-            let side_ratio = dir_side.dot(&dir_velocity_xz).abs();
-            let damping_ratio = lerp(
-                0.5 - dir_velocity_xz.dot(&(dir_forward * self._acceleration.z)) * 0.5,
-                0.5 - dir_velocity_xz.dot(&(dir_side * self._acceleration.x)) * 0.5,
-                side_ratio
-            ) * 2.0;
-            let damping = controller_data._damping * damping_ratio * delta_time;
-            let damped_ground_speed = controller_data._max_ground_speed.min(0f32.max(ground_speed - damping)) / ground_speed;
+            let mut forward_spped = dir_forward.dot(&velocity_xz).abs();
+            let mut forward_velocity = dir_forward * forward_spped;
 
-            self._velocity.x *= damped_ground_speed;
-            self._velocity.z *= damped_ground_speed;
+            let mut side_spped = dir_side.dot(&velocity_xz).abs();
+            let mut side_velocity = velocity_xz - forward_velocity;
+
+            if 0.0 < forward_spped {
+                forward_velocity /= forward_spped;
+                let forward_damping = (0.5 - forward_velocity.dot(&(dir_forward * self._acceleration.z))) * controller_data._damping * delta_time;
+                forward_spped = 0f32.max(forward_spped - forward_damping);
+                forward_velocity *= forward_spped;
+            }
+
+            if 0.0 < side_spped {
+                side_velocity /= side_spped;
+                let side_damping = (0.5 - side_velocity.dot(&(dir_side * self._acceleration.x))) * controller_data._damping * delta_time;
+                side_spped = 0f32.max(side_spped - side_damping);
+                side_velocity *= side_spped;
+            }
+
+            velocity_xz = forward_velocity + side_velocity;
+            let ground_speed = velocity_xz.norm();
+            if controller_data._max_ground_speed < ground_speed {
+                velocity_xz = velocity_xz / ground_speed * controller_data._max_ground_speed;
+            }
+
+            self._velocity.x = velocity_xz.x;
+            self._velocity.z = velocity_xz.z;
         }
 
         // apply gravity
