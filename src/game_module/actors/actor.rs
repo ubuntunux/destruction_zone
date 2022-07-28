@@ -6,11 +6,13 @@ use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
 use crate::application::project_scene_manager::ProjectSceneManager;
-use crate::game_module::actors::actor_data::ActorData;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
+
+pub struct ActorData {
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ActorControllerState {

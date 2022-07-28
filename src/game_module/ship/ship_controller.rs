@@ -2,7 +2,7 @@ use nalgebra::{ Vector2, Vector3 };
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::math::TWO_PI;
+use rust_engine_3d::utilities::math::{ TWO_PI, lerp };
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::GRAVITY;
@@ -118,9 +118,10 @@ impl ShipController {
 
         let controller_data = self._controller_data.borrow();
         let boost_acceleration = if self._boost { controller_data._boost_acceleration } else { 1.0 };
+        let dir_forward = Vector3::new(transform.get_front().x, 0.0f32, transform.get_front().z).normalize();
+        let dir_side = Vector3::new(transform.get_left().x, 0.0, transform.get_left().z).normalize();
 
         if 0.0 != self._acceleration.x {
-            let dir_side = Vector3::new(transform.get_left().x, 0.0f32, transform.get_left().z).normalize();
             self._velocity += dir_side * self._acceleration.x * controller_data._side_acceleration * boost_acceleration * delta_time;
             goal_roll = -controller_data._side_step_roll * self._acceleration.x;
         }
@@ -130,22 +131,26 @@ impl ShipController {
         }
 
         if 0.0 != self._acceleration.z {
-            let dir_forward = Vector3::new(transform.get_front().x, 0.0f32, transform.get_front().z).normalize();
             self._velocity += dir_forward * self._acceleration.z * controller_data._forward_acceleration * boost_acceleration * delta_time;
         }
 
         // ground speed
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
-            let mut ground_speed: f32 = (self._velocity.x * self._velocity.x + self._velocity.z * self._velocity.z).sqrt();
-            self._velocity.x /= ground_speed;
-            self._velocity.z /= ground_speed;
+            let ground_speed: f32 = (self._velocity.x * self._velocity.x + self._velocity.z * self._velocity.z).sqrt();
+            let dir_velocity_xz = Vector3::new(self._velocity.x / ground_speed, 0.0, self._velocity.z / ground_speed);
 
             // friction
-            let damping = controller_data._damping * delta_time;
-            ground_speed = controller_data._max_ground_speed.min(0.0f32.max(ground_speed - damping));
+            let side_ratio = dir_side.dot(&dir_velocity_xz).abs();
+            let damping_ratio = lerp(
+                0.5 - dir_velocity_xz.dot(&(dir_forward * self._acceleration.z)) * 0.5,
+                0.5 - dir_velocity_xz.dot(&(dir_side * self._acceleration.x)) * 0.5,
+                side_ratio
+            ) * 2.0;
+            let damping = controller_data._damping * damping_ratio * delta_time;
+            let damped_ground_speed = controller_data._max_ground_speed.min(0f32.max(ground_speed - damping)) / ground_speed;
 
-            self._velocity.x *= ground_speed;
-            self._velocity.z *= ground_speed;
+            self._velocity.x *= damped_ground_speed;
+            self._velocity.z *= damped_ground_speed;
         }
 
         // apply gravity
