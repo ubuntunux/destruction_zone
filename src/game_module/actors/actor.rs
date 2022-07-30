@@ -150,11 +150,10 @@ impl ActorController {
     }
 
     fn move_to_target(ship_controller: &mut ShipController, target_position: &Vector3<f32>, to_target: &Vector3<f32>, distance: f32, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
-        let velocity = ship_controller.get_velocity();
-        let ground_speed = (velocity.x * velocity.x + velocity.z * velocity.z).sqrt();
+        let ground_speed = ship_controller.get_ground_speed();
         let move_delta = ground_speed * delta_time;
         if move_delta < distance {
-            let braking_time = ground_speed / ship_controller._controller_data.borrow()._damping;
+            let braking_time = ship_controller.get_breaking_time();
             let braking_distance = ground_speed * 0.5 * braking_time;
             let front_dot_target = actor_front.dot(&to_target);
             if braking_distance < distance && 0.0 < front_dot_target {

@@ -55,6 +55,8 @@ pub struct ShipController {
     pub _prev_velocity: Vector3<f32>,
     pub _velocity: Vector3<f32>,
     pub _floating_height: f32,
+    pub _ground_speed: f32,
+    pub _breaking_time: f32,
     pub _acceleration: Vector3<f32>,
     pub _rotation_velocity: Vector2<f32>,
     pub _rotation_acceleration: Vector2<f32>,
@@ -77,6 +79,8 @@ impl ShipController {
             _prev_velocity: Vector3::zeros(),
             _velocity: Vector3::zeros(),
             _floating_height: floating_height,
+            _ground_speed: 0.0,
+            _breaking_time: 0.0,
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
@@ -88,6 +92,8 @@ impl ShipController {
     }
 
     pub fn boost_on(&mut self) { self._boost = true; }
+    pub fn get_ground_speed(&self) -> f32 { return self._ground_speed; }
+    pub fn get_breaking_time(&self) -> f32 { return self._breaking_time; }
     pub fn acceleration_forward(&mut self) { self._acceleration.z = 1.0; }
     pub fn acceleration_backward(&mut self) { self._acceleration.z = -1.0; }
     pub fn acceleration_left(&mut self) { self._acceleration.x = 1.0; }
@@ -135,37 +141,24 @@ impl ShipController {
         }
 
         // ground speed
+        self._ground_speed = 0.0;
+        self._breaking_time = 0.0;
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
-            let mut velocity_xz = Vector3::new(self._velocity.x, 0.0, self._velocity.z);
-
-            let mut forward_spped = dir_forward.dot(&velocity_xz).abs();
-            let mut forward_velocity = dir_forward * forward_spped;
-
-            let mut side_spped = dir_side.dot(&velocity_xz).abs();
-            let mut side_velocity = velocity_xz - forward_velocity;
-
-            if 0.0 < forward_spped {
-                forward_velocity /= forward_spped;
-                let forward_damping = (0.5 - forward_velocity.dot(&(dir_forward * self._acceleration.z))) * controller_data._damping * delta_time;
-                forward_spped = 0f32.max(forward_spped - forward_damping);
-                forward_velocity *= forward_spped;
+            let mut ground_velocity_dir = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
+            let mut ground_speed = ground_velocity_dir.norm();
+            if 0.0 < ground_speed {
+                ground_velocity_dir /= ground_speed;
             }
 
-            if 0.0 < side_spped {
-                side_velocity /= side_spped;
-                let side_damping = (0.5 - side_velocity.dot(&(dir_side * self._acceleration.x))) * controller_data._damping * delta_time;
-                side_spped = 0f32.max(side_spped - side_damping);
-                side_velocity *= side_spped;
-            }
+            // friction
+            let damping = controller_data._damping * delta_time;
+            ground_speed = controller_data._max_ground_speed.min(0f32.max(ground_speed - damping));
+            let ground_velocity = ground_velocity_dir * ground_speed;
 
-            velocity_xz = forward_velocity + side_velocity;
-            let ground_speed = velocity_xz.norm();
-            if controller_data._max_ground_speed < ground_speed {
-                velocity_xz = velocity_xz / ground_speed * controller_data._max_ground_speed;
-            }
-
-            self._velocity.x = velocity_xz.x;
-            self._velocity.z = velocity_xz.z;
+            self._velocity.x = ground_velocity.x;
+            self._velocity.z = ground_velocity.z;
+            self._ground_speed = ground_speed;
+            self._breaking_time = ground_speed / controller_data._damping;
         }
 
         // apply gravity
