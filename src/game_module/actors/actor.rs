@@ -161,13 +161,11 @@ impl ActorController {
         let mut ground_velocty = ship_controller.get_velocity().clone_owned();
         ground_velocty.y = 0.0;
 
-        let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
-        let to_target_move_delta = to_target_dot_velocity * delta_time;
+        let to_target_move_delta = to_target_dir.dot(&ground_velocty) * delta_time;
         if to_target_move_delta < distance {
-            let front_dot_to_target = actor_front.dot(&to_target_dir);
+            // forward velocity
             let front_dot_velocity = actor_front.dot(&ground_velocty);
-            let front_velocity = actor_front * front_dot_velocity;
-            if 0.0 <= front_dot_to_target {
+            if 0.0 <= actor_front.dot(&to_target_dir) {
                 let breaking_time = front_dot_velocity / ship_controller._controller_data.borrow()._damping;
                 let breaking_distance = front_dot_velocity * 0.5 * breaking_time;
                 if breaking_distance < distance {
@@ -177,7 +175,8 @@ impl ActorController {
                 ship_controller.acceleration_backward();
             }
 
-            let side_velocity = ground_velocty - front_velocity;
+            // side velocity
+            let side_velocity = ground_velocty - actor_front * front_dot_velocity;
             let side_velocity_speed = side_velocity.norm();
             let side_damping_amount = ship_controller._controller_data.borrow()._side_acceleration * delta_time;
             if side_damping_amount <= side_velocity_speed {
@@ -188,6 +187,7 @@ impl ActorController {
                 }
             }
         } else {
+            // arrives to traget
             ship_controller.set_velocity(&Vector3::zeros());
             let mut position = ship_controller.get_position().clone_owned();
             position.x = target_position.x;
