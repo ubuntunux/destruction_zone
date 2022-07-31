@@ -100,6 +100,7 @@ impl ShipController {
     pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
     pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
     pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
+    pub fn get_acceleration(&self) -> &Vector3<f32> { &self._acceleration }
     pub fn set_acceleration(&mut self, acceleration: &Vector3<f32>) { self._acceleration.clone_from(acceleration); }
     pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = (-1f32).max(1f32.min(acceleration)); }
     pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = (-1f32).max(1f32.min(acceleration)); }
@@ -145,13 +146,12 @@ impl ShipController {
         self._breaking_time = 0.0;
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
             let mut ground_velocity = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
-            let mut ground_speed = ground_velocity_dir.norm();
+            let ground_speed = ground_velocity.norm();
             if controller_data._max_ground_speed < ground_speed {
-                ground_speed = controller_data._max_ground_speed;
-                ground_velocity = ground_velocity_dir * controller_data._max_ground_speed;
+                ground_velocity = ground_velocity / ground_speed * controller_data._max_ground_speed;
             }
 
-            let mut acceleration_dir = Vector3::new(self._acceleration.x, 0.0, self._acceleration.z);
+            let mut acceleration_dir = self._acceleration.x * dir_forward + self._acceleration.z * dir_side;
             let acceleration_amount = acceleration_dir.norm();
             if 0.0 < acceleration_amount {
                 acceleration_dir /= acceleration_amount;
@@ -159,22 +159,21 @@ impl ShipController {
 
             let velocity_along_acceleration = acceleration_dir * 0f32.max(acceleration_dir.dot(&ground_velocity));
             let mut reduce_velocity_dir = ground_velocity - velocity_along_acceleration;
-            let reduce_velocity_speed = reduce_velocity_dir.norm();
+            let mut reduce_velocity_speed = reduce_velocity_dir.norm();
             if 0.0 < reduce_velocity_speed {
                 reduce_velocity_dir /= reduce_velocity_speed;
             }
 
             // friction
             let damping = controller_data._damping * delta_time;
-            let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * 0f32.max(reduce_velocity_speed - damping);
+            reduce_velocity_speed = 0f32.max(reduce_velocity_speed - damping);
+            let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * reduce_velocity_speed;
             let ground_speed = ground_velocity.norm();
-
-            log::info!("reduce_velocity_speed: {:?}", 0f32.max(reduce_velocity_speed - damping));
 
             self._velocity.x = ground_velocity.x;
             self._velocity.z = ground_velocity.z;
             self._ground_speed = ground_speed;
-            self._breaking_time = reduce_velocity_speed / controller_data._damping;
+            self._breaking_time = ground_speed / controller_data._damping;
         }
 
         // apply gravity
@@ -203,11 +202,9 @@ impl ShipController {
 
         // rotation speed
         if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
-            let mut rotation_speed: f32 = self._rotation_velocity.norm();
-            self._rotation_velocity /= rotation_speed;
+            let rotation_speed: f32 = self._rotation_velocity.norm();
             let rotation_damping = controller_data._rotation_damping * delta_time;
-            rotation_speed = controller_data._max_rotation_speed.min(0.0f32.max(rotation_speed - rotation_damping));
-            self._rotation_velocity *= rotation_speed;
+            self._rotation_velocity = &self._rotation_velocity / rotation_speed * controller_data._max_rotation_speed.min(0.0f32.max(rotation_speed - rotation_damping));
         }
 
         // roll

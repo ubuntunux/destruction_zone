@@ -128,20 +128,20 @@ impl ActorController {
         self._actor_controller_state = ActorControllerState::None;
     }
 
-    fn roate_to_target(ship_controller: &mut ShipController, to_target: &Vector3<f32>, actor_left: &Vector3<f32>, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
-        let front_dot_target = actor_front.dot(&to_target);
+    fn roate_to_target(ship_controller: &mut ShipController, to_target_dir: &Vector3<f32>, actor_left: &Vector3<f32>, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
+        let front_dot_target = actor_front.dot(&to_target_dir);
         let velocity_yaw = ship_controller.get_velocity_yaw();
         let yaw_delta = velocity_yaw * delta_time;
         let yaw_diff = (0.5 - front_dot_target * 0.5) * std::f32::consts::PI;
         if yaw_delta < yaw_diff {
-            let braking_time = velocity_yaw / ship_controller._controller_data.borrow()._rotation_damping;
-            let braking_distance = velocity_yaw * 0.5 * braking_time;
-            if braking_distance < yaw_diff {
-                let accel_yaw = if 0.0 <= actor_left.dot(&to_target) { 1.0 } else { -1.0 };
+            let breaking_time = velocity_yaw / ship_controller._controller_data.borrow()._rotation_damping;
+            let breaking_distance = velocity_yaw * 0.5 * breaking_time;
+            if breaking_distance < yaw_diff {
+                let accel_yaw = if 0.0 <= actor_left.dot(&to_target_dir) { 1.0 } else { -1.0 };
                 ship_controller.acceleration_yaw(accel_yaw);
             }
         } else {
-            let goal_yaw: f32 = to_target.x.atan2(to_target.z);
+            let goal_yaw: f32 = to_target_dir.x.atan2(to_target_dir.z);
             ship_controller.set_yaw(goal_yaw);
             ship_controller.set_velocity_yaw(0.0);
             return true;
@@ -149,15 +149,43 @@ impl ActorController {
         false
     }
 
-    fn move_to_target(ship_controller: &mut ShipController, target_position: &Vector3<f32>, to_target: &Vector3<f32>, distance: f32, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
-        let ground_speed = ship_controller.get_ground_speed();
-        let move_delta = ground_speed * delta_time;
-        if move_delta < distance {
-            let braking_time = ship_controller.get_breaking_time();
-            let braking_distance = ground_speed * 0.5 * braking_time;
-            let front_dot_target = actor_front.dot(&to_target);
-            if braking_distance < distance && 0.0 < front_dot_target {
-                ship_controller.acceleration_forward();
+    fn move_to_target(
+        ship_controller: &mut ShipController,
+        target_position: &Vector3<f32>,
+        to_target_dir: &Vector3<f32>,
+        distance: f32,
+        actor_front: &Vector3<f32>,
+        actor_left: &Vector3<f32>,
+        delta_time: f32
+    ) -> bool {
+        let mut ground_velocty = ship_controller.get_velocity().clone_owned();
+        ground_velocty.y = 0.0;
+
+        let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
+        let to_target_move_delta = to_target_dot_velocity * delta_time;
+        if to_target_move_delta < distance {
+            let front_dot_to_target = actor_front.dot(&to_target_dir);
+            let front_dot_velocity = actor_front.dot(&ground_velocty);
+            let front_velocity = actor_front * front_dot_velocity;
+            if 0.0 <= front_dot_to_target {
+                let breaking_time = front_dot_velocity / ship_controller._controller_data.borrow()._damping;
+                let breaking_distance = front_dot_velocity * 0.5 * breaking_time;
+                if breaking_distance < distance {
+                    ship_controller.acceleration_forward();
+                }
+            } else {
+                ship_controller.acceleration_backward();
+            }
+
+            let side_velocity = ground_velocty - front_velocity;
+            let side_velocity_speed = side_velocity.norm();
+            let side_damping_amount = ship_controller._controller_data.borrow()._side_acceleration * delta_time;
+            if side_damping_amount <= side_velocity_speed {
+                if 0.0 <= actor_left.dot(&side_velocity) {
+                    ship_controller.acceleration_right();
+                } else {
+                    ship_controller.acceleration_left();
+                }
             }
         } else {
             ship_controller.set_velocity(&Vector3::zeros());
@@ -173,11 +201,11 @@ impl ActorController {
     pub fn update_command_actor_move(&mut self, delta_time: f32) {
         if self._command_move || self._command_rotate {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
-            let mut to_target = &self._target_position - ship_controller.get_position();
-            to_target.y = 0.0;
-            let distance = to_target.norm();
+            let mut to_target_dir = &self._target_position - ship_controller.get_position();
+            to_target_dir.y = 0.0;
+            let distance = to_target_dir.norm();
             if 0.0 < distance {
-                to_target /= distance;
+                to_target_dir /= distance;
             } else {
                 self.cancle_command_of_actor();
                 return;
@@ -192,14 +220,14 @@ impl ActorController {
             left.normalize_mut();
 
             if self._command_rotate {
-                if ActorController::roate_to_target(ship_controller, &to_target, &left, &front, delta_time) {
+                if ActorController::roate_to_target(ship_controller, &to_target_dir, &left, &front, delta_time) {
                     self._command_rotate = false;
                 }
             }
 
             if self._command_move && false == self._command_rotate {
-                if ActorController::move_to_target(ship_controller, &self._target_position, &to_target, distance, &front, delta_time) {
-                    self._command_rotate = false;
+                if ActorController::move_to_target(ship_controller, &self._target_position, &to_target_dir, distance, &front, &left, delta_time) {
+                    self._command_move = false;
                 }
             }
         }
@@ -210,11 +238,11 @@ impl ActorController {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
             if self._command_rotate {
-                let mut to_target = &self._target_position - ship_controller.get_position();
-                to_target.y = 0.0;
-                let distance = to_target.norm();
+                let mut to_target_dir = &self._target_position - ship_controller.get_position();
+                to_target_dir.y = 0.0;
+                let distance = to_target_dir.norm();
                 if 0.0 < distance {
-                    to_target /= distance;
+                    to_target_dir /= distance;
 
                     let mut front = self.get_ship().get_transform().get_front().clone_owned();
                     front.y = 0.0;
@@ -223,7 +251,7 @@ impl ActorController {
                     let mut left = self.get_ship().get_transform().get_left().clone_owned();
                     left.y = 0.0;
                     left.normalize_mut();
-                    if ActorController::roate_to_target(ship_controller, &to_target, &left, &front, delta_time) {
+                    if ActorController::roate_to_target(ship_controller, &to_target_dir, &left, &front, delta_time) {
                         self._command_rotate = false;
                     }
                 } else {
