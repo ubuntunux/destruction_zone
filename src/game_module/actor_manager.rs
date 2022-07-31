@@ -99,7 +99,9 @@ impl ActorManager {
         let game_client = ptr_as_ref(self._game_client);
         for actor_ref in self._actors.values() {
             let actor = ptr_as_mut(actor_ref.as_ref());
-            actor.update_actor_controller(game_client, delta_time);
+            if actor._is_player_actor {
+                actor.update_actor_controller(game_client, delta_time);
+            }
         }
     }
 }

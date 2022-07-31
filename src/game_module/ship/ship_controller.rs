@@ -144,21 +144,37 @@ impl ShipController {
         self._ground_speed = 0.0;
         self._breaking_time = 0.0;
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
-            let mut ground_velocity_dir = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
+            let mut ground_velocity = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
             let mut ground_speed = ground_velocity_dir.norm();
-            if 0.0 < ground_speed {
-                ground_velocity_dir /= ground_speed;
+            if controller_data._max_ground_speed < ground_speed {
+                ground_speed = controller_data._max_ground_speed;
+                ground_velocity = ground_velocity_dir * controller_data._max_ground_speed;
+            }
+
+            let mut acceleration_dir = Vector3::new(self._acceleration.x, 0.0, self._acceleration.z);
+            let acceleration_amount = acceleration_dir.norm();
+            if 0.0 < acceleration_amount {
+                acceleration_dir /= acceleration_amount;
+            }
+
+            let velocity_along_acceleration = acceleration_dir * 0f32.max(acceleration_dir.dot(&ground_velocity));
+            let mut reduce_velocity_dir = ground_velocity - velocity_along_acceleration;
+            let reduce_velocity_speed = reduce_velocity_dir.norm();
+            if 0.0 < reduce_velocity_speed {
+                reduce_velocity_dir /= reduce_velocity_speed;
             }
 
             // friction
             let damping = controller_data._damping * delta_time;
-            ground_speed = controller_data._max_ground_speed.min(0f32.max(ground_speed - damping));
-            let ground_velocity = ground_velocity_dir * ground_speed;
+            let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * 0f32.max(reduce_velocity_speed - damping);
+            let ground_speed = ground_velocity.norm();
+
+            log::info!("reduce_velocity_speed: {:?}", 0f32.max(reduce_velocity_speed - damping));
 
             self._velocity.x = ground_velocity.x;
             self._velocity.z = ground_velocity.z;
             self._ground_speed = ground_speed;
-            self._breaking_time = ground_speed / controller_data._damping;
+            self._breaking_time = reduce_velocity_speed / controller_data._damping;
         }
 
         // apply gravity
