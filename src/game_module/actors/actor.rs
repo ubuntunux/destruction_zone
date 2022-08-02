@@ -11,7 +11,6 @@ use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
 use crate::game_module::ship::ship::{ShipInstance, ShipData};
 use crate::game_module::ship::ship_controller::{ ShipController };
-use rust_engine_3d::utilities::math::{ make_normalize_xz_with_norm };
 
 pub struct ActorData {
 }
@@ -171,9 +170,8 @@ impl ActorController {
             if breaking_distance < distance {
                 let forward = actor_front.dot(&to_target_dir);
                 let side = actor_left.dot(&to_target_dir);
-                let accel = (forward * forward + side * side).sqrt();
-                ship_controller.acceleration_forward(forward / accel);
-                ship_controller.acceleration_side(side / accel);
+                ship_controller.acceleration_forward(forward);
+                ship_controller.acceleration_side(side);
             }
         } else {
             // arrives to traget
@@ -215,7 +213,7 @@ impl ActorController {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
 
             if self._command_rotate {
-                let (to_target_dir, distance) = make_normalize_xz_with_norm(&(&self._target_position - ship_controller.get_position()));
+                let (to_target_dir, distance) = math::make_normalize_xz_with_norm(&(&self._target_position - ship_controller.get_position()));
                 if 0.0 < distance {
                     let front = math::make_normalize_xz(self.get_ship().get_transform().get_front());
                     let left = math::make_normalize_xz(self.get_ship().get_transform().get_left());
