@@ -2,7 +2,7 @@ use nalgebra::{ Vector2, Vector3 };
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
-use rust_engine_3d::utilities::math::{ TWO_PI };
+use rust_engine_3d::utilities::math::{TWO_PI, make_normalize_xz, make_normalize_xz_with_norm};
 use rust_engine_3d::utilities::system::RcRefCell;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::GRAVITY;
@@ -94,16 +94,13 @@ impl ShipController {
     pub fn boost_on(&mut self) { self._boost = true; }
     pub fn get_ground_speed(&self) -> f32 { return self._ground_speed; }
     pub fn get_breaking_time(&self) -> f32 { return self._breaking_time; }
-    pub fn acceleration_forward(&mut self) { self._acceleration.z = 1.0; }
-    pub fn acceleration_backward(&mut self) { self._acceleration.z = -1.0; }
-    pub fn acceleration_left(&mut self) { self._acceleration.x = 1.0; }
-    pub fn acceleration_right(&mut self) { self._acceleration.x = -1.0; }
-    pub fn acceleration_up(&mut self) { self._acceleration.y = 1.0; }
-    pub fn acceleration_down(&mut self) { self._acceleration.y = -1.0; }
+    pub fn acceleration_side(&mut self, acceleration: f32) { self._acceleration.x = acceleration; }
+    pub fn acceleration_vertical(&mut self, acceleration: f32) { self._acceleration.y = acceleration; }
+    pub fn acceleration_forward(&mut self, acceleration: f32) { self._acceleration.z = acceleration; }
     pub fn get_acceleration(&self) -> &Vector3<f32> { &self._acceleration }
     pub fn set_acceleration(&mut self, acceleration: &Vector3<f32>) { self._acceleration.clone_from(acceleration); }
-    pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = (-1f32).max(1f32.min(acceleration)); }
-    pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = (-1f32).max(1f32.min(acceleration)); }
+    pub fn acceleration_pitch(&mut self, acceleration: f32) { self._rotation_acceleration.x = acceleration; }
+    pub fn acceleration_yaw(&mut self, acceleration: f32) { self._rotation_acceleration.y = acceleration; }
     pub fn get_velocity_pitch(&self) -> f32 { self._rotation_velocity.x as f32 }
     pub fn set_velocity_pitch(&mut self, pitch: f32) { self._rotation_velocity.x = pitch; }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
@@ -125,8 +122,8 @@ impl ShipController {
 
         let controller_data = self._controller_data.borrow();
         let boost_acceleration = if self._boost { controller_data._boost_acceleration } else { 1.0 };
-        let dir_forward = Vector3::new(transform.get_front().x, 0.0f32, transform.get_front().z).normalize();
-        let dir_side = Vector3::new(transform.get_left().x, 0.0, transform.get_left().z).normalize();
+        let dir_forward = make_normalize_xz(transform.get_front());
+        let dir_side = make_normalize_xz(transform.get_left());
 
         if 0.0 != self._acceleration.x {
             self._velocity += dir_side * self._acceleration.x * controller_data._side_acceleration * boost_acceleration * delta_time;
@@ -151,22 +148,12 @@ impl ShipController {
                 ground_velocity = ground_velocity / ground_speed * controller_data._max_ground_speed;
             }
 
-            let mut acceleration_dir = self._acceleration.x * dir_forward + self._acceleration.z * dir_side;
-            let acceleration_amount = acceleration_dir.norm();
-            if 0.0 < acceleration_amount {
-                acceleration_dir /= acceleration_amount;
-            }
-
-            let velocity_along_acceleration = acceleration_dir * 0f32.max(acceleration_dir.dot(&ground_velocity));
-            let mut reduce_velocity_dir = ground_velocity - velocity_along_acceleration;
-            let mut reduce_velocity_speed = reduce_velocity_dir.norm();
-            if 0.0 < reduce_velocity_speed {
-                reduce_velocity_dir /= reduce_velocity_speed;
-            }
+            let acceleration_dir = make_normalize_xz(&(self._acceleration.x * &dir_side + self._acceleration.z * &dir_forward));
+            let velocity_along_acceleration = acceleration_dir * acceleration_dir.dot(&ground_velocity);
+            let (reduce_velocity_dir, mut reduce_velocity_speed) = make_normalize_xz_with_norm(&(&ground_velocity - &velocity_along_acceleration));
 
             // friction
-            let damping = controller_data._damping * delta_time;
-            reduce_velocity_speed = 0f32.max(reduce_velocity_speed - damping);
+            reduce_velocity_speed = 0f32.max(reduce_velocity_speed - controller_data._damping * delta_time);
             let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * reduce_velocity_speed;
             let ground_speed = ground_velocity.norm();
 

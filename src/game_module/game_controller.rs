@@ -258,29 +258,29 @@ impl GameController {
 
         let mut cancle_move = false;
         if hold_key_w {
-            player_ship_controller.acceleration_forward();
+            player_ship_controller.acceleration_forward(1.0);
             cancle_move = true;
         }
         else if hold_key_s {
-            player_ship_controller.acceleration_backward();
+            player_ship_controller.acceleration_forward(-1.0);
             cancle_move = true;
         }
 
         if hold_key_a {
-            player_ship_controller.acceleration_left();
+            player_ship_controller.acceleration_side(1.0);
             cancle_move = true;
         }
         else if hold_key_d {
-            player_ship_controller.acceleration_right();
+            player_ship_controller.acceleration_side(-1.0);
             cancle_move = true;
         }
 
         if hold_key_q {
-            player_ship_controller.acceleration_down();
+            player_ship_controller.acceleration_vertical(-1.0);
             cancle_move = true;
         }
         else if hold_key_e {
-            player_ship_controller.acceleration_up();
+            player_ship_controller.acceleration_vertical(1.0);
             cancle_move = true;
         }
 
