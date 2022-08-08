@@ -5,7 +5,7 @@ use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
 use rust_engine_3d::utilities::math;
-use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut};
+use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut, ptr_as_ref};
 use crate::application::project_scene_manager::ProjectSceneManager;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::game_constants::{CHECK_TARGET_DISTANCE_MAX};
@@ -164,14 +164,26 @@ impl ActorController {
         let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
         let to_target_move_delta = to_target_dot_velocity * delta_time;
         if to_target_move_delta < distance {
+            let controller_data = ptr_as_ref(ship_controller._controller_data.as_ptr());
             let ground_speed = ground_velocty.norm();
-            let breaking_time = ground_speed / ship_controller._controller_data.borrow()._damping;
+            let breaking_time = ground_speed / controller_data._damping;
             let breaking_distance = ground_speed * 0.5 * breaking_time;
             if breaking_distance < distance {
-                let forward = actor_front.dot(&to_target_dir);
-                let side = actor_left.dot(&to_target_dir);
-                ship_controller.acceleration_forward(forward);
-                ship_controller.acceleration_side(side);
+                let velocity_amount_along_target = ground_velocty.dot(to_target_dir);
+                let velocity_along_target = to_target_dir * velocity_amount_along_target;
+                let (side_velocity_dir_along_target, side_speed_along_target) = math::safe_normalize_with_norm(&(ground_velocty - velocity_along_target));
+                let mut side_move_time = side_speed_along_target / controller_data._side_acceleration;
+                let mut to_target_move_time = (2.0 * distance - velocity_amount_along_target) / controller_data._forward_acceleration;
+                let max_time = to_target_move_time.max(side_move_time);
+                if 0.0 < max_time {
+                    to_target_move_time /= max_time;
+                    side_move_time /= max_time;
+                }
+                let accel = math::safe_normalize(&(to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time));
+                let forward_accel = actor_front.dot(&accel);
+                let side_accel = actor_left.dot(&accel);
+                ship_controller.acceleration_forward(forward_accel);
+                ship_controller.acceleration_side(side_accel);
             }
         } else {
             // arrives to traget
