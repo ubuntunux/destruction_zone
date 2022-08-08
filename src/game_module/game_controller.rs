@@ -96,10 +96,6 @@ impl GameController {
         }
     }
     pub fn update_target_position(&mut self, project_scene_manager: &ProjectSceneManager, main_camera: &CameraObjectData, mouse_pos: &Vector2<i32>) {
-        // _target_position: Vector3::zeros(),
-        // _target_direction: Vector3::zeros(),
-        // _relative_target_position: Vector3::zeros(),
-
         let relative_pos = main_camera.convert_screen_to_relative_world(mouse_pos);
         if project_scene_manager.get_height_map_collision_point(main_camera._transform_object.get_position(), &relative_pos.normalize(), -1.0, &mut self._target_position) {
             self._target_direction = self._target_position.normalize();

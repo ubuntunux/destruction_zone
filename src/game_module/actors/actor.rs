@@ -160,13 +160,13 @@ impl ActorController {
         actor_left: &Vector3<f32>,
         delta_time: f32
     ) -> bool {
+        let controller_data = ptr_as_ref(ship_controller._controller_data.as_ptr());
         let ground_velocty = math::make_vector_xz(ship_controller.get_velocity());
         let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
         let to_target_move_delta = to_target_dot_velocity * delta_time;
         if to_target_move_delta < distance {
             let breaking_distance = ship_controller.get_breaking_distance();
             if breaking_distance < distance {
-                let controller_data = ptr_as_ref(ship_controller._controller_data.as_ptr());
                 let velocity_amount_along_target = ground_velocty.dot(to_target_dir);
                 let velocity_along_target = to_target_dir * velocity_amount_along_target;
                 let (side_velocity_dir_along_target, side_speed_along_target) = math::safe_normalize_with_norm(&(ground_velocty - velocity_along_target));
@@ -185,6 +185,7 @@ impl ActorController {
             }
         } else {
             // arrives to traget
+            log::info!("Arrive");
             ship_controller.set_velocity(&Vector3::zeros());
             ship_controller.set_position(&Vector3::new(target_position.x, ship_controller.get_position().y, target_position.z));
             return true;

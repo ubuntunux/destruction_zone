@@ -108,7 +108,7 @@ impl GameClient {
         let main_camera = project_scene_manager.get_main_camera_mut();
         let player_actor = ptr_as_mut(self.get_actor_manager().get_player_actor());
 
-        if 0 != mouse_move_data._mouse_pos_delta.x || 0 != mouse_move_data._mouse_pos_delta.y || 0 != scroll_delta.y {
+        if 0 != mouse_move_data._mouse_pos_delta.x || 0 != mouse_move_data._mouse_pos_delta.y || 0 != scroll_delta.y || keyboard_input_data.is_any_key_hold() {
             self._game_controller.update_target_position(project_scene_manager, main_camera, &mouse_move_data._mouse_pos);
         }
 
