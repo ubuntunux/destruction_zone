@@ -18,10 +18,8 @@ pub enum ShipControllerDataType {
 pub struct ShipControllerData {
     pub _controller_data_type: ShipControllerDataType,
     pub _max_ground_speed: f32,
-    pub _forward_acceleration: f32,
-    pub _side_acceleration: f32,
+    pub _ground_acceleration: f32,
     pub _floating_acceleration: f32,
-    pub _damping: f32,
     pub _side_step_roll: f32,
     pub _side_step_roll_speed: f32,
     pub _boost_acceleration: f32,
@@ -35,10 +33,8 @@ impl Default for ShipControllerData {
         ShipControllerData {
             _controller_data_type: ShipControllerDataType::ShipController,
             _max_ground_speed: 50.0,
-            _forward_acceleration: 50.0,
-            _side_acceleration: 50.0,
+            _ground_acceleration: 50.0,
             _floating_acceleration: 30.0,
-            _damping: 30.0,
             _side_step_roll: 0.3,
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
@@ -57,6 +53,7 @@ pub struct ShipController {
     pub _floating_height: f32,
     pub _ground_speed: f32,
     pub _breaking_time: f32,
+    pub _breaking_distance: f32,
     pub _acceleration: Vector3<f32>,
     pub _rotation_velocity: Vector2<f32>,
     pub _rotation_acceleration: Vector2<f32>,
@@ -81,6 +78,7 @@ impl ShipController {
             _floating_height: floating_height,
             _ground_speed: 0.0,
             _breaking_time: 0.0,
+            _breaking_distance: 0.0,
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
@@ -94,6 +92,7 @@ impl ShipController {
     pub fn boost_on(&mut self) { self._boost = true; }
     pub fn get_ground_speed(&self) -> f32 { return self._ground_speed; }
     pub fn get_breaking_time(&self) -> f32 { return self._breaking_time; }
+    pub fn get_breaking_distance(&self) -> f32 { return self._breaking_distance; }
     pub fn acceleration_side(&mut self, acceleration: f32) { self._acceleration.x = acceleration; }
     pub fn acceleration_vertical(&mut self, acceleration: f32) { self._acceleration.y = acceleration; }
     pub fn acceleration_forward(&mut self, acceleration: f32) { self._acceleration.z = acceleration; }
@@ -124,23 +123,26 @@ impl ShipController {
         let boost_acceleration = if self._boost { controller_data._boost_acceleration } else { 1.0 };
         let dir_forward = make_normalize_xz(transform.get_front());
         let dir_side = make_normalize_xz(transform.get_left());
+        let ground_acceleration = make_normalize_xz(&self._acceleration);
+        let floating_acceleration = self._acceleration.y;
 
-        if 0.0 != self._acceleration.x {
-            self._velocity += dir_side * self._acceleration.x * controller_data._side_acceleration * boost_acceleration * delta_time;
-            goal_roll = -controller_data._side_step_roll * self._acceleration.x;
+        if 0.0 != ground_acceleration.x || 0.0 != ground_acceleration.z {
+            self._velocity += dir_side * ground_acceleration.x * controller_data._ground_acceleration * boost_acceleration * delta_time;
+            goal_roll = -controller_data._side_step_roll * ground_acceleration.x;
         }
 
-        if 0.0 != self._acceleration.y {
-            self._velocity.y += self._acceleration.y * controller_data._floating_acceleration * boost_acceleration * delta_time;
+        if 0.0 != floating_acceleration {
+            self._velocity.y += floating_acceleration * controller_data._floating_acceleration * boost_acceleration * delta_time;
         }
 
-        if 0.0 != self._acceleration.z {
-            self._velocity += dir_forward * self._acceleration.z * controller_data._forward_acceleration * boost_acceleration * delta_time;
+        if 0.0 != ground_acceleration.z {
+            self._velocity += dir_forward * ground_acceleration.z * controller_data._ground_acceleration * boost_acceleration * delta_time;
         }
 
         // ground speed
         self._ground_speed = 0.0;
         self._breaking_time = 0.0;
+        self._breaking_distance = 0.0;
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
             let mut ground_velocity = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
             let ground_speed = ground_velocity.norm();
@@ -148,23 +150,24 @@ impl ShipController {
                 ground_velocity = ground_velocity / ground_speed * controller_data._max_ground_speed;
             }
 
-            let acceleration_dir = make_normalize_xz(&(self._acceleration.x * &dir_side + self._acceleration.z * &dir_forward));
+            let acceleration_dir = make_normalize_xz(&(ground_acceleration.x * &dir_side + ground_acceleration.z * &dir_forward));
             let velocity_along_acceleration = acceleration_dir * acceleration_dir.dot(&ground_velocity);
             let (reduce_velocity_dir, mut reduce_velocity_speed) = make_normalize_xz_with_norm(&(&ground_velocity - &velocity_along_acceleration));
 
             // friction
-            reduce_velocity_speed = 0f32.max(reduce_velocity_speed - controller_data._damping * delta_time);
+            reduce_velocity_speed = 0f32.max(reduce_velocity_speed - controller_data._ground_acceleration * delta_time);
             let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * reduce_velocity_speed;
             let ground_speed = ground_velocity.norm();
 
             self._velocity.x = ground_velocity.x;
             self._velocity.z = ground_velocity.z;
             self._ground_speed = ground_speed;
-            self._breaking_time = ground_speed / controller_data._damping;
+            self._breaking_time = ground_speed / controller_data._ground_acceleration;
+            self._breaking_distance = ground_speed * 0.5 * self._breaking_time;
         }
 
         // apply gravity
-        if 0.0 == self._acceleration.y && false == self._on_ground {
+        if 0.0 == floating_acceleration && false == self._on_ground {
             self._velocity.y -= GRAVITY * delta_time;
         }
 
