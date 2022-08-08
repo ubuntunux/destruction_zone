@@ -123,20 +123,18 @@ impl ShipController {
         let boost_acceleration = if self._boost { controller_data._boost_acceleration } else { 1.0 };
         let dir_forward = make_normalize_xz(transform.get_front());
         let dir_side = make_normalize_xz(transform.get_left());
-        let ground_acceleration = make_normalize_xz(&self._acceleration);
-        let floating_acceleration = self._acceleration.y;
 
-        if 0.0 != ground_acceleration.x || 0.0 != ground_acceleration.z {
-            self._velocity += dir_side * ground_acceleration.x * controller_data._ground_acceleration * boost_acceleration * delta_time;
-            goal_roll = -controller_data._side_step_roll * ground_acceleration.x;
+        if 0.0 != self._acceleration.x || 0.0 != self._acceleration.z {
+            self._velocity += dir_side * self._acceleration.x * controller_data._ground_acceleration * boost_acceleration * delta_time;
+            goal_roll = -controller_data._side_step_roll * self._acceleration.x;
         }
 
-        if 0.0 != floating_acceleration {
-            self._velocity.y += floating_acceleration * controller_data._floating_acceleration * boost_acceleration * delta_time;
+        if 0.0 != self._acceleration.y {
+            self._velocity.y += self._acceleration.y * controller_data._floating_acceleration * boost_acceleration * delta_time;
         }
 
-        if 0.0 != ground_acceleration.z {
-            self._velocity += dir_forward * ground_acceleration.z * controller_data._ground_acceleration * boost_acceleration * delta_time;
+        if 0.0 != self._acceleration.z {
+            self._velocity += dir_forward * self._acceleration.z * controller_data._ground_acceleration * boost_acceleration * delta_time;
         }
 
         // ground speed
@@ -150,7 +148,7 @@ impl ShipController {
                 ground_velocity = ground_velocity / ground_speed * controller_data._max_ground_speed;
             }
 
-            let acceleration_dir = make_normalize_xz(&(ground_acceleration.x * &dir_side + ground_acceleration.z * &dir_forward));
+            let acceleration_dir = make_normalize_xz(&(self._acceleration.x * &dir_side + self._acceleration.z * &dir_forward));
             let velocity_along_acceleration = acceleration_dir * acceleration_dir.dot(&ground_velocity);
             let (reduce_velocity_dir, mut reduce_velocity_speed) = make_normalize_xz_with_norm(&(&ground_velocity - &velocity_along_acceleration));
 
@@ -167,7 +165,7 @@ impl ShipController {
         }
 
         // apply gravity
-        if 0.0 == floating_acceleration && false == self._on_ground {
+        if 0.0 == self._acceleration.y && false == self._on_ground {
             self._velocity.y -= GRAVITY * delta_time;
         }
 
