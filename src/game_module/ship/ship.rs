@@ -10,6 +10,7 @@ use crate::game_module::actors::actor::ActorController;
 use crate::game_module::game_client::GameClient;
 use crate::game_module::ship::ship_controller::{ShipController, ShipControllerData};
 use crate::game_module::weapons::weapon::{WeaponTrait, WeaponData, BeamEmitter, WeaponSlotData};
+use rust_engine_3d::utilities::bounding_box::BoundingBox;
 
 #[derive(Serialize, Deserialize,Clone, Copy, Debug, PartialEq)]
 pub enum ShipDataType {
@@ -150,6 +151,7 @@ impl ShipInstance {
         &self._controller
     }
     pub fn get_controller_mut(&mut self) -> &mut ShipController { &mut self._controller }
+    pub fn get_bound_box(&self) -> &BoundingBox { &ptr_as_ref(self._render_object.as_ptr())._bound_box }
     pub fn get_transform(&self) -> &TransformObjectData { ptr_as_ref(self._transform_object) }
     pub fn get_transform_mut(&self) -> &mut TransformObjectData { ptr_as_mut(self._transform_object) }
     pub fn get_current_weapons(&self) -> &Vec<*const dyn WeaponTrait> {

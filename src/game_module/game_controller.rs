@@ -281,7 +281,7 @@ impl GameController {
         }
 
         if cancle_move {
-            player_actor.cancle_command_of_actor();
+            player_actor.clear_command_of_actor();
         }
     }
 
@@ -326,7 +326,7 @@ impl GameController {
                     cockpit_offset = -cockpit_offset;
                 }
 
-                let bound_box = &player_actor.get_ship()._render_object.borrow()._bound_box;
+                let bound_box = &player_actor.get_bound_box();
                 const BOUND_BOX_MIN: f32 = 2.0;
                 cockpit_offset = cockpit_offset * -BOUND_BOX_MIN.max(bound_box._size.z * 0.5);
                 cockpit_offset.y = BOUND_BOX_MIN.max(bound_box._size.y * 0.5);

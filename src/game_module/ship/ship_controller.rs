@@ -51,9 +51,6 @@ pub struct ShipController {
     pub _prev_velocity: Vector3<f32>,
     pub _velocity: Vector3<f32>,
     pub _floating_height: f32,
-    pub _ground_speed: f32,
-    pub _breaking_time: f32,
-    pub _breaking_distance: f32,
     pub _acceleration: Vector3<f32>,
     pub _rotation_velocity: Vector2<f32>,
     pub _rotation_acceleration: Vector2<f32>,
@@ -76,9 +73,6 @@ impl ShipController {
             _prev_velocity: Vector3::zeros(),
             _velocity: Vector3::zeros(),
             _floating_height: floating_height,
-            _ground_speed: 0.0,
-            _breaking_time: 0.0,
-            _breaking_distance: 0.0,
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
             _rotation_velocity: Vector2::zeros(),
@@ -90,9 +84,6 @@ impl ShipController {
     }
 
     pub fn boost_on(&mut self) { self._boost = true; }
-    pub fn get_ground_speed(&self) -> f32 { return self._ground_speed; }
-    pub fn get_breaking_time(&self) -> f32 { return self._breaking_time; }
-    pub fn get_breaking_distance(&self) -> f32 { return self._breaking_distance; }
     pub fn acceleration_side(&mut self, acceleration: f32) { self._acceleration.x = acceleration; }
     pub fn acceleration_vertical(&mut self, acceleration: f32) { self._acceleration.y = acceleration; }
     pub fn acceleration_forward(&mut self, acceleration: f32) { self._acceleration.z = acceleration; }
@@ -138,9 +129,6 @@ impl ShipController {
         }
 
         // ground speed
-        self._ground_speed = 0.0;
-        self._breaking_time = 0.0;
-        self._breaking_distance = 0.0;
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
             let mut ground_velocity = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
             let ground_speed = ground_velocity.norm();
@@ -155,13 +143,9 @@ impl ShipController {
             // friction
             reduce_velocity_speed = 0f32.max(reduce_velocity_speed - controller_data._ground_acceleration * delta_time);
             let ground_velocity = velocity_along_acceleration + reduce_velocity_dir * reduce_velocity_speed;
-            let ground_speed = ground_velocity.norm();
 
             self._velocity.x = ground_velocity.x;
             self._velocity.z = ground_velocity.z;
-            self._ground_speed = ground_speed;
-            self._breaking_time = ground_speed / controller_data._ground_acceleration;
-            self._breaking_distance = ground_speed * 0.5 * self._breaking_time;
         }
 
         // apply gravity

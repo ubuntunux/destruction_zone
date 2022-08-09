@@ -4,6 +4,7 @@ use nalgebra::Vector3;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::renderer::render_object::{RenderObjectData};
 use rust_engine_3d::renderer::transform_object::TransformObjectData;
+use rust_engine_3d::utilities::bounding_box::BoundingBox;
 use rust_engine_3d::utilities::math;
 use rust_engine_3d::utilities::system::{RcRefCell, ptr_as_mut, ptr_as_ref};
 use crate::application::project_scene_manager::ProjectSceneManager;
@@ -75,9 +76,7 @@ impl ActorController {
     pub fn get_actor_data_mut(&mut self) -> &mut ActorData {
         &mut self._actor_data
     }
-    pub fn get_ship(&self) -> &ShipInstance {
-        &self._ship
-    }
+    pub fn get_ship(&self) -> &ShipInstance { &self._ship }
     pub fn get_ship_mut(&mut self) -> &mut ShipInstance {
         &mut self._ship
     }
@@ -87,13 +86,14 @@ impl ActorController {
     pub fn get_controller_mut(&mut self) -> &mut ShipController {
         &mut self._ship._controller
     }
+    pub fn get_bound_box(&self) -> &BoundingBox { self._ship.get_bound_box() }
     pub fn get_transform(&self) -> &TransformObjectData { self._ship.get_transform() }
     pub fn get_transform_mut(&self) -> &mut TransformObjectData {
         self._ship.get_transform_mut()
     }
     pub fn get_velocity(&self) -> &Vector3<f32> { self.get_controller().get_velocity() }
     pub fn can_manual_controll(&self) -> bool {
-        false == self._command_move && false == self._command_rotate
+        ActorControllerState::None == self._actor_controller_state
     }
 
     pub fn manual_actor_attack(&mut self, game_client: &GameClient) {
@@ -108,7 +108,7 @@ impl ActorController {
     }
 
     pub fn set_command_actor_attack(&mut self, target_position: &Vector3<f32>) {
-        self.cancle_command_of_actor();
+        self.clear_command_of_actor();
         self._actor_controller_state = ActorControllerState::Attack;
         self._command_attack = true;
         self._command_rotate = true;
@@ -116,14 +116,14 @@ impl ActorController {
     }
 
     pub fn set_command_actor_move(&mut self, target_position: &Vector3<f32>) {
-        self.cancle_command_of_actor();
+        self.clear_command_of_actor();
         self._actor_controller_state = ActorControllerState::Move;
         self._command_move = true;
         self._command_rotate = true;
         self._target_position.clone_from(target_position);
     }
 
-    pub fn cancle_command_of_actor(&mut self) {
+    pub fn clear_command_of_actor(&mut self) {
         self._actor_controller_state = ActorControllerState::None;
         self._command_attack = false;
         self._command_move = false;
@@ -142,18 +142,18 @@ impl ActorController {
                 let accel_yaw = if 0.0 <= actor_left.dot(&to_target_dir) { 1.0 } else { -1.0 };
                 ship_controller.acceleration_yaw(accel_yaw);
             }
-        } else {
-            let goal_yaw: f32 = to_target_dir.x.atan2(to_target_dir.z);
-            ship_controller.set_yaw(goal_yaw);
-            ship_controller.set_velocity_yaw(0.0);
-            return true;
+            return false;
         }
-        false
+
+        // arrive
+        let goal_yaw: f32 = to_target_dir.x.atan2(to_target_dir.z);
+        ship_controller.set_yaw(goal_yaw);
+        ship_controller.set_velocity_yaw(0.0);
+        return true;
     }
 
     fn move_to_target(
         ship_controller: &mut ShipController,
-        target_position: &Vector3<f32>,
         to_target_dir: &Vector3<f32>,
         distance: f32,
         actor_front: &Vector3<f32>,
@@ -164,8 +164,12 @@ impl ActorController {
         let ground_velocty = math::make_vector_xz(ship_controller.get_velocity());
         let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
         let to_target_move_delta = to_target_dot_velocity * delta_time;
-        if to_target_move_delta < distance {
-            let breaking_distance = ship_controller.get_breaking_distance();
+        if distance <= to_target_move_delta {
+            // arrive
+            return true;
+        } else {
+            let breaking_time = to_target_move_delta.abs() / controller_data._ground_acceleration;
+            let breaking_distance = to_target_move_delta.abs() * 0.5 * breaking_time;
             if breaking_distance < distance {
                 let velocity_amount_along_target = ground_velocty.dot(to_target_dir);
                 let velocity_along_target = to_target_dir * velocity_amount_along_target;
@@ -177,20 +181,16 @@ impl ActorController {
                     to_target_move_time /= max_time;
                     side_move_time /= max_time;
                 }
-                let accel = to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time;
+                let accel = math::safe_normalize(&(to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time));
                 let forward_accel = actor_front.dot(&accel);
                 let side_accel = actor_left.dot(&accel);
                 ship_controller.acceleration_forward(forward_accel);
                 ship_controller.acceleration_side(side_accel);
+                return false;
             }
-        } else {
-            // arrives to traget
-            log::info!("Arrive");
-            ship_controller.set_velocity(&Vector3::zeros());
-            ship_controller.set_position(&Vector3::new(target_position.x, ship_controller.get_position().y, target_position.z));
-            return true;
         }
-        false
+
+        true
     }
 
     pub fn update_command_actor_move(&mut self, delta_time: f32) {
@@ -198,7 +198,7 @@ impl ActorController {
             let ship_controller = ptr_as_mut(&self.get_ship()._controller);
             let (to_target_dir, distance) = math::make_normalize_xz_with_norm(&(&self._target_position - ship_controller.get_position()));
             if distance <= 0.0 {
-                self.cancle_command_of_actor();
+                self.clear_command_of_actor();
                 return;
             }
 
@@ -212,9 +212,22 @@ impl ActorController {
             }
 
             if self._command_move {
-                if ActorController::move_to_target(ship_controller, &self._target_position, &to_target_dir, distance, &front, &left, delta_time) {
+                TODO: Check self.get_bound_box()._radius arrive
+
+                if ActorController::move_to_target(
+                    ship_controller,
+                    &to_target_dir,
+                    distance,
+                    &front,
+                    &left,
+                    delta_time
+                ) {
                     self._command_move = false;
                 }
+            }
+
+            if false == self._command_move && false == self._command_rotate {
+                self.clear_command_of_actor();
             }
         }
     }
@@ -244,7 +257,7 @@ impl ActorController {
                 self._ship.ship_fire(game_client, &fire_start, &fire_dir, &target_position);
 
                 // stop
-                self.cancle_command_of_actor();
+                self.clear_command_of_actor();
             }
         }
     }

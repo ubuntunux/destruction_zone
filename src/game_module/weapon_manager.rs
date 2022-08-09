@@ -79,7 +79,7 @@ impl WeaponManager {
                     let actor = ptr_as_mut(actor_wrapper.as_ref());
                     if is_player_actor != actor.is_player_actor() {
                         let is_hit = {
-                            let actor_bound_box = &actor.get_ship()._render_object.borrow()._bound_box;
+                            let actor_bound_box = actor.get_bound_box();
                             let to_actor = &actor_bound_box._center - bullet_position;
                             to_actor.norm_squared() <= (actor_bound_box._radius * actor_bound_box._radius)
                         };
