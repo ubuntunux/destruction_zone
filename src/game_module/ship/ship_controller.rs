@@ -50,6 +50,7 @@ pub struct ShipController {
     pub _controller_data: RcRefCell<ShipControllerData>,
     pub _prev_velocity: Vector3<f32>,
     pub _velocity: Vector3<f32>,
+    pub _ground_speed: f32,
     pub _floating_height: f32,
     pub _acceleration: Vector3<f32>,
     pub _rotation_velocity: Vector2<f32>,
@@ -72,6 +73,7 @@ impl ShipController {
             _controller_data: controller_data.clone(),
             _prev_velocity: Vector3::zeros(),
             _velocity: Vector3::zeros(),
+            _ground_speed: 0.0,
             _floating_height: floating_height,
             _acceleration: Vector3::zeros(),
             _rotation_acceleration: Vector2::zeros(),
@@ -95,6 +97,7 @@ impl ShipController {
     pub fn set_velocity_pitch(&mut self, pitch: f32) { self._rotation_velocity.x = pitch; }
     pub fn get_velocity_yaw(&self) -> f32 { self._rotation_velocity.y as f32 }
     pub fn set_velocity_yaw(&mut self, yaw: f32) { self._rotation_velocity.y = yaw; }
+    pub fn get_ground_speed(&self) -> f32 { self._ground_speed }
     pub fn get_velocity(&self) -> &Vector3<f32> { &self._velocity }
     pub fn set_velocity(&mut self, velocity: &Vector3<f32>) { self._velocity.clone_from(velocity); }
     pub fn get_position(&self) -> &Vector3<f32> { &self._position }
@@ -131,9 +134,10 @@ impl ShipController {
         // ground speed
         if 0.0 != self._velocity.x || 0.0 != self._velocity.z {
             let mut ground_velocity = Vector3::new(self._velocity.x, 0f32, self._velocity.z);
-            let ground_speed = ground_velocity.norm();
+            let mut ground_speed = ground_velocity.norm();
             if controller_data._max_ground_speed < ground_speed {
                 ground_velocity = ground_velocity / ground_speed * controller_data._max_ground_speed;
+                ground_speed = controller_data._max_ground_speed;
             }
 
             let acceleration_dir = make_normalize_xz(&(self._acceleration.x * &dir_side + self._acceleration.z * &dir_forward));
@@ -146,6 +150,7 @@ impl ShipController {
 
             self._velocity.x = ground_velocity.x;
             self._velocity.z = ground_velocity.z;
+            self._ground_speed = ground_speed;
         }
 
         // apply gravity

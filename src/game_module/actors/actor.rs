@@ -109,6 +109,7 @@ impl ActorController {
 
     pub fn set_command_actor_attack(&mut self, target_position: &Vector3<f32>) {
         self.clear_command_of_actor();
+        log::info!("set_command_actor_attack");
         self._actor_controller_state = ActorControllerState::Attack;
         self._command_attack = true;
         self._command_rotate = true;
@@ -117,6 +118,7 @@ impl ActorController {
 
     pub fn set_command_actor_move(&mut self, target_position: &Vector3<f32>) {
         self.clear_command_of_actor();
+        log::info!("set_command_actor_move");
         self._actor_controller_state = ActorControllerState::Move;
         self._command_move = true;
         self._command_rotate = true;
@@ -124,6 +126,7 @@ impl ActorController {
     }
 
     pub fn clear_command_of_actor(&mut self) {
+        log::info!("clear_command_of_actor");
         self._actor_controller_state = ActorControllerState::None;
         self._command_attack = false;
         self._command_move = false;
@@ -158,39 +161,35 @@ impl ActorController {
         distance: f32,
         actor_front: &Vector3<f32>,
         actor_left: &Vector3<f32>,
-        delta_time: f32
+        bound_box_radius: f32
     ) -> bool {
         let controller_data = ptr_as_ref(ship_controller._controller_data.as_ptr());
         let ground_velocty = math::make_vector_xz(ship_controller.get_velocity());
-        let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
-        let to_target_move_delta = to_target_dot_velocity * delta_time;
-        if distance <= to_target_move_delta {
-            // arrive
+        let ground_speed = ship_controller.get_ground_speed();
+        let breaking_time = ground_speed / controller_data._ground_acceleration;
+        let breaking_distance = ground_speed * 0.5 * breaking_time;
+        if distance.max(breaking_distance) <= bound_box_radius {
             return true;
-        } else {
-            let breaking_time = to_target_move_delta.abs() / controller_data._ground_acceleration;
-            let breaking_distance = to_target_move_delta.abs() * 0.5 * breaking_time;
-            if breaking_distance < distance {
-                let velocity_amount_along_target = ground_velocty.dot(to_target_dir);
-                let velocity_along_target = to_target_dir * velocity_amount_along_target;
-                let (side_velocity_dir_along_target, side_speed_along_target) = math::safe_normalize_with_norm(&(ground_velocty - velocity_along_target));
-                let mut side_move_time = side_speed_along_target / controller_data._ground_acceleration;
-                let mut to_target_move_time = (2.0 * distance - velocity_amount_along_target) / controller_data._ground_acceleration;
-                let max_time = to_target_move_time.max(side_move_time);
-                if 0.0 < max_time {
-                    to_target_move_time /= max_time;
-                    side_move_time /= max_time;
-                }
-                let accel = math::safe_normalize(&(to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time));
-                let forward_accel = actor_front.dot(&accel);
-                let side_accel = actor_left.dot(&accel);
-                ship_controller.acceleration_forward(forward_accel);
-                ship_controller.acceleration_side(side_accel);
-                return false;
-            }
         }
 
-        true
+        if breaking_distance <= distance {
+            let to_target_dot_velocity = to_target_dir.dot(&ground_velocty);
+            let velocity_along_target = to_target_dir * to_target_dot_velocity;
+            let (side_velocity_dir_along_target, side_speed_along_target) = math::safe_normalize_with_norm(&(ground_velocty - velocity_along_target));
+            let mut side_move_time = side_speed_along_target / controller_data._ground_acceleration;
+            let mut to_target_move_time = (2.0 * distance - to_target_dot_velocity) / controller_data._ground_acceleration;
+            let max_time = to_target_move_time.max(side_move_time);
+            if 0.0 < max_time {
+                to_target_move_time /= max_time;
+                side_move_time /= max_time;
+            }
+            let accel = math::safe_normalize(&(to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time));
+            let forward_accel = actor_front.dot(&accel);
+            let side_accel = actor_left.dot(&accel);
+            ship_controller.acceleration_forward(forward_accel);
+            ship_controller.acceleration_side(side_accel);
+        }
+        false
     }
 
     pub fn update_command_actor_move(&mut self, delta_time: f32) {
@@ -212,15 +211,13 @@ impl ActorController {
             }
 
             if self._command_move {
-                TODO: Check self.get_bound_box()._radius arrive
-
                 if ActorController::move_to_target(
                     ship_controller,
                     &to_target_dir,
                     distance,
                     &front,
                     &left,
-                    delta_time
+                    self.get_bound_box()._radius
                 ) {
                     self._command_move = false;
                 }
