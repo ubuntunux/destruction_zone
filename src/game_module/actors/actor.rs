@@ -135,24 +135,30 @@ impl ActorController {
 
     fn roate_to_target(ship_controller: &mut ShipController, to_target_dir: &Vector3<f32>, actor_left: &Vector3<f32>, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
         let front_dot_target = actor_front.dot(&to_target_dir);
-        let velocity_yaw = ship_controller.get_velocity_yaw();
+        let velocity_yaw = ship_controller.get_velocity_yaw().abs();
         let yaw_delta = velocity_yaw * delta_time;
         let yaw_diff = (0.5 - front_dot_target * 0.5) * std::f32::consts::PI;
-        if yaw_delta < yaw_diff {
-            let breaking_time = velocity_yaw / ship_controller._controller_data.borrow()._rotation_damping;
-            let breaking_distance = velocity_yaw * 0.5 * breaking_time;
-            if breaking_distance < yaw_diff {
-                let accel_yaw = if 0.0 <= actor_left.dot(&to_target_dir) { 1.0 } else { -1.0 };
-                ship_controller.acceleration_yaw(accel_yaw);
-            }
-            return false;
+
+        let damping = ship_controller._controller_data.borrow()._rotation_damping;
+        let breaking_time = velocity_yaw / damping;
+        let breaking_distance = velocity_yaw * 0.5 * breaking_time;
+        if yaw_diff <= yaw_delta {
+            log::info!("Done:: yaw_diff: {:?}, velocity_yaw: {:?}, yaw_delta: {:?}, breaking_distance: {:?}, damping: {:?}", yaw_diff, velocity_yaw, yaw_delta, breaking_distance, damping);
+            let goal_yaw: f32 = to_target_dir.x.atan2(to_target_dir.z);
+            ship_controller.set_yaw(goal_yaw);
+            ship_controller.set_velocity_yaw(0.0);
+            return true;
         }
 
-        // arrive
-        let goal_yaw: f32 = to_target_dir.x.atan2(to_target_dir.z);
-        ship_controller.set_yaw(goal_yaw);
-        ship_controller.set_velocity_yaw(0.0);
-        return true;
+        if breaking_distance < yaw_diff {
+            log::info!("Accel:: yaw_diff: {:?}, velocity_yaw: {:?}, yaw_delta: {:?}, breaking_distance: {:?}, damping: {:?}", yaw_diff, velocity_yaw, yaw_delta, breaking_distance, damping);
+            let accel_yaw = if 0.0 <= actor_left.dot(&to_target_dir) { 1.0 } else { -1.0 };
+            ship_controller.acceleration_yaw(accel_yaw);
+        } else {
+            log::info!("Breaking:: yaw_diff: {:?}, velocity_yaw: {:?}, yaw_delta: {:?}, breaking_distance: {:?}, damping: {:?}", yaw_diff, velocity_yaw, yaw_delta, breaking_distance, damping);
+        }
+
+        false
     }
 
     fn move_to_target(

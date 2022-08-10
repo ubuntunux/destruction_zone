@@ -179,9 +179,16 @@ impl ShipController {
 
         // rotation speed
         if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
-            let rotation_speed: f32 = self._rotation_velocity.norm();
-            let rotation_damping = controller_data._rotation_damping * delta_time;
-            self._rotation_velocity = &self._rotation_velocity / rotation_speed * controller_data._max_rotation_speed.min(0.0f32.max(rotation_speed - rotation_damping));
+            let mut rotation_speed: f32 = self._rotation_velocity.norm();
+            if controller_data._max_rotation_speed < rotation_speed {
+                self._rotation_velocity = &self._rotation_velocity / rotation_speed * controller_data._max_rotation_speed;
+                rotation_speed = controller_data._max_rotation_speed;
+            }
+
+            if 0.0 == self._rotation_acceleration.x && 0.0 == self._rotation_acceleration.y {
+                let rotation_damping = controller_data._rotation_damping * delta_time;
+                self._rotation_velocity = &self._rotation_velocity / rotation_speed * 0.0f32.max(rotation_speed - rotation_damping);
+            }
         }
 
         // roll
