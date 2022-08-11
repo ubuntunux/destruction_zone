@@ -6,5 +6,4 @@
 "_side_step_roll_speed":2.0,
 "_boost_acceleration":1.5,
 "_max_rotation_speed":10.0,
-"_rotation_acceleration":100.0,
-"_rotation_damping":10.0}
+"_rotation_acceleration":100.0}

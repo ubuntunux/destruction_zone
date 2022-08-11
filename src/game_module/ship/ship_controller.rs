@@ -24,8 +24,7 @@ pub struct ShipControllerData {
     pub _side_step_roll_speed: f32,
     pub _boost_acceleration: f32,
     pub _max_rotation_speed: f32,
-    pub _rotation_acceleration: f32,
-    pub _rotation_damping: f32,
+    pub _rotation_acceleration: f32
 }
 
 impl Default for ShipControllerData {
@@ -39,8 +38,7 @@ impl Default for ShipControllerData {
             _side_step_roll_speed: 2.0,
             _boost_acceleration: 1.5,
             _max_rotation_speed: 10.0,
-            _rotation_acceleration: 100.0,
-            _rotation_damping: 10.0,
+            _rotation_acceleration: 100.0
         }
     }
 }
@@ -172,23 +170,18 @@ impl ShipController {
             self._position = position;
         }
 
-        // rotation acceleration
         if 0.0 != self._rotation_acceleration.x || 0.0 != self._rotation_acceleration.y {
+            // rotation acceleration
             self._rotation_velocity += &self._rotation_acceleration * controller_data._rotation_acceleration * delta_time;
-        }
-
-        // rotation speed
-        if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
-            let mut rotation_speed: f32 = self._rotation_velocity.norm();
+            let rotation_speed: f32 = self._rotation_velocity.norm();
             if controller_data._max_rotation_speed < rotation_speed {
                 self._rotation_velocity = &self._rotation_velocity / rotation_speed * controller_data._max_rotation_speed;
-                rotation_speed = controller_data._max_rotation_speed;
             }
-
-            if 0.0 == self._rotation_acceleration.x && 0.0 == self._rotation_acceleration.y {
-                let rotation_damping = controller_data._rotation_damping * delta_time;
-                self._rotation_velocity = &self._rotation_velocity / rotation_speed * 0.0f32.max(rotation_speed - rotation_damping);
-            }
+        } else if 0.0 != self._rotation_velocity.x || 0.0 != self._rotation_velocity.y {
+            // rotation damping
+            let rotation_speed: f32 = self._rotation_velocity.norm();
+            let rotation_damping = controller_data._rotation_acceleration * delta_time;
+            self._rotation_velocity = &self._rotation_velocity / rotation_speed * 0.0f32.max(rotation_speed - rotation_damping);
         }
 
         // roll
