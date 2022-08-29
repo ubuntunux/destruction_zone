@@ -1,5 +1,5 @@
 {"material_name": "common/render_static_object",
- "material_parameters": {
+ "material_resources": {
     "textureBase": "sponza/sponza_arch_diff",
     "textureMaterial": "sponza/sponza_arch_spec",
     "textureNormal": "sponza/sponza_arch_ddn"

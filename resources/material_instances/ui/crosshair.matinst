@@ -1,6 +1,6 @@
 {
     "material_name": "ui/render_ui",
-    "material_parameters": {
+    "material_resources": {
         "texture_normal": "ui/crosshair"
     }
 }

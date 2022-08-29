@@ -1,5 +1,5 @@
 {"material_name": "effect/render_particle",
- "material_parameters": {
+ "material_resources": {
     "textureBase": "sponza/lion",
     "textureMaterial": "sponza/lion_spec",
     "textureNormal": "sponza/lion_ddn"
