@@ -3,6 +3,7 @@ use serde::{ Serialize, Deserialize };
 use crate::game_module::level_datas::spawn_point::{ SpawnPointType, ShipSpawnPointData };
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(default)]
 pub struct LevelData {
     pub _spawn_point_datas: Vec<SpawnPointType>,
 }

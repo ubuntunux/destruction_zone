@@ -41,6 +41,7 @@ type EffectIDMap = HashMap<String, i64>;
 type RenderObjectMap = HashMap<String, RcRefCell<RenderObjectData>>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(default)]
 pub struct SceneDataCreateInfo {
     pub _sea_height: f32,
     pub _cameras: HashMap<String, CameraCreateInfo>,

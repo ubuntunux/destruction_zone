@@ -19,6 +19,7 @@ pub enum ShipDataType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct ShipDataCreateInfo {
     pub _ship_type: ShipDataType,
     pub _model_data_name: String,

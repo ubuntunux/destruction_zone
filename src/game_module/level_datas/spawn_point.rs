@@ -9,6 +9,7 @@ pub enum SpawnPointType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(default)]
 pub struct ShipSpawnPointData {
     pub _ship_data_name: String,
     pub _position: Vector3<f32>,

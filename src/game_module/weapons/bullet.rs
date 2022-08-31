@@ -27,6 +27,7 @@ pub const BULLET_TYPES: [BulletType; 5] = [
 ];
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct BulletData {
     pub _bullet_type: BulletType,
     pub _shield_damage: f32,

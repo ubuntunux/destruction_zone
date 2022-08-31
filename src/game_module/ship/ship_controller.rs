@@ -15,6 +15,7 @@ pub enum ShipControllerDataType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct ShipControllerData {
     pub _controller_data_type: ShipControllerDataType,
     pub _max_ground_speed: f32,

@@ -29,6 +29,7 @@ pub const WEAPON_TYPES: [WeaponType; 5] = [
 ];
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct WeaponSlotData {
     pub _position: Vector3<f32>,
     pub _rotation: Vector3<f32>,
@@ -46,6 +47,7 @@ impl Default for WeaponSlotData {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(default)]
 pub struct WeaponDataCreateInfo {
     pub _weapon_type: WeaponType,
     pub _rate_of_fire: f32,
