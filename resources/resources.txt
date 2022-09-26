@@ -40,7 +40,6 @@ resources/engine_resources/materials/common/render_ssr_resolve.mat
 resources/engine_resources/materials/common/clear_framebuffer.mat
 resources/engine_resources/materials/common/clear_render_target.mat
 resources/engine_resources/materials/common/render_motion_blur.mat
-resources/engine_resources/materials/default.txt
 resources/engine_resources/materials/precomputed_atmosphere/precomputed_atmosphere.mat
 resources/engine_resources/materials/fft_ocean/render_fft_ocean.mat
 resources/engine_resources/materials/effect/render_particle.mat

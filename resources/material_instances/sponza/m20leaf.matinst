@@ -1,5 +1,5 @@
 {"material_name": "common/render_static_object",
- "material_resources": {
+ "material_parameters": {
     "textureBase": "sponza/sponza_thorn_diff",
     "textureMaterial": "sponza/sponza_thorn_spec",
     "textureNormal": "sponza/sponza_thorn_ddn"

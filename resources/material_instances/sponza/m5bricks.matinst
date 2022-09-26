@@ -1,5 +1,5 @@
 {"material_name": "common/render_static_object",
- "material_resources": {
+ "material_parameters": {
     "textureBase": "sponza/spnza_bricks_a_diff",
     "textureMaterial": "sponza/spnza_bricks_a_spec",
     "textureNormal": "sponza/spnza_bricks_a_ddn"
