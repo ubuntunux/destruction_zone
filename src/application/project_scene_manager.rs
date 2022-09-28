@@ -300,8 +300,9 @@ impl ProjectSceneManager {
     ) {
         render_elements.clear();
         render_shadow_elements.clear();
+
         for (_key, render_object_data) in render_object_map.iter() {
-            let render_object_data_ref = &render_object_data.borrow();
+            let render_object_data_ref = &render_object_data.borrow_mut();
             let mode_data = render_object_data_ref.get_model_data().borrow();
             let mesh_data = mode_data.get_mesh_data().borrow();
             let geometry_datas = mesh_data.get_geomtry_datas();
