@@ -2,25 +2,21 @@ use std::collections::HashMap;
 use std::path::{ PathBuf };
 use std::rc::Rc;
 
-use nalgebra::{
-    Vector2,
-    Vector3,
-    Vector4
-};
+use nalgebra::{Vector2, Vector3, Vector4, Matrix4};
 use serde::{ Serialize, Deserialize };
 
 use rust_engine_3d::constants;
 use rust_engine_3d::application::application::EngineApplication;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
+use rust_engine_3d::constants::MAX_TRANSFORM_COUNT;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::effect::effect_data::{ EffectCreateInfo, EffectInstance };
 use rust_engine_3d::renderer::renderer_context::RendererContext;
 use rust_engine_3d::renderer::camera::{ CameraCreateInfo, CameraObjectData};
-use rust_engine_3d::renderer::light::{ DirectionalLightCreateInfo, DirectionalLightData };
+use rust_engine_3d::renderer::light::{ DirectionalLightCreateInfo, DirectionalLightData, LightConstants };
+use rust_engine_3d::renderer::renderer_data::{RendererData, RenderObjectType};
 use rust_engine_3d::renderer::render_element::{ RenderElementData };
 use rust_engine_3d::renderer::render_object::{ RenderObjectCreateInfo, RenderObjectData };
-use rust_engine_3d::renderer::light::LightConstants;
-use rust_engine_3d::renderer::renderer_data::RendererData;
 use rust_engine_3d::resource::resource::{
     TEXTURE_SOURCE_DIRECTORY,
     EXT_IMAGE_SOURCE,
@@ -28,7 +24,7 @@ use rust_engine_3d::resource::resource::{
     EngineResources,
     ProjectResourcesBase,
 };
-use rust_engine_3d::utilities::system::{self, RcRefCell, newRcRefCell, ptr_as_mut};
+use rust_engine_3d::utilities::system::{self, RcRefCell, newRcRefCell, ptr_as_mut, ptr_as_ref};
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::level_datas::level_data::LevelData;
@@ -88,6 +84,8 @@ pub struct ProjectSceneManager {
     pub _static_shadow_render_elements: Vec<RenderElementData>,
     pub _skeletal_render_elements: Vec<RenderElementData>,
     pub _skeletal_shadow_render_elements: Vec<RenderElementData>,
+    pub _render_element_transform_count: usize,
+    pub _render_element_transform_metrices: Vec<Matrix4<f32>>,
     pub _level_data: LevelData,
 }
 
@@ -102,6 +100,8 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn get_static_shadow_render_elements(&self) -> &Vec<RenderElementData> { &self._static_shadow_render_elements }
     fn get_skeletal_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_render_elements }
     fn get_skeletal_shadow_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_shadow_render_elements }
+    fn get_render_element_transform_count(&self) -> usize { self._render_element_transform_count }
+    fn get_render_element_transform_metrices(&self) -> &Vec<Matrix4<f32>> { &self._render_element_transform_metrices }
 }
 
 impl ProjectSceneManager {
@@ -158,6 +158,8 @@ impl ProjectSceneManager {
             _static_shadow_render_elements: Vec::new(),
             _skeletal_render_elements: Vec::new(),
             _skeletal_shadow_render_elements: Vec::new(),
+            _render_element_transform_count: 0,
+            _render_element_transform_metrices: vec![Matrix4::identity(); MAX_TRANSFORM_COUNT],
             _level_data: LevelData::default(),
         })
     }
@@ -291,39 +293,91 @@ impl ProjectSceneManager {
         }
         false
     }
+
     pub fn gather_render_elements(
+        render_object_type: RenderObjectType,
         camera: &CameraObjectData,
         light: &DirectionalLightData,
         render_object_map: &RenderObjectMap,
         render_elements: &mut Vec<RenderElementData>,
         render_shadow_elements: &mut Vec<RenderElementData>,
+        render_element_transform_offset: &mut usize,
+        render_element_transform_metrices: &mut Vec<Matrix4<f32>>
     ) {
         render_elements.clear();
         render_shadow_elements.clear();
 
         for (_key, render_object_data) in render_object_map.iter() {
-            let render_object_data_ref = &render_object_data.borrow_mut();
-            let mode_data = render_object_data_ref.get_model_data().borrow();
-            let mesh_data = mode_data.get_mesh_data().borrow();
+            let render_object_data_mut = ptr_as_mut(render_object_data.as_ptr());
+            let model_data = ptr_as_ref(render_object_data_mut.get_model_data().as_ptr());
+            let mesh_data = model_data.get_mesh_data().borrow();
             let geometry_datas = mesh_data.get_geomtry_datas();
-            let geometry_bound_boxes = &render_object_data_ref._geometry_bound_boxes;
-            let material_instance_datas = mode_data.get_material_instance_datas();
+            let material_instance_datas = model_data.get_material_instance_datas();
             for index in 0..geometry_datas.len() {
-                if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &geometry_bound_boxes[index]) {
-                    render_elements.push(RenderElementData {
-                        _render_object: render_object_data.clone(),
-                        _geometry_data: geometry_datas[index].clone(),
-                        _material_instance_data: material_instance_datas[index].clone(),
-                    })
+                let mut transform_offset = *render_element_transform_offset;
+
+                let bone_count = render_object_data_mut.get_bone_count();
+                let required_transform_count = match render_object_type {
+                    // Static: _localMatrix
+                    RenderObjectType::Static => 0,
+                    // Skeletal: _localMatrix + _localMatrixPrev + curr_animation_bone_count + prev_animation_bone_count
+                    RenderObjectType::Skeletal => 0 + bone_count * 2,
+                };
+
+                // view frustum culling
+                let mut render_something: bool = false;
+                if (transform_offset + required_transform_count) <= MAX_TRANSFORM_COUNT {
+                    if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &render_object_data_mut._geometry_bound_boxes[index]) {
+                        render_elements.push(RenderElementData {
+                            _render_object: render_object_data.clone(),
+                            _geometry_data: geometry_datas[index].clone(),
+                            _material_instance_data: material_instance_datas[index].clone(),
+                        });
+                        render_something = true;
+                    }
+
+                    if false == ProjectSceneManager::shadow_culling(light, &render_object_data_mut._geometry_bound_boxes[index]) {
+                        render_shadow_elements.push(RenderElementData {
+                            _render_object: render_object_data.clone(),
+                            _geometry_data: geometry_datas[index].clone(),
+                            _material_instance_data: material_instance_datas[index].clone(),
+                        });
+                        render_something = true;
+                    }
                 }
 
-                if false == ProjectSceneManager::shadow_culling(light, &geometry_bound_boxes[index]) {
-                    render_shadow_elements.push(RenderElementData {
-                        _render_object: render_object_data.clone(),
-                        _geometry_data: geometry_datas[index].clone(),
-                        _material_instance_data: material_instance_datas[index].clone(),
-                    })
+                if false == render_something {
+                    return;
                 }
+
+                // set
+                render_object_data_mut.set_transform_matrix_offset(transform_offset);
+
+                // set transform metrices
+                {
+                    // render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_matrix());
+                    // transform_offset += 1;
+                    //
+                    // render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_prev_matrix());
+                    // transform_offset += 1;
+                }
+
+                if RenderObjectType::Skeletal == render_object_type {
+                    let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_prev_animation_buffer(0);
+                    let animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_animation_buffer(0);
+                    assert!(prev_animation_buffer.len() == bone_count && animation_buffer.len() == bone_count);
+
+                    let next_transform_offset: usize = transform_offset + bone_count;
+                    render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(prev_animation_buffer);
+                    transform_offset = next_transform_offset;
+
+                    let next_transform_offset: usize = transform_offset + bone_count;
+                    render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(animation_buffer);
+                    transform_offset = next_transform_offset;
+                }
+
+                // set transform matrix index
+                *render_element_transform_offset = transform_offset;
             }
         }
     }
@@ -633,21 +687,31 @@ impl ProjectSceneManager {
         }
 
         // gather render elements
-        ProjectSceneManager::gather_render_elements(
-            &main_camera,
-            &main_light,
-            &self._static_render_object_map,
-            &mut self._static_render_elements,
-            &mut self._static_shadow_render_elements
-        );
+        {
+            self._render_element_transform_count = 0;
 
-        ProjectSceneManager::gather_render_elements(
-            &main_camera,
-            &main_light,
-            &self._skeletal_render_object_map,
-            &mut self._skeletal_render_elements,
-            &mut self._skeletal_shadow_render_elements
-        );
+            ProjectSceneManager::gather_render_elements(
+                RenderObjectType::Static,
+                &main_camera,
+                &main_light,
+                &self._static_render_object_map,
+                &mut self._static_render_elements,
+                &mut self._static_shadow_render_elements,
+                &mut self._render_element_transform_count,
+                &mut self._render_element_transform_metrices
+            );
+
+            ProjectSceneManager::gather_render_elements(
+                RenderObjectType::Skeletal,
+                &main_camera,
+                &main_light,
+                &self._skeletal_render_object_map,
+                &mut self._skeletal_render_elements,
+                &mut self._skeletal_shadow_render_elements,
+                &mut self._render_element_transform_count,
+                &mut self._render_element_transform_metrices
+            );
+        }
 
         // debug text
         font_manager.clear_logs();
