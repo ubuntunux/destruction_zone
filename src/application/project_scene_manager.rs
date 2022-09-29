@@ -315,14 +315,11 @@ impl ProjectSceneManager {
             let material_instance_datas = model_data.get_material_instance_datas();
             for index in 0..geometry_datas.len() {
                 let mut transform_offset = *render_element_transform_offset;
-
+                let local_matrix_count = 1usize;
+                let local_matrix_prev_count = 1usize;
                 let bone_count = render_object_data_mut.get_bone_count();
-                let required_transform_count = match render_object_type {
-                    // Static: _localMatrix
-                    RenderObjectType::Static => 0,
-                    // Skeletal: _localMatrix + _localMatrixPrev + curr_animation_bone_count + prev_animation_bone_count
-                    RenderObjectType::Skeletal => 0 + bone_count * 2,
-                };
+                // transform matrix offset: _localMatrixPrev + _localMatrix + prev_animation_bone_count + curr_animation_bone_count
+                let required_transform_count = local_matrix_count + local_matrix_prev_count + bone_count + bone_count;
 
                 // view frustum culling
                 let mut render_something: bool = false;
@@ -350,27 +347,28 @@ impl ProjectSceneManager {
                     return;
                 }
 
-                // set
+                // set transform_offset
                 render_object_data_mut.set_transform_matrix_offset(transform_offset);
 
-                // set transform metrices
-                {
-                    // render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_matrix());
-                    // transform_offset += 1;
-                    //
-                    // render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_prev_matrix());
-                    // transform_offset += 1;
-                }
+                // loca matrix prev
+                render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_prev_matrix());
+                transform_offset += local_matrix_prev_count;
+
+                // local matrix
+                render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_matrix());
+                transform_offset += local_matrix_count;
 
                 if RenderObjectType::Skeletal == render_object_type {
+                    // prev animation buffer
                     let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_prev_animation_buffer(0);
-                    let animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_animation_buffer(0);
-                    assert!(prev_animation_buffer.len() == bone_count && animation_buffer.len() == bone_count);
-
+                    assert_eq!(bone_count, prev_animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
                     render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(prev_animation_buffer);
                     transform_offset = next_transform_offset;
 
+                    // current animation buffer
+                    let animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_animation_buffer(0);
+                    assert_eq!(bone_count, animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
                     render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(animation_buffer);
                     transform_offset = next_transform_offset;
