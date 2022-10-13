@@ -26,9 +26,11 @@ use rust_engine_3d::resource::resource::{
 };
 use rust_engine_3d::utilities::system::{self, RcRefCell, newRcRefCell, ptr_as_mut, ptr_as_ref};
 use rust_engine_3d::utilities::bounding_box::BoundingBox;
+use rust_engine_3d::vulkan_context::render_pass::PipelinePushConstantData;
 use crate::game_module::height_map_data::HeightMapData;
 use crate::game_module::level_datas::level_data::LevelData;
 use crate::resource::project_resource::ProjectResources;
+use rust_engine_3d::renderer::push_constants::PushConstantParameter;
 
 
 type CameraObjectMap = HashMap<String, Rc<CameraObjectData>>;
@@ -307,9 +309,9 @@ impl ProjectSceneManager {
         render_elements.clear();
         render_shadow_elements.clear();
 
-        for (_key, render_object_data) in render_object_map.iter() {
-            let render_object_data_mut = ptr_as_mut(render_object_data.as_ptr());
-            let model_data = ptr_as_ref(render_object_data_mut.get_model_data().as_ptr());
+        for (_key, render_object_data_ref) in render_object_map.iter() {
+            let render_object_data = render_object_data_ref.borrow();
+            let model_data = ptr_as_ref(render_object_data.get_model_data().as_ptr());
             let mesh_data = model_data.get_mesh_data().borrow();
             let geometry_datas = mesh_data.get_geomtry_datas();
             let material_instance_datas = model_data.get_material_instance_datas();
@@ -317,27 +319,30 @@ impl ProjectSceneManager {
                 let mut transform_offset = *render_element_transform_offset;
                 let local_matrix_count = 1usize;
                 let local_matrix_prev_count = 1usize;
-                let bone_count = render_object_data_mut.get_bone_count();
+                let bone_count = render_object_data.get_bone_count();
                 // transform matrix offset: _localMatrixPrev + _localMatrix + prev_animation_bone_count + curr_animation_bone_count
                 let required_transform_count = local_matrix_count + local_matrix_prev_count + bone_count + bone_count;
+                let push_constant_datas: *const Vec<PipelinePushConstantData> = render_object_data.get_push_constant_datas(index);
 
                 // view frustum culling
                 let mut render_something: bool = false;
                 if (transform_offset + required_transform_count) <= MAX_TRANSFORM_COUNT {
-                    if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &render_object_data_mut._geometry_bound_boxes[index]) {
+                    if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &render_object_data._geometry_bound_boxes[index]) {
                         render_elements.push(RenderElementData {
-                            _render_object: render_object_data.clone(),
+                            _render_object: render_object_data_ref.clone(),
                             _geometry_data: geometry_datas[index].clone(),
                             _material_instance_data: material_instance_datas[index].clone(),
+                            _push_constant_datas: push_constant_datas.clone()
                         });
                         render_something = true;
                     }
 
-                    if false == ProjectSceneManager::shadow_culling(light, &render_object_data_mut._geometry_bound_boxes[index]) {
+                    if false == ProjectSceneManager::shadow_culling(light, &render_object_data._geometry_bound_boxes[index]) {
                         render_shadow_elements.push(RenderElementData {
-                            _render_object: render_object_data.clone(),
+                            _render_object: render_object_data_ref.clone(),
                             _geometry_data: geometry_datas[index].clone(),
                             _material_instance_data: material_instance_datas[index].clone(),
+                            _push_constant_datas: push_constant_datas.clone()
                         });
                         render_something = true;
                     }
@@ -348,26 +353,30 @@ impl ProjectSceneManager {
                 }
 
                 // set transform_offset
-                render_object_data_mut.set_transform_matrix_offset(transform_offset);
+                let push_constant_datas_mut = ptr_as_mut(push_constant_datas);
+                for push_constant_data_mut in push_constant_datas_mut.iter_mut() {
+                    push_constant_data_mut._push_constant.set_push_constant_parameter("_transform_matrix_offset", &PushConstantParameter::Int(transform_offset as i32));
+                    push_constant_data_mut._push_constant.set_push_constant_parameter("_bone_count", &PushConstantParameter::Int(bone_count as i32));
+                }
 
                 // loca matrix prev
-                render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_prev_matrix());
+                render_element_transform_metrices[transform_offset].copy_from(render_object_data._transform_object.get_prev_matrix());
                 transform_offset += local_matrix_prev_count;
 
                 // local matrix
-                render_element_transform_metrices[transform_offset].copy_from(render_object_data_mut._transform_object.get_matrix());
+                render_element_transform_metrices[transform_offset].copy_from(render_object_data._transform_object.get_matrix());
                 transform_offset += local_matrix_count;
 
                 if RenderObjectType::Skeletal == render_object_type {
                     // prev animation buffer
-                    let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_prev_animation_buffer(0);
+                    let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object_data.get_prev_animation_buffer(0);
                     assert_eq!(bone_count, prev_animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
                     render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(prev_animation_buffer);
                     transform_offset = next_transform_offset;
 
                     // current animation buffer
-                    let animation_buffer: &Vec<Matrix4<f32>> = render_object_data_mut.get_animation_buffer(0);
+                    let animation_buffer: &Vec<Matrix4<f32>> = render_object_data.get_animation_buffer(0);
                     assert_eq!(bone_count, animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
                     render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(animation_buffer);
