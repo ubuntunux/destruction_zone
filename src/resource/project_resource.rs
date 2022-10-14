@@ -58,11 +58,15 @@ pub struct ProjectResources {
 }
 
 impl ProjectResourcesBase for ProjectResources {
-    fn initialize_project_resources(&mut self, engine_resources: &EngineResources, renderer_context: &RendererContext) {
+    fn initialize_project_resources(&mut self, engine_resources: &EngineResources) {
         self._engine_resources = engine_resources;
+    }
+
+    fn load_project_resources(&mut self, renderer_context: &RendererContext) {
         self.load_scene_datas(renderer_context);
         self.load_game_datas();
     }
+
     fn destroy_project_resources(&mut self, renderer_context: &RendererContext) {
         self.unload_game_datas();
         self.unload_scene_datas(renderer_context);
