@@ -4,10 +4,12 @@ extern crate nalgebra;
 extern crate winit;
 extern crate log;
 extern crate cgmath;
+extern crate destruction_zone;
 
 pub mod application;
 pub mod application_constants;
 pub mod game_module;
+pub mod render_pass;
 pub mod renderer;
 pub mod resource;
 

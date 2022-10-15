@@ -337,6 +337,7 @@ resources/sounds/assaultrifle1.wav
 resources/sounds/curious_ambience.meta
 resources/sounds/Bullet_Metal_01.meta
 resources/sounds/curious_ambience.mp3
+resources/materials/render_skeletal_object_test.mat
 resources/externals/textures/stages/default_stage_heightmap.png
 resources/externals/textures/ui/alert.png
 resources/externals/textures/ui/crosshair_box.png

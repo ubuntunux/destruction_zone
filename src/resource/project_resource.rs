@@ -4,14 +4,7 @@ use std::path::{ Path, PathBuf };
 
 use serde_json::{ self };
 
-use rust_engine_3d::resource::resource::{
-    PROJECT_RESOURCE_PATH,
-    ResourceData,
-    ResourceDataMap,
-    ProjectResourcesBase,
-    EngineResources,
-    get_unique_resource_name,
-};
+use rust_engine_3d::resource::resource::{PROJECT_RESOURCE_PATH, ResourceData, ResourceDataMap, ProjectResourcesBase, EngineResources, get_unique_resource_name, RenderPassDataCreateInfoMap};
 use rust_engine_3d::effect::effect_data::EffectData;
 use rust_engine_3d::renderer::renderer_context::{ RendererContext };
 use rust_engine_3d::utilities::system::{ self, RcRefCell, newRcRefCell };
@@ -26,6 +19,7 @@ use crate::game_module::ship::ship::{ShipDataCreateInfo, ShipData};
 use crate::game_module::ship::ship_controller::ShipControllerData;
 use crate::game_module::weapons::bullet::BulletData;
 use crate::game_module::weapons::weapon::{WeaponDataCreateInfo, WeaponData};
+use crate::render_pass::render_pass;
 
 pub const SCENE_FILE_PATH: &str = "scenes";
 pub const BUILDING_DATA_FILE_PATH: &str = "game_datas/buildings";
@@ -74,6 +68,9 @@ impl ProjectResourcesBase for ProjectResources {
     fn load_graphics_datas(&mut self, _renderer_context: &RendererContext) {
     }
     fn unload_graphics_datas(&mut self, _renderer_context: &RendererContext) {
+    }
+    fn load_render_pass_data_create_infos(&mut self, renderer_context: &RendererContext, render_pass_data_create_info_map: &mut RenderPassDataCreateInfoMap) {
+        render_pass::get_render_pass_data_create_infos(renderer_context, render_pass_data_create_info_map);
     }
     fn regist_resource(&mut self) {
     }
