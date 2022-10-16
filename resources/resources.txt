@@ -186,6 +186,7 @@ resources/engine_resources/shaders/precomputed_atmosphere/compute_scattering_den
 resources/engine_resources/shaders/precomputed_atmosphere/render_atmosphere.vert
 resources/engine_resources/shaders/precomputed_atmosphere/atmosphere_predefined.glsl
 resources/engine_resources/shaders/fft_ocean/render_fft_ocean.vert
+resources/engine_resources/shaders/fft_ocean/common_fft_ocean.glsl
 resources/engine_resources/shaders/fft_ocean/render_fft_waves.frag
 resources/engine_resources/shaders/fft_ocean/render_fft_init.frag
 resources/engine_resources/shaders/fft_ocean/render_fft_ocean.frag
@@ -220,9 +221,6 @@ resources/engine_resources/shaders/effect/backup/particle_render.glsl
 resources/engine_resources/shaders/effect/effect_constants.glsl
 resources/engine_resources/shaders/effect/render_particle_common.glsl
 resources/engine_resources/sound_banks/default.bank
-resources/engine_resources/shader_caches/ray_tracing/triangle.rmiss.spirv
-resources/engine_resources/shader_caches/ray_tracing/triangle.rchit.spirv
-resources/engine_resources/shader_caches/ray_tracing/triangle.rgen.spirv
 resources/engine_resources/shader_caches/ui/render_font_USE_DISTANCE_FIELD.frag.spirv
 resources/engine_resources/shader_caches/ui/render_font_USE_DISTANCE_FIELD.vert.spirv
 resources/engine_resources/shader_caches/ui/render_ui.frag.spirv
@@ -233,7 +231,6 @@ resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.vert.spirv
-resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.vert.spirv
 resources/engine_resources/shader_caches/common/render_bloom_downsampling.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
 resources/engine_resources/shader_caches/common/render_copy.frag.spirv
@@ -263,7 +260,6 @@ resources/engine_resources/shader_caches/common/render_motion_blur.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.vert.spirv
 resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount0.vert.spirv
 resources/engine_resources/shader_caches/common/composite_gbuffer.frag.spirv
-resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssr.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao_blur.frag.spirv
 resources/engine_resources/shader_caches/common/clear_color_ColorAttachmentCount0.frag.spirv
@@ -440,14 +436,6 @@ resources/game_datas/ships/tank.data
 resources/game_datas/bullets/beam.data
 resources/game_datas/bullets/default.data
 resources/shader_caches/render_ship_RenderMode1_RenderObjectType1.vert.spirv
-resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
-resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
-resources/shader_caches/common/render_object_RenderMode1_RenderObjectType1.frag.spirv
-resources/shader_caches/common/render_object_RenderMode1_RenderObjectType0.frag.spirv
-resources/shader_caches/common/render_object_RenderMode0_RenderObjectType0.frag.spirv
-resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.frag.spirv
-resources/shader_caches/common/render_object_RenderMode0_RenderObjectType1.frag.spirv
-resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
 resources/shader_caches/render_ship_RenderMode1_RenderObjectType1.frag.spirv
 resources/shader_caches/render_ship_RenderMode2_RenderObjectType1.frag.spirv
 resources/shader_caches/render_ship_RenderMode2_RenderObjectType1.vert.spirv
