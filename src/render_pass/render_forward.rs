@@ -7,8 +7,8 @@ use rust_engine_3d::vulkan_context::render_pass::PipelinePushConstantData;
 
 pub fn get_render_pass_data_create_info(render_object_type: RenderObjectType, render_pass_data_create_info_map: &mut RenderPassDataCreateInfoMap) {
     let render_pass_name = match render_object_type {
-        RenderObjectType::Static => String::from("render_pass_static_gbuffer"),
-        RenderObjectType::Skeletal => String::from("render_pass_skeletal_gbuffer"),
+        RenderObjectType::Static => String::from("render_pass_static_forward"),
+        RenderObjectType::Skeletal => String::from("render_pass_skeletal_forward"),
     };
     let render_pass_data_create_info = render_pass_data_create_info_map.get_mut(&*render_pass_name).unwrap();
     let mut pipeline_data_create_info = render_pass_data_create_info.get_pipeline_data_create_info_clone("render_object");

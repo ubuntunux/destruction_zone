@@ -337,7 +337,7 @@ resources/sounds/assaultrifle1.wav
 resources/sounds/curious_ambience.meta
 resources/sounds/Bullet_Metal_01.meta
 resources/sounds/curious_ambience.mp3
-resources/materials/render_skeletal_object_test.mat
+resources/materials/render_ship.mat
 resources/externals/textures/stages/default_stage_heightmap.png
 resources/externals/textures/ui/alert.png
 resources/externals/textures/ui/crosshair_box.png
@@ -426,6 +426,7 @@ resources/externals/meshes/ships/tank.dae
 resources/externals/meshes/Plane00.blend
 resources/externals/meshes/Plane00.dae
 resources/shaders/render_ship.frag
+resources/shaders/render_ship.vert
 resources/sound_banks/bullet_metal.meta
 resources/sound_banks/bullet_metal.bank
 resources/game_datas/weapons/beam_emitter.data
@@ -438,6 +439,7 @@ resources/game_datas/ships/default.data
 resources/game_datas/ships/tank.data
 resources/game_datas/bullets/beam.data
 resources/game_datas/bullets/default.data
+resources/shader_caches/render_ship_RenderMode1_RenderObjectType1.vert.spirv
 resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
 resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
 resources/shader_caches/common/render_object_RenderMode1_RenderObjectType1.frag.spirv
@@ -446,6 +448,11 @@ resources/shader_caches/common/render_object_RenderMode0_RenderObjectType0.frag.
 resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.frag.spirv
 resources/shader_caches/common/render_object_RenderMode0_RenderObjectType1.frag.spirv
 resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
+resources/shader_caches/render_ship_RenderMode1_RenderObjectType1.frag.spirv
+resources/shader_caches/render_ship_RenderMode2_RenderObjectType1.frag.spirv
+resources/shader_caches/render_ship_RenderMode2_RenderObjectType1.vert.spirv
+resources/shader_caches/render_ship_RenderMode0_RenderObjectType1.vert.spirv
+resources/shader_caches/render_ship_RenderMode0_RenderObjectType1.frag.spirv
 resources/effects/bullet_destroy.effect
 resources/scenes/sponza.scene
 resources/scenes/default.scene
