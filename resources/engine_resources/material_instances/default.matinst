@@ -2,6 +2,5 @@
 , "material_parameters": { "textureBase": "common/default"
                         , "textureMaterial": "common/default_m"
                         , "textureNormal": "common/default_n"
-                        , "_color": [1.0,0.0,0.0,1.0]
                         }
 }
