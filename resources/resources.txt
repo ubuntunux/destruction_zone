@@ -24,6 +24,7 @@ resources/engine_resources/materials/common/render_color.mat
 resources/engine_resources/materials/common/render_ssao.mat
 resources/engine_resources/materials/common/render_ssao_blur.mat
 resources/engine_resources/materials/common/render_final.mat
+resources/engine_resources/materials/common/render_taa_simple.mat
 resources/engine_resources/materials/common/render_ssr.mat
 resources/engine_resources/materials/common/render_static_object.mat
 resources/engine_resources/materials/common/composite_gbuffer.mat
@@ -36,7 +37,6 @@ resources/engine_resources/materials/common/render_copy.mat
 resources/engine_resources/materials/common/downsampling.mat
 resources/engine_resources/materials/common/render_debug.mat
 resources/engine_resources/materials/common/render_taa.mat
-resources/engine_resources/materials/common/render_ssr_resolve.mat
 resources/engine_resources/materials/common/clear_framebuffer.mat
 resources/engine_resources/materials/common/clear_render_target.mat
 resources/engine_resources/materials/common/render_motion_blur.mat
@@ -128,6 +128,7 @@ resources/engine_resources/shaders/common/render_object_common.glsl
 resources/engine_resources/shaders/common/render_bloom_downsampling.frag
 resources/engine_resources/shaders/common/blur.frag
 resources/engine_resources/shaders/common/render_object.frag
+resources/engine_resources/shaders/common/render_taa_simple.frag
 resources/engine_resources/shaders/common/render_object_id.frag
 resources/engine_resources/shaders/common/render_ssao_blur.frag
 resources/engine_resources/shaders/common/blend_cube_map.comp
@@ -157,7 +158,6 @@ resources/engine_resources/shaders/common/depth_of_field.frag
 resources/engine_resources/shaders/common/render_object.vert
 resources/engine_resources/shaders/common/render_bloom_highlight.frag
 resources/engine_resources/shaders/common/render_final.frag
-resources/engine_resources/shaders/common/render_ssr_resolve.frag
 resources/engine_resources/shaders/common/light_scatter.frag
 resources/engine_resources/shaders/common/copy_cube.frag
 resources/engine_resources/shaders/common/screen_space_raycast.glsl
@@ -295,6 +295,7 @@ resources/engine_resources/material_instances/common/render_ssao_blur.matinst
 resources/engine_resources/material_instances/common/render_gaussian_blur.matinst
 resources/engine_resources/material_instances/common/copy_cube_map.matinst
 resources/engine_resources/material_instances/common/render_bloom.matinst
+resources/engine_resources/material_instances/common/render_taa_simple.matinst
 resources/engine_resources/material_instances/common/render_taa.matinst
 resources/engine_resources/material_instances/common/render_ssr.matinst
 resources/engine_resources/material_instances/common/composite_gbuffer.matinst
@@ -304,7 +305,6 @@ resources/engine_resources/material_instances/common/render_copy.matinst
 resources/engine_resources/material_instances/common/render_final.matinst
 resources/engine_resources/material_instances/common/render_debug.matinst
 resources/engine_resources/material_instances/common/clear_framebuffer.matinst
-resources/engine_resources/material_instances/common/render_ssr_resolve.matinst
 resources/engine_resources/material_instances/common/render_ssao.matinst
 resources/engine_resources/material_instances/common/render_color.matinst
 resources/engine_resources/material_instances/common/generate_min_z.matinst
