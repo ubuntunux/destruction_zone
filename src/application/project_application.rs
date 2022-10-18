@@ -89,7 +89,15 @@ impl ProjectApplicationBase for ProjectApplication {
             let mouse_delta_y = mouse_move_data._mouse_pos_delta.y as f32 / engine_application._window_size.y as f32 * MOUSE_DELTA_RATIO;
             let btn_left: bool = mouse_input_data._btn_l_hold;
             let btn_right: bool = mouse_input_data._btn_r_hold;
+            let btn_r_pressed: bool = mouse_input_data._btn_r_pressed;
+            let btn_r_released: bool = mouse_input_data._btn_r_released;
             let _btn_middle: bool = mouse_input_data._btn_m_hold;
+
+            if btn_r_pressed {
+                self.get_engine_application_mut().set_grab_mode(true);
+            } else if btn_r_released {
+                self.get_engine_application_mut().set_grab_mode(false);
+            }
 
             let pressed_key_a = keyboard_input_data.get_key_hold(VirtualKeyCode::A);
             let pressed_key_d = keyboard_input_data.get_key_hold(VirtualKeyCode::D);

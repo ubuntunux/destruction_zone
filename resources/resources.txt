@@ -232,6 +232,7 @@ resources/engine_resources/shader_caches/common/render_object_RenderMode2_Render
 resources/engine_resources/shader_caches/common/render_ssao.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.vert.spirv
 resources/engine_resources/shader_caches/common/render_bloom_downsampling.frag.spirv
+resources/engine_resources/shader_caches/common/render_taa_simple.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
 resources/engine_resources/shader_caches/common/render_copy.frag.spirv
 resources/engine_resources/shader_caches/common/generate_min_z.comp.spirv
