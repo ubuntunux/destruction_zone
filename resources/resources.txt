@@ -231,6 +231,7 @@ resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.vert.spirv
+resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.vert.spirv
 resources/engine_resources/shader_caches/common/render_bloom_downsampling.frag.spirv
 resources/engine_resources/shader_caches/common/render_taa_simple.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
@@ -261,6 +262,7 @@ resources/engine_resources/shader_caches/common/render_motion_blur.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.vert.spirv
 resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount0.vert.spirv
 resources/engine_resources/shader_caches/common/composite_gbuffer.frag.spirv
+resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssr.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao_blur.frag.spirv
 resources/engine_resources/shader_caches/common/clear_color_ColorAttachmentCount0.frag.spirv
