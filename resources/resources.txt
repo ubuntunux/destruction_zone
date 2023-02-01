@@ -61,6 +61,7 @@ resources/engine_resources/externals/textures/common/default.png
 resources/engine_resources/externals/textures/common/water_caustic_13.png
 resources/engine_resources/externals/textures/common/water_caustic_09.png
 resources/engine_resources/externals/textures/common/water_caustic_12.png
+resources/engine_resources/externals/textures/common/flat_yellow.png
 resources/engine_resources/externals/textures/common/flat_black.png
 resources/engine_resources/externals/textures/common/mouse_cursor.png
 resources/engine_resources/externals/textures/common/default_cube.cube
@@ -76,6 +77,7 @@ resources/engine_resources/externals/textures/common/default_n.png
 resources/engine_resources/externals/textures/common/water_caustic.3d
 resources/engine_resources/externals/textures/common/water_caustic_08.png
 resources/engine_resources/externals/textures/common/water_caustic_15.png
+resources/engine_resources/externals/textures/common/flat_magenta.png
 resources/engine_resources/externals/textures/common/water_caustic_00.png
 resources/engine_resources/externals/textures/common/water_caustic_14.png
 resources/engine_resources/externals/textures/common/flat_blue.png
@@ -85,6 +87,7 @@ resources/engine_resources/externals/textures/common/default_cube_front.jpg
 resources/engine_resources/externals/textures/common/water_caustic_04.png
 resources/engine_resources/externals/textures/common/flat_none.png
 resources/engine_resources/externals/textures/common/fresnel_lut.png
+resources/engine_resources/externals/textures/common/flat_cyan.png
 resources/engine_resources/externals/textures/common/water_caustic_06.png
 resources/engine_resources/externals/textures/common/water_foam.jpg
 resources/engine_resources/externals/textures/fonts/NanumGothic_Basic_Latin.png
@@ -233,7 +236,6 @@ resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType0.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.vert.spirv
-resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.vert.spirv
 resources/engine_resources/shader_caches/common/render_bloom_downsampling.frag.spirv
 resources/engine_resources/shader_caches/common/render_taa_simple.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode2_RenderObjectType1.frag.spirv
@@ -241,7 +243,6 @@ resources/engine_resources/shader_caches/common/render_copy.frag.spirv
 resources/engine_resources/shader_caches/common/generate_min_z.comp.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode0_RenderObjectType0.vert.spirv
 resources/engine_resources/shader_caches/common/copy_cube_map.comp.spirv
-resources/engine_resources/shader_caches/common/render_ssr_resolve.frag.spirv
 resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount4.vert.spirv
 resources/engine_resources/shader_caches/common/render_gaussian_blur.frag.spirv
 resources/engine_resources/shader_caches/common/render_quad.vert.spirv
@@ -264,7 +265,6 @@ resources/engine_resources/shader_caches/common/render_motion_blur.frag.spirv
 resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType0.vert.spirv
 resources/engine_resources/shader_caches/common/render_quad_ColorAttachmentCount0.vert.spirv
 resources/engine_resources/shader_caches/common/composite_gbuffer.frag.spirv
-resources/engine_resources/shader_caches/common/render_object_RenderMode3_RenderObjectType1.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssr.frag.spirv
 resources/engine_resources/shader_caches/common/render_ssao_blur.frag.spirv
 resources/engine_resources/shader_caches/common/clear_color_ColorAttachmentCount0.frag.spirv
