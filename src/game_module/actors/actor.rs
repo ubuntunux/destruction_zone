@@ -130,7 +130,7 @@ impl ActorController {
         self._command_rotate = false;
     }
 
-    fn roate_to_target(ship_controller: &mut ShipController, to_target_dir: &Vector3<f32>, actor_left: &Vector3<f32>, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
+    fn roate_to_target(ship_controller: &mut ShipController, to_target_dir: &Vector3<f32>, actor_right: &Vector3<f32>, actor_front: &Vector3<f32>, delta_time: f32) -> bool {
         let front_dot_target = actor_front.dot(&to_target_dir);
         let velocity_yaw = ship_controller.get_velocity_yaw().abs();
         let yaw_delta = velocity_yaw * delta_time;
@@ -145,7 +145,7 @@ impl ActorController {
         }
 
         if breaking_distance < yaw_diff {
-            let accel_yaw = if 0.0 <= actor_left.dot(&to_target_dir) { 1.0 } else { -1.0 };
+            let accel_yaw = if 0.0 <= actor_right.dot(&to_target_dir) { 1.0 } else { -1.0 };
             ship_controller.acceleration_yaw(accel_yaw);
         }
 
@@ -157,7 +157,7 @@ impl ActorController {
         to_target_dir: &Vector3<f32>,
         distance: f32,
         actor_front: &Vector3<f32>,
-        actor_left: &Vector3<f32>,
+        actor_right: &Vector3<f32>,
         bound_box_radius: f32
     ) -> bool {
         let controller_data = ptr_as_ref(ship_controller._controller_data.as_ptr());
@@ -182,7 +182,7 @@ impl ActorController {
             }
             let accel = math::safe_normalize(&(to_target_dir * to_target_move_time - side_velocity_dir_along_target * side_move_time));
             let forward_accel = actor_front.dot(&accel);
-            let side_accel = actor_left.dot(&accel);
+            let side_accel = actor_right.dot(&accel);
             ship_controller.acceleration_forward(forward_accel);
             ship_controller.acceleration_side(side_accel);
         }
@@ -199,10 +199,10 @@ impl ActorController {
             }
 
             let front = math::make_normalize_xz(self.get_ship().get_transform().get_front());
-            let left = math::make_normalize_xz(self.get_ship().get_transform().get_left());
+            let right = math::make_normalize_xz(self.get_ship().get_transform().get_right());
 
             if self._command_rotate {
-                if ActorController::roate_to_target(ship_controller, &to_target_dir, &left, &front, delta_time) {
+                if ActorController::roate_to_target(ship_controller, &to_target_dir, &right, &front, delta_time) {
                     self._command_rotate = false;
                 }
             }
@@ -213,7 +213,7 @@ impl ActorController {
                     &to_target_dir,
                     distance,
                     &front,
-                    &left,
+                    &right,
                     self.get_bound_box()._radius
                 ) {
                     self._command_move = false;
@@ -234,8 +234,8 @@ impl ActorController {
                 let (to_target_dir, distance) = math::make_normalize_xz_with_norm(&(&self._target_position - ship_controller.get_position()));
                 if 0.0 < distance {
                     let front = math::make_normalize_xz(self.get_ship().get_transform().get_front());
-                    let left = math::make_normalize_xz(self.get_ship().get_transform().get_left());
-                    if ActorController::roate_to_target(ship_controller, &to_target_dir, &left, &front, delta_time) {
+                    let right = math::make_normalize_xz(self.get_ship().get_transform().get_right());
+                    if ActorController::roate_to_target(ship_controller, &to_target_dir, &right, &front, delta_time) {
                         self._command_rotate = false;
                     }
                 } else {

@@ -126,35 +126,35 @@ impl GameController {
         front_xz.y = 0.0;
         front_xz.try_normalize_mut(0.0);
 
-        let mut left_xz: Vector3<f32> = main_camera._transform_object.get_left().clone_owned();
-        left_xz.y = 0.0;
-        left_xz.try_normalize_mut(0.0);
+        let mut right_xz: Vector3<f32> = main_camera._transform_object.get_right().clone_owned();
+        right_xz.y = 0.0;
+        right_xz.try_normalize_mut(0.0);
 
         // camera move
         if 0 == mouse_move_data._mouse_pos.x && mouse_move_data._mouse_pos_delta.x < 0 ||
             0 == mouse_move_data._mouse_pos.y && mouse_move_data._mouse_pos_delta.y < 0 ||
             (main_camera._window_size.x - 1) == mouse_move_data._mouse_pos.x && 0 < mouse_move_data._mouse_pos_delta.x ||
             (main_camera._window_size.y - 1) == mouse_move_data._mouse_pos.y && 0 < mouse_move_data._mouse_pos_delta.y {
-            let move_delta: Vector3<f32> = (front_xz * mouse_move_data._mouse_pos_delta.y as f32 + left_xz * mouse_move_data._mouse_pos_delta.x as f32) * CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE;
+            let move_delta: Vector3<f32> = (front_xz * mouse_move_data._mouse_pos_delta.y as f32 + right_xz * mouse_move_data._mouse_pos_delta.x as f32) * CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE;
             main_camera._transform_object.move_position(&move_delta);
         } else {
             let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
             let camera_move_speed: f32 = CAMERA_EDGE_SCROLL_SPEED * camera_move_speed_multiplier * time_data._delta_time as f32;
             if pressed_key_w {
-                let move_delta = front_xz * -camera_move_speed;
+                let move_delta = front_xz * camera_move_speed;
                 main_camera._transform_object.move_position(&move_delta);
             }
             else if pressed_key_s {
-                let move_delta = front_xz * camera_move_speed;
+                let move_delta = -front_xz * camera_move_speed;
                 main_camera._transform_object.move_position(&move_delta);
             }
 
             if pressed_key_a {
-                let move_delta = left_xz * -camera_move_speed;
+                let move_delta = right_xz * -camera_move_speed;
                 main_camera._transform_object.move_position(&move_delta);
             }
             else if pressed_key_d {
-                let move_delta = left_xz * camera_move_speed;
+                let move_delta = right_xz * camera_move_speed;
                 main_camera._transform_object.move_position(&move_delta);
             }
         }
@@ -298,7 +298,7 @@ impl GameController {
         if GameViewMode::TopViewMode == self._game_view_mode {
             // camera pitch
             let dist_ratio = self.get_camera_distance_ratio();
-            let pitch: f32 = math::degree_to_radian(math::lerp(-25.0, -75.0, dist_ratio));
+            let pitch: f32 = math::degree_to_radian(math::lerp(25.0, 75.0, dist_ratio));
             main_camera._transform_object.set_pitch(pitch);
             main_camera._transform_object.update_transform_object();
 

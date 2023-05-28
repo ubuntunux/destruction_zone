@@ -146,12 +146,12 @@ impl ProjectApplicationBase for ProjectApplication {
             }
 
             if btn_left && btn_right {
-                main_camera._transform_object.move_left(-pan_speed * mouse_delta_x as f32);
-                main_camera._transform_object.move_up(pan_speed * mouse_delta_y as f32);
+                main_camera._transform_object.move_right(pan_speed * mouse_delta_x as f32);
+                main_camera._transform_object.move_up(-pan_speed * mouse_delta_y as f32);
             }
             else if btn_right {
-                main_camera._transform_object.rotation_pitch(-rotation_speed * mouse_delta_y as f32);
-                main_camera._transform_object.rotation_yaw(-rotation_speed * mouse_delta_x as f32);
+                main_camera._transform_object.rotation_pitch(rotation_speed * mouse_delta_y as f32);
+                main_camera._transform_object.rotation_yaw(rotation_speed * mouse_delta_x as f32);
             }
 
             if pressed_key_z {
@@ -162,17 +162,17 @@ impl ProjectApplicationBase for ProjectApplication {
             }
 
             if pressed_key_w {
-                main_camera._transform_object.move_front(-move_speed);
+                main_camera._transform_object.move_front(move_speed);
             }
             else if pressed_key_s {
-                main_camera._transform_object.move_front(move_speed);
+                main_camera._transform_object.move_front(-move_speed);
             }
 
             if pressed_key_a {
-                main_camera._transform_object.move_left(-move_speed);
+                main_camera._transform_object.move_right(-move_speed);
             }
             else if pressed_key_d {
-                main_camera._transform_object.move_left(move_speed);
+                main_camera._transform_object.move_right(move_speed);
             }
 
             if pressed_key_q {

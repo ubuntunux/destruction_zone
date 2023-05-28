@@ -170,7 +170,7 @@ impl WeaponTrait for BeamEmitter {
         if self._transform_object.update_transform_object() {
             let muzzle_position = &self.get_weapon_data()._muzzle_position;
             self._muzzle_position =
-                self._transform_object.get_left() * muzzle_position.x +
+                self._transform_object.get_right() * muzzle_position.x +
                 self._transform_object.get_up() * muzzle_position.y +
                 self._transform_object.get_front() * muzzle_position.z +
                 self._transform_object.get_position();
