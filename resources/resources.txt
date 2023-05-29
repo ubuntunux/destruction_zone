@@ -26,6 +26,7 @@ resources/externals/meshes/ships/trident.dae
 resources/externals/meshes/ships/tank.dae
 resources/externals/meshes/ships/tank.blend
 resources/externals/meshes/ships/trident.blend
+resources/externals/meshes/suzan_skeleton.dae
 resources/externals/meshes/stages/default_stage.obj
 resources/externals/meshes/stages/default_stage.blend
 resources/externals/meshes/Plane00.blend

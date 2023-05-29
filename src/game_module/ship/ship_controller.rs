@@ -128,6 +128,7 @@ impl ShipController {
 
         if 0.0 != self._acceleration.z {
             self._velocity += dir_forward * self._acceleration.z * controller_data._ground_acceleration * boost_acceleration * delta_time;
+            log::info!("velocity: {:?}", self._acceleration.z * controller_data._ground_acceleration * boost_acceleration * delta_time);
         }
 
         // ground speed

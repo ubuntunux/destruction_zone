@@ -135,7 +135,7 @@ impl GameController {
             0 == mouse_move_data._mouse_pos.y && mouse_move_data._mouse_pos_delta.y < 0 ||
             (main_camera._window_size.x - 1) == mouse_move_data._mouse_pos.x && 0 < mouse_move_data._mouse_pos_delta.x ||
             (main_camera._window_size.y - 1) == mouse_move_data._mouse_pos.y && 0 < mouse_move_data._mouse_pos_delta.y {
-            let move_delta: Vector3<f32> = (front_xz * mouse_move_data._mouse_pos_delta.y as f32 + right_xz * mouse_move_data._mouse_pos_delta.x as f32) * CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE;
+            let move_delta: Vector3<f32> = (-front_xz * mouse_move_data._mouse_pos_delta.y as f32 + right_xz * mouse_move_data._mouse_pos_delta.x as f32) * CAMERA_EDGE_SCROLL_SPEED_BY_MOUSE;
             main_camera._transform_object.move_position(&move_delta);
         } else {
             let camera_move_speed_multiplier = if modifier_keys_shift { 2.0 } else { 1.0 };
@@ -161,7 +161,7 @@ impl GameController {
 
         // camera yaw
         if btn_right_hold && 0.0 != mouse_delta.x {
-            let yaw = main_camera._transform_object.get_yaw() - mouse_delta.x * MOUSE_ROTATION_SPEED;
+            let yaw = main_camera._transform_object.get_yaw() + mouse_delta.x * MOUSE_ROTATION_SPEED;
             main_camera._transform_object.set_yaw(yaw);
         }
 
