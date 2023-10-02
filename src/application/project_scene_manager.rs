@@ -87,7 +87,7 @@ pub struct ProjectSceneManager {
     pub _skeletal_render_elements: Vec<RenderElementData>,
     pub _skeletal_shadow_render_elements: Vec<RenderElementData>,
     pub _render_element_transform_count: usize,
-    pub _render_element_transform_metrices: Vec<Matrix4<f32>>,
+    pub _render_element_transform_matrices: Vec<Matrix4<f32>>,
     pub _level_data: LevelData,
 }
 
@@ -103,7 +103,7 @@ impl ProjectSceneManagerBase for ProjectSceneManager {
     fn get_skeletal_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_render_elements }
     fn get_skeletal_shadow_render_elements(&self) -> &Vec<RenderElementData> { &self._skeletal_shadow_render_elements }
     fn get_render_element_transform_count(&self) -> usize { self._render_element_transform_count }
-    fn get_render_element_transform_metrices(&self) -> &Vec<Matrix4<f32>> { &self._render_element_transform_metrices }
+    fn get_render_element_transform_matrices(&self) -> &Vec<Matrix4<f32>> { &self._render_element_transform_matrices }
 }
 
 impl ProjectSceneManager {
@@ -161,7 +161,7 @@ impl ProjectSceneManager {
             _skeletal_render_elements: Vec::new(),
             _skeletal_shadow_render_elements: Vec::new(),
             _render_element_transform_count: 0,
-            _render_element_transform_metrices: vec![Matrix4::identity(); MAX_TRANSFORM_COUNT],
+            _render_element_transform_matrices: vec![Matrix4::identity(); MAX_TRANSFORM_COUNT],
             _level_data: LevelData::default(),
         })
     }
@@ -304,7 +304,7 @@ impl ProjectSceneManager {
         render_elements: &mut Vec<RenderElementData>,
         render_shadow_elements: &mut Vec<RenderElementData>,
         render_element_transform_offset: &mut usize,
-        render_element_transform_metrices: &mut Vec<Matrix4<f32>>
+        render_element_transform_matrices: &mut Vec<Matrix4<f32>>
     ) {
         render_elements.clear();
         render_shadow_elements.clear();
@@ -315,6 +315,9 @@ impl ProjectSceneManager {
             let mesh_data = model_data.get_mesh_data().borrow();
             let geometry_datas = mesh_data.get_geomtry_datas();
             let material_instance_datas = model_data.get_material_instance_datas();
+            let is_render = false == ProjectSceneManager::view_frustum_culling_geometry(camera, &render_object_data._bound_box);
+            let is_render_shadow = false == ProjectSceneManager::shadow_culling(light, &render_object_data._bound_box);
+
             for index in 0..geometry_datas.len() {
                 let mut transform_offset = *render_element_transform_offset;
                 let local_matrix_count = 1usize;
@@ -323,32 +326,27 @@ impl ProjectSceneManager {
                 // transform matrix offset: _localMatrixPrev + _localMatrix + prev_animation_bone_count + curr_animation_bone_count
                 let required_transform_count = local_matrix_count + local_matrix_prev_count + bone_count + bone_count;
                 let push_constant_datas: *const Vec<PipelinePushConstantData> = render_object_data.get_push_constant_datas(index);
-
-                // view frustum culling
-                let mut render_something: bool = false;
-                if (transform_offset + required_transform_count) <= MAX_TRANSFORM_COUNT {
-                    if false == ProjectSceneManager::view_frustum_culling_geometry(camera, &render_object_data._geometry_bound_boxes[index]) {
+                let render_something: bool = is_render || is_render_shadow;
+                if render_something && (transform_offset + required_transform_count) <= MAX_TRANSFORM_COUNT {
+                    if is_render {
                         render_elements.push(RenderElementData {
                             _render_object: render_object_data_ref.clone(),
                             _geometry_data: geometry_datas[index].clone(),
                             _material_instance_data: material_instance_datas[index].clone(),
                             _push_constant_datas: push_constant_datas.clone()
                         });
-                        render_something = true;
                     }
 
-                    if false == ProjectSceneManager::shadow_culling(light, &render_object_data._geometry_bound_boxes[index]) {
+                    if is_render_shadow {
                         render_shadow_elements.push(RenderElementData {
                             _render_object: render_object_data_ref.clone(),
                             _geometry_data: geometry_datas[index].clone(),
                             _material_instance_data: material_instance_datas[index].clone(),
                             _push_constant_datas: push_constant_datas.clone()
                         });
-                        render_something = true;
                     }
-                }
-
-                if false == render_something {
+                } else {
+                    // not visible
                     return;
                 }
 
@@ -360,11 +358,11 @@ impl ProjectSceneManager {
                 }
 
                 // loca matrix prev
-                render_element_transform_metrices[transform_offset].copy_from(render_object_data._transform_object.get_prev_matrix());
+                render_element_transform_matrices[transform_offset].copy_from(render_object_data._transform_object.get_prev_matrix());
                 transform_offset += local_matrix_prev_count;
 
                 // local matrix
-                render_element_transform_metrices[transform_offset].copy_from(render_object_data._transform_object.get_matrix());
+                render_element_transform_matrices[transform_offset].copy_from(render_object_data._transform_object.get_matrix());
                 transform_offset += local_matrix_count;
 
                 if RenderObjectType::Skeletal == render_object_type {
@@ -372,14 +370,14 @@ impl ProjectSceneManager {
                     let prev_animation_buffer: &Vec<Matrix4<f32>> = render_object_data.get_prev_animation_buffer(0);
                     assert_eq!(bone_count, prev_animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
-                    render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(prev_animation_buffer);
+                    render_element_transform_matrices[transform_offset..next_transform_offset].copy_from_slice(prev_animation_buffer);
                     transform_offset = next_transform_offset;
 
                     // current animation buffer
                     let animation_buffer: &Vec<Matrix4<f32>> = render_object_data.get_animation_buffer(0);
                     assert_eq!(bone_count, animation_buffer.len());
                     let next_transform_offset: usize = transform_offset + bone_count;
-                    render_element_transform_metrices[transform_offset..next_transform_offset].copy_from_slice(animation_buffer);
+                    render_element_transform_matrices[transform_offset..next_transform_offset].copy_from_slice(animation_buffer);
                     transform_offset = next_transform_offset;
                 }
 
@@ -574,7 +572,8 @@ impl ProjectSceneManager {
                 if resource_name == stage_height_map_name {
                     let (image_width, image_height, _image_layers, image_data, _image_format) = EngineResources::load_image_data(height_map_file);
                     stage_model._transform_object.update_transform_object();
-                    stage_model.update_bound_box();
+                    let stage_transform = ptr_as_ref(stage_model._transform_object.get_matrix());
+                    stage_model.update_bound_box(stage_transform);
                     self._height_map_data.initialize_height_map_data(&stage_model._bound_box, image_width as i32, image_height as i32, image_data, scene_data_create_info._sea_height);
                     break;
                 }
@@ -670,7 +669,7 @@ impl ProjectSceneManager {
     pub fn destroy_project_scene_manager(&mut self) {
     }
 
-    pub fn update_project_scene_manager(&mut self, engine_application: &EngineApplication) {
+    pub fn update_project_scene_manager(&mut self, engine_application: &EngineApplication, _delta_time: f64) {
         let time_data = &engine_application._time_data;
         let font_manager = engine_application.get_font_manager_mut();
         let delta_time: f64 = time_data._delta_time;
@@ -705,7 +704,7 @@ impl ProjectSceneManager {
                 &mut self._static_render_elements,
                 &mut self._static_shadow_render_elements,
                 &mut self._render_element_transform_count,
-                &mut self._render_element_transform_metrices
+                &mut self._render_element_transform_matrices
             );
 
             ProjectSceneManager::gather_render_elements(
@@ -716,7 +715,7 @@ impl ProjectSceneManager {
                 &mut self._skeletal_render_elements,
                 &mut self._skeletal_shadow_render_elements,
                 &mut self._render_element_transform_count,
-                &mut self._render_element_transform_metrices
+                &mut self._render_element_transform_matrices
             );
         }
 

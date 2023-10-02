@@ -15,6 +15,7 @@ use rust_engine_3d::application::audio_manager::AudioManager;
 use rust_engine_3d::application::scene_manager::ProjectSceneManagerBase;
 use rust_engine_3d::effect::effect_manager::EffectManager;
 use rust_engine_3d::renderer::renderer_data::RendererData;
+use rust_engine_3d::renderer::ui::ProjectUIManagerBase;
 use rust_engine_3d::utilities::system::{ptr_as_ref, ptr_as_mut};
 use crate::application_constants;
 use crate::application::project_scene_manager::ProjectSceneManager;
@@ -184,13 +185,14 @@ impl ProjectApplicationBase for ProjectApplication {
         }
     }
 
-    fn update_project_application(&mut self) {
+    fn update_project_application(&mut self, delta_time: f64) {
         if self._is_game_mode {
             self._game_client.update_game_client();
         }
 
         let engine_application = unsafe { &*self._engine_application };
-        self._project_scene_manager.update_project_scene_manager(engine_application);
+        self._project_scene_manager.update_project_scene_manager(engine_application, delta_time);
+        self._project_ui_manager.update_ui_manager(engine_application, delta_time);
     }
 }
 
